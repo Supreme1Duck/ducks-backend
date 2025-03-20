@@ -1,9 +1,9 @@
-package com.ducks.routing
+package com.ducks.routings
 
 import com.ducks.mapper.UserMapper
 import com.ducks.repository.UserRepository
-import com.ducks.routing.request.LoginRequest
-import com.ducks.routing.request.OtpRequest
+import com.ducks.routings.request.LoginRequest
+import com.ducks.routings.request.OtpRequest
 import com.ducks.service.JwtService
 import io.ktor.http.*
 import io.ktor.server.request.*

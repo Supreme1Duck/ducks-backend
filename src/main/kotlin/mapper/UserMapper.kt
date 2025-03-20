@@ -1,7 +1,7 @@
 package com.ducks.mapper
 
 import com.ducks.model.User
-import com.ducks.routing.request.LoginRequest
+import com.ducks.routings.request.LoginRequest
 import java.util.*
 
 object UserMapper {

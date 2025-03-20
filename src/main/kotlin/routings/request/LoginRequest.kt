@@ -1,4 +1,4 @@
-package com.ducks.routing.request
+package com.ducks.routings.request
 
 import kotlinx.serialization.Serializable
 
