@@ -29,6 +29,16 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.jetbrains.exposed.core)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.migration)
+    implementation(libs.jetbrains.exposed.json)
+    implementation(libs.jetbrains.exposed.kotlin.datetime)
+    implementation(libs.migrations.flyway)
+    implementation(libs.database.postgre)
+    implementation("org.reflections:reflections:0.10.2")
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

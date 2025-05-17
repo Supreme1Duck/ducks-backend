@@ -1,3 +1,10 @@
+# Технические части
+
+# Архитектура
+Файлы с суффиксом DTO -> модели данных возравщаемые сервисом
+
+Файлы с суффиксом Model -> промежуточные модели данных необходимые для работы доменного слоя
+
 # ducks-backend
 
 This project was created using the [Ktor Project Generator](https://start.ktor.io).
