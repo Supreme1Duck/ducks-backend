@@ -1,8 +1,8 @@
-package com.ducks.database.repository
+package com.ducks.repository
 
 import com.ducks.database.entity.ShopEntity
 import com.ducks.database.table.ShopTable
-import com.ducks.mapper.entityToModel
+import com.ducks.mapper.entityToDto
 import com.ducks.dto.ShopDTO
 import com.ducks.model.ShopModel
 import org.jetbrains.exposed.sql.deleteAll
@@ -20,7 +20,7 @@ class ShopsRepository {
             val list = ShopEntity.all().toList()
 
              list.map {
-                it.entityToModel(limit = productsLimit)
+                it.entityToDto(limit = productsLimit)
             }
         }
     }

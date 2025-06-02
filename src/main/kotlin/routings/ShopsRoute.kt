@@ -1,6 +1,6 @@
 package com.ducks.routings
 
-import com.ducks.database.repository.ShopsRepository
+import com.ducks.repository.ShopsRepository
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject

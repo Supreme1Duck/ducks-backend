@@ -1,26 +1,40 @@
 package com.ducks.domain
 
-import com.ducks.database.repository.ShopProductCategoryRepository
-import com.ducks.database.repository.ShopProductsRepository
-import com.ducks.database.repository.ShopsRepository
+import com.ducks.database.entity.ShopEntity
+import com.ducks.database.entity.ShopProductCategoryEntity
+import com.ducks.database.entity.ShopProductSizeEntity
+import com.ducks.repository.ShopProductsRepository
+import com.ducks.repository.ShopProductsWithSizesRepository
 import com.ducks.model.ShopProductModel
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class InsertShopProductUseCase(
-    private val shopsRepository: ShopsRepository,
-    private val categoryRepository: ShopProductCategoryRepository,
     private val shopProductsRepository: ShopProductsRepository,
+    private val shopProductsWithSizesRepository: ShopProductsWithSizesRepository,
 ) {
 
-    suspend operator fun invoke(shopId: Long, categoryId: Long, productModel: ShopProductModel) {
+    suspend operator fun invoke(
+        shopId: Long,
+        sizeIds: List<Long>,
+        categoryId: Long,
+        productModel: ShopProductModel
+    ) {
         newSuspendedTransaction {
-            val shopEntity = shopsRepository.getById(shopId)
-            val categoryEntity = categoryRepository.getById(categoryId)
+            val shopEntity = ShopEntity[shopId]
+            val categoryEntity = ShopProductCategoryEntity[categoryId]
+            val sizes = sizeIds.map {
+                ShopProductSizeEntity[it]
+            }
 
-            shopProductsRepository.insertProduct(
-                shopEntity,
-                categoryEntity,
-                productModel
+            val insertedProduct = shopProductsRepository.insertProduct(
+                shopEntity = shopEntity,
+                categoryEntity = categoryEntity,
+                shopProductModel = productModel
+            )
+
+            shopProductsWithSizesRepository.insert(
+                product = insertedProduct,
+                sizes = sizes
             )
         }
     }

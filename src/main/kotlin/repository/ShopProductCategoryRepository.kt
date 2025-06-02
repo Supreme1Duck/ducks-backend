@@ -1,4 +1,4 @@
-package com.ducks.database.repository
+package com.ducks.repository
 
 import com.ducks.database.entity.ShopProductCategoryEntity
 import com.ducks.dto.ShopProductCategoryDTO
@@ -18,8 +18,19 @@ class ShopProductCategoryRepository {
         }
     }
 
-    suspend fun getById(id: Long): ShopProductCategoryEntity {
-        return ShopProductCategoryEntity[id]
+    suspend fun getById(id: Long): ShopProductCategoryDTO {
+        return newSuspendedTransaction {
+            val entity = ShopProductCategoryEntity[id]
+
+            ShopProductCategoryDTO(
+                id = entity.id.value,
+                name = entity.name,
+                description = entity.description,
+                isSuperCategory = entity.isSuperCategory,
+                superCategoryId = entity.superCategory?.id?.value,
+                parentCategoryId = entity.parent?.id?.value
+            )
+        }
     }
 
     suspend fun insertCategory(

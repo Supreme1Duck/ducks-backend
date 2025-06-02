@@ -1,6 +1,10 @@
 package com.ducks.dto
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ShopProductCategoryDTO(
+    val id: Long,
     val name: String,
     val description: String? = null,
     val isSuperCategory: Boolean = false,

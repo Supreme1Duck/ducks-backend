@@ -17,4 +17,8 @@ class ShopProductEntity(id: EntityID<Long>): LongEntity(id) {
 
     var shop by ShopEntity referencedOn ShopProductTable.shop
     var category by ShopProductCategoryEntity referencedOn ShopProductTable.category
+
+    // Могут не быть
+    var color by ShopProductColorsEntity optionalReferencedOn ShopProductTable.color
+    var seasonId by ShopProductTable.seasonId
 }

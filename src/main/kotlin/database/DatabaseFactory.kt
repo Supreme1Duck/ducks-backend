@@ -3,7 +3,6 @@ package database
 import MigrationUtils
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.reflections.Reflections
@@ -28,21 +27,21 @@ object DatabaseFactory {
 
             generateMigrationScripts(tables = allTables)
             migrate(password)
-
-            // Какая-то хуйня с Flyway, при первом запуске может не создать таблицы, приходится писать это.
-            SchemaUtils.create(*allTables.toTypedArray())
         }
     }
 
     private fun migrate(password: String) {
         val flyway = Flyway.configure()
             .dataSource("jdbc:postgresql://localhost:5432/ducksdatabase", "andrewutko", password)
-            .locations("classpath:db/migration")
+            .locations("filesystem:src/main/resources/db/migration")
             .load()
 
         flyway.migrate()
     }
 
+    /**
+     * Миграции создаются в рантайме, поэтому и читать их нужно не в jar а в filesystem.
+     */
     private fun generateMigrationScripts(tables: List<Table>) {
         val statements = MigrationUtils.statementsRequiredForDatabaseMigration(*tables.toTypedArray())
         val migrationDir = "src/main/resources/db/migration"

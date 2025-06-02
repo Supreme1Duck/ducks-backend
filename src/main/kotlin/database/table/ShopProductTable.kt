@@ -20,7 +20,7 @@ object ShopProductTable : IdTable<Long>("ducks_shop_product_table") {
 
     val name = text("name")
     val description = text("description").nullable()
-    val brandName = text("brandname")
+    val brandName = text("brandname").nullable()
     val price = decimal("price", precision = 15, scale = 2).nullable()
     val category = reference("category_id", ShopProductCategoryTable)
     val imageUrls = jsonb(
@@ -28,4 +28,6 @@ object ShopProductTable : IdTable<Long>("ducks_shop_product_table") {
         serialize = StringListSerializer::serialize,
         deserialize = StringListSerializer::deserialize
     )
+    val seasonId = integer("season_id").nullable()
+    val color = optReference("color", ShopProductColorsTable)
 }
