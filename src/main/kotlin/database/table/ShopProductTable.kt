@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.json.jsonb
+import util.citext
 
 object ShopProductTable : IdTable<Long>("ducks_shop_product_table") {
 
@@ -18,8 +19,8 @@ object ShopProductTable : IdTable<Long>("ducks_shop_product_table") {
 
     val shop = reference(name = "shop", foreign = ShopTable, onDelete = ReferenceOption.CASCADE)
 
-    val name = text("name")
-    val description = text("description").nullable()
+    val name = citext("name", 32)
+    val description = citext("description", 255).nullable()
     val brandName = text("brandname").nullable()
     val price = decimal("price", precision = 15, scale = 2).nullable()
     val category = reference("category_id", ShopProductCategoryTable)

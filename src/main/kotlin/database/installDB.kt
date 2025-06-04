@@ -24,7 +24,7 @@ private fun Application.testFunction() {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     coroutineScope.launch {
-        searchSomeProducts()
+
     }
 }
 

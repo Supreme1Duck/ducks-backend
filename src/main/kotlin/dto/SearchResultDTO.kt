@@ -5,7 +5,9 @@ import com.ducks.dto.ShopProductCategoryDTO
 import com.ducks.dto.ShopProductChildSizeDTO
 import com.ducks.dto.ShopProductDTO
 import com.ducks.model.SeasonModel
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class SearchResultDTO(
     val products: List<ShopProductDTO>,
     val sizes: List<ShopProductChildSizeDTO>,

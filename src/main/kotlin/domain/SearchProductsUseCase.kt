@@ -22,13 +22,13 @@ class SearchProductsUseCase {
         categoriesIds: List<Long>?,
         sizeIds: List<Long>?,
         colorId: Int?,
-        seasonModel: SeasonModel?,
+        seasonModelId: Int?,
     ): SearchResultDTO = searchWithQuery(
         query = query,
         categoriesIds = categoriesIds,
         sizeIds = sizeIds,
         colorIds = colorId,
-        seasonModel = seasonModel
+        seasonModelId = seasonModelId
     )
 
     private suspend fun searchWithQuery(
@@ -36,14 +36,14 @@ class SearchProductsUseCase {
         categoriesIds: List<Long>?,
         sizeIds: List<Long>?,
         colorIds: Int?,
-        seasonModel: SeasonModel?
+        seasonModelId: Int?
     ): SearchResultDTO {
         return newSuspendedTransaction {
             val foundProducts = searchProductsWithQuery(
                 query = query,
                 categoriesIds = categoriesIds,
                 colorIds = colorIds,
-                seasonModel = seasonModel,
+                seasonModelId = seasonModelId,
                 sizeIds = sizeIds,
             )
 
@@ -65,7 +65,7 @@ class SearchProductsUseCase {
         query: String?,
         categoriesIds: List<Long>?,
         colorIds: Int?,
-        seasonModel: SeasonModel?,
+        seasonModelId: Int?,
         sizeIds: List<Long>?,
     ): List<ShopProductDTO> {
         val productsFilteredBySizes = sizeIds?.let {
@@ -74,15 +74,15 @@ class SearchProductsUseCase {
             }
         }
 
+        val queryFilteredOp = query?.let { (ShopProductTable.name like "%$query%") or (ShopProductTable.description like "%$query%") } ?: Op.TRUE
         val sizedFilteredOp = productsFilteredBySizes?.let { (ShopProductTable.id inList productsFilteredBySizes.map { it.id }.asIterable()) } ?: Op.TRUE
-        val queryFilteredOp = query?.let { (ShopProductTable.name like "%$it%") or (ShopProductTable.description like "%$it%") } ?: Op.TRUE
         val categoryFilteredOp = categoriesIds?.let { ShopProductTable.category inList it } ?: Op.TRUE
         val colorFilteredOp = colorIds?.let { ShopProductTable.color eq it } ?: Op.TRUE
-        val seasonFilteredOp = seasonModel?.let { ShopProductTable.seasonId eq seasonModel.id } ?: Op.TRUE
+        val seasonFilteredOp = seasonModelId?.let { ShopProductTable.seasonId eq seasonModelId } ?: Op.TRUE
 
         val products = ShopProductEntity.find {
-            sizedFilteredOp and
-                    queryFilteredOp and
+            queryFilteredOp and
+                    sizedFilteredOp and
                     categoryFilteredOp and
                     colorFilteredOp and
                     seasonFilteredOp
