@@ -1,6 +1,6 @@
 package com.ducks.database.table
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object UserTable : Table("ducks_user_table") {
     private val id = integer("id").autoIncrement()

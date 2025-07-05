@@ -1,12 +1,12 @@
 package com.ducks.database
 
-import com.ducks.domain.InsertShopProductUseCase
-import com.ducks.domain.SearchProductsUseCase
-import com.ducks.model.ShopModel
-import com.ducks.model.ShopProductModel
-import com.ducks.repository.ShopProductCategoryRepository
-import com.ducks.repository.ShopProductSizesRepository
-import com.ducks.repository.ShopsRepository
+import com.ducks.shops.seller.domain.InsertOrUpdateShopProductUseCase
+import com.ducks.shops.common.model.ShopModel
+import com.ducks.shops.common.model.ShopProductModel
+import com.ducks.shops.common.repository.ShopProductCategoryRepository
+import com.ducks.shops.common.repository.ShopProductSizesRepository
+import com.ducks.shops.common.repository.ShopProductsRepository
+import com.ducks.shops.common.repository.ShopsRepository
 import database.DatabaseFactory
 import io.ktor.server.application.*
 import kotlinx.coroutines.CoroutineScope
@@ -29,36 +29,36 @@ private fun Application.testFunction() {
 }
 
 private suspend fun Application.searchSomeProducts() {
-    val searchProductsUseCase by inject<SearchProductsUseCase>()
+    val searchProductsUseCase by inject<ShopProductsRepository>()
 
-    val result = searchProductsUseCase.invoke(null, null, null, null, null)
+    val result = searchProductsUseCase.searchWithQueryOrFilters(null, null, null, null, null, null, null, null)
 
     println("Продукты")
     result.products.forEach {
         println()
-        println(it.name + " " + it.description)
+        println(it.name)
     }
 
     println("Размеры")
-    result.sizes.forEach {
+    result.filters.sizes.forEach {
         println()
         println(it.id.toString() + " " + it.name)
     }
 
     println("Цвета")
-    result.colors.forEach {
+    result.filters.colors.forEach {
         println()
         println(it.id.toString() + " " + it.name)
     }
 
     println("Категории")
-    result.categories.forEach {
+    result.filters.categories.forEach {
         println()
         println(it.id.toString() + " " + it.name)
     }
 
     println("Сезоны")
-    result.seasons.forEach {
+    result.filters.seasons.forEach {
         println()
         println(it.id.toString() + " " + it.name)
     }
@@ -66,7 +66,7 @@ private suspend fun Application.searchSomeProducts() {
 
 private suspend fun Application.deleteAllAndInsertNewShops() {
     val shopsRepository by inject<ShopsRepository>()
-    val shopProductUseCase by inject<InsertShopProductUseCase>()
+    val shopProductUseCase by inject<InsertOrUpdateShopProductUseCase>()
 
     shopsRepository.deleteAll()
 
@@ -82,12 +82,8 @@ private suspend fun Application.deleteAllAndInsertNewShops() {
             description = "Велюровые",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(2, 3, 4, 5, 6, 7),
             shopId = shopId.value,
-            categoryId = 7,
             price = null,
-            seasonModel = null,
-            colorId = null,
         ),
         ShopProductModel(
             name = "Майка",
@@ -96,81 +92,48 @@ private suspend fun Application.deleteAllAndInsertNewShops() {
             brandName = "Zara",
             price = null,
             shopId = shopId.value,
-            categoryId = 7,
-            sizeIds = listOf(30, 31, 32, 33, 34, 35, 36),
-            seasonModel = null,
-            colorId = null
         ),
         ShopProductModel(
             name = "Кроссовки",
             description = "Велюровые",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(42, 43, 44, 45, 46, 47, 48),
             shopId = shopId.value,
-            categoryId = 7,
             price = null,
-            seasonModel = null,
-            colorId = null
         ),
         ShopProductModel(
             name = "Кофта",
             description = "Обычная",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(29, 30 ,31 ,32, 33, 34, 35),
             shopId = shopId.value,
-            categoryId = 6,
             price = null,
-            seasonModel = null,
-            colorId = null
         ),
         ShopProductModel(
             name = "Туника",
             description = "Обычная",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(29, 30 ,31 ,32, 33, 34, 35),
             shopId = shopId.value,
-            categoryId = 5,
             price = null,
-            seasonModel = null,
-            colorId = null
         ),
         ShopProductModel(
             name = "Брюки",
             description = "Велюровые",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(2, 3, 4, 5, 6, 7),
             shopId = shopId.value,
-            categoryId = 4,
             price = null,
-            seasonModel = null,
-            colorId = null
         ),
         ShopProductModel(
             name = "Штаны",
             description = "Велюровые",
             imageUrls = emptyList(),
             brandName = "Zara",
-            sizeIds = listOf(2, 3, 4, 5, 6, 7),
             shopId = shopId.value,
-            categoryId = 12,
             price = null,
-            seasonModel = null,
-            colorId = null
         )
     )
-
-    shopProducts.forEach {
-        shopProductUseCase(
-            shopId = shopId.value,
-            sizeIds = it.sizeIds,
-            categoryId = it.categoryId,
-            productModel = it
-        )
-    }
 }
 
 private suspend fun Application.logAllCategoriesWithSubs() {

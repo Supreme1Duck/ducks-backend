@@ -3,6 +3,6 @@ package com.ducks.di
 import com.ducks.repository.UserRepository
 import org.koin.dsl.module
 
-fun userModule() = module {
+val userModule = module {
     single { UserRepository() }
 }
