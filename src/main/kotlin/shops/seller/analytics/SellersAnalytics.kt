@@ -18,4 +18,11 @@ class SellersAnalytics {
     ) {
        suspiciousFile.writeText("Подозрительный файл $fileName, ${LocalDate.now()}, от магазина с id $shopId /n /n")
     }
+
+    fun logSuspiciousDeleteFile(
+        shopId: Long,
+        fileName: String,
+    ) {
+        suspiciousFile.writeText("${LocalDate.now()}: Файл $fileName не имеющийся в магазине с id $shopId, использован в попытке удаления /n /n")
+    }
 }

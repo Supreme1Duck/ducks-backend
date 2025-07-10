@@ -1,6 +1,6 @@
 package com.ducks.database
 
-import com.ducks.shops.seller.domain.InsertOrUpdateShopProductUseCase
+import com.ducks.shops.seller.domain.ShopProductInteractor
 import com.ducks.shops.common.model.ShopModel
 import com.ducks.shops.common.model.ShopProductModel
 import com.ducks.shops.common.repository.ShopProductCategoryRepository
@@ -66,7 +66,7 @@ private suspend fun Application.searchSomeProducts() {
 
 private suspend fun Application.deleteAllAndInsertNewShops() {
     val shopsRepository by inject<ShopsRepository>()
-    val shopProductUseCase by inject<InsertOrUpdateShopProductUseCase>()
+    val shopProductUseCase by inject<ShopProductInteractor>()
 
     shopsRepository.deleteAll()
 

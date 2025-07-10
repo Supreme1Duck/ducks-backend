@@ -1,8 +1,10 @@
 package com.ducks.shops.seller.data
 
+import com.ducks.shops.common.database.table.ShopProductTable
 import com.ducks.shops.seller.data.model.DeleteImageResult
 import com.ducks.shops.seller.data.model.SaveImageResult
 import io.ktor.http.content.*
+import org.jetbrains.exposed.v1.jdbc.select
 import java.io.File
 import java.util.*
 
@@ -30,11 +32,19 @@ class ShopImageRepository {
         return SaveImageResult.Success(imageUrl)
     }
 
-    fun deleteImage(imageUrl: String): DeleteImageResult {
+
+    fun deleteImage(
+        shopId: Long,
+        imageUrl: String
+    ): DeleteImageResult {
         val fileExtension = imageUrl.substringAfterLast(".", "").lowercase()
 
         if (fileExtension !in allowedExtensions) {
             return DeleteImageResult.UnsupportedImageType
+        }
+
+        if (!shopHasImage(shopId, imageUrl)) {
+            return DeleteImageResult.TryToDeleteAlienFile
         }
 
         val file = File("shops/images/$imageUrl")
@@ -50,5 +60,14 @@ class ShopImageRepository {
         } else {
             DeleteImageResult.InternalError
         }
+    }
+
+    private fun shopHasImage(shopId: Long, imageUrl: String): Boolean {
+        return ShopProductTable
+            .select(ShopProductTable.imageUrls)
+            .where { ShopProductTable.id eq shopId }
+            .flatMap {
+                it[ShopProductTable.imageUrls]
+            }.contains(imageUrl)
     }
 }

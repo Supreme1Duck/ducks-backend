@@ -5,7 +5,7 @@ import com.ducks.auth.seller.JWTSellerService
 import com.ducks.shops.common.data.ShopDataSource
 import com.ducks.shops.common.data.ShopProductsDataSource
 import com.ducks.shops.seller.domain.InsertShopProductColorUseCase
-import com.ducks.shops.seller.domain.InsertOrUpdateShopProductUseCase
+import com.ducks.shops.seller.domain.ShopProductInteractor
 import com.ducks.shops.common.repository.*
 import com.ducks.shops.seller.di.sellerModule
 import org.koin.dsl.module
@@ -28,7 +28,7 @@ val shopsModule = module {
     single { ShopProductsDataSource() }
 
     // Use case
-    single { InsertOrUpdateShopProductUseCase(get(), get()) }
+    single { ShopProductInteractor(get(), get()) }
     single { InsertShopProductColorUseCase() }
 
     includes(sellerModule)
