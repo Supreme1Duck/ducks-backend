@@ -1,6 +1,6 @@
 package com.ducks.admin.database
 
-import com.ducks.shops.common.database.table.ShopTable
+import com.ducks.shops.database.table.ShopTable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 

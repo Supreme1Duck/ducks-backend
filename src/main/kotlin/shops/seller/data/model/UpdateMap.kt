@@ -1,9 +1,5 @@
 package com.ducks.shops.seller.data.model
 
-import kotlinx.serialization.json.JsonElement
-
-typealias UpdateMap = Map<String, JsonElement>
-
 const val SELLER_PRODUCT_MAP_SIZE_KEY = "size"
 const val SELLER_PRODUCT_MAP_NAME_KEY = "name"
 const val SELLER_PRODUCT_MAP_DESCRIPTION_KEY = "description"

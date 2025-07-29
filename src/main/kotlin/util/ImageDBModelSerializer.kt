@@ -1,6 +1,6 @@
 package com.ducks.util
 
-import com.ducks.shops.common.database.dbmodels.ShopProductImageDTO
+import com.ducks.shops.database.dbmodels.ShopProductImageDTO
 import kotlinx.serialization.json.Json
 
 object ImageDBModelSerializer {

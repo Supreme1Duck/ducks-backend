@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.jetbrains.exposed.core)
     implementation(libs.jetbrains.exposed.dao)
     implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.r2dbc)
     implementation(libs.jetbrains.exposed.migration)
     implementation(libs.jetbrains.exposed.json)
     implementation(libs.jetbrains.exposed.kotlin.datetime)

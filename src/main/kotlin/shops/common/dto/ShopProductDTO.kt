@@ -1,8 +1,8 @@
 package com.ducks.shops.common.dto
 
 import com.ducks.shops.common.model.SeasonModel
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import util.BigDecimalSerializer
 import java.math.BigDecimal
 
 @Serializable
@@ -10,7 +10,7 @@ data class ShopProductDTO(
     val id: Long,
     val name: String,
     val description: String?,
-    @Contextual
+    @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal?,
     val categoryDTO: ShopProductCategoryDTO,
     val color: ShopProductColorDTO?,

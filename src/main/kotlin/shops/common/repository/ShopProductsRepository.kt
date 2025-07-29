@@ -1,12 +1,14 @@
 package com.ducks.shops.common.repository
 
+import com.ducks.common.data.UpdateMap
 import com.ducks.shops.common.data.ShopProductsDataSource
-import com.ducks.shops.common.database.table.ShopProductTable
+import com.ducks.shops.database.table.ShopProductTable
 import com.ducks.shops.common.dto.SearchResultDTO
 import com.ducks.shops.common.dto.ShopProductDTO
 import com.ducks.shops.common.dto.ShopProductPreviewDTO
 import com.ducks.shops.common.model.SeasonModel
 import com.ducks.shops.common.model.ShopProductModel
+import com.ducks.shops.seller.domain.ShopImageRepository
 import com.ducks.shops.seller.data.model.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -14,12 +16,14 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.math.BigDecimal
 
 class ShopProductsRepository(
     private val dataSource: ShopProductsDataSource,
+    private val shopImageRepository: ShopImageRepository,
 ) {
 
     fun insertProduct(
@@ -69,7 +73,9 @@ class ShopProductsRepository(
                     }
 
                     SELLER_PRODUCT_MAP_IMAGES_KEY -> {
-                        table[imageUrls] = Json.decodeFromJsonElement<List<String>>(it.value)
+                        val imageUrls = Json.decodeFromJsonElement<List<String>>(it.value)
+                        deleteUnusedImages(shopId = productId, productId = shopId, imageUrls = imageUrls)
+                        table[ShopProductTable.imageUrls] = imageUrls
                     }
 
                     SELLER_PRODUCT_MAP_CATEGORY_KEY -> {
@@ -82,6 +88,28 @@ class ShopProductsRepository(
                 }
             }
         }
+    }
+
+    private fun deleteUnusedImages(shopId: Long, productId: Long, imageUrls: List<String>): List<String> {
+        val existingImageUrls = ShopProductTable
+            .select(ShopProductTable.imageUrls)
+            .where { ShopProductTable.id eq productId }
+            .map { it[ShopProductTable.imageUrls] }
+            .first()
+
+        val listToDelete = existingImageUrls.mapNotNull {
+            if (imageUrls.contains(it)) {
+                null
+            } else {
+                it
+            }
+        }
+
+        listToDelete.forEach {
+            shopImageRepository.deleteImage(shopId, it)
+        }
+
+        return imageUrls
     }
 
     fun deleteProduct(

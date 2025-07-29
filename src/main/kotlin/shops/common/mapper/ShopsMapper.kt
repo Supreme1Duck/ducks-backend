@@ -1,7 +1,7 @@
 package com.ducks.shops.common.mapper
 
-import com.ducks.shops.common.database.entity.ShopEntity
-import com.ducks.shops.common.database.entity.ShopProductEntity
+import com.ducks.shops.database.entity.ShopEntity
+import com.ducks.shops.database.entity.ShopProductEntity
 import com.ducks.shops.common.dto.*
 import com.ducks.shops.common.model.SeasonModel
 

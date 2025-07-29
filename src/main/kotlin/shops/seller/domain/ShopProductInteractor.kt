@@ -1,10 +1,10 @@
 package com.ducks.shops.seller.domain
 
+import com.ducks.common.data.UpdateMap
 import com.ducks.shops.common.model.ShopProductModel
 import com.ducks.shops.common.repository.ShopProductsRepository
 import com.ducks.shops.common.repository.ShopProductsWithSizesRepository
 import com.ducks.shops.seller.data.model.SELLER_PRODUCT_MAP_SIZE_KEY
-import com.ducks.shops.seller.data.model.UpdateMap
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction

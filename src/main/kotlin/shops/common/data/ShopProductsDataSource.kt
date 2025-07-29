@@ -1,16 +1,16 @@
 package com.ducks.shops.common.data
 
-import com.ducks.shops.common.database.entity.ShopProductEntity
-import com.ducks.shops.common.database.entity.ShopProductsWithSizesEntity
+import com.ducks.shops.database.entity.ShopProductEntity
+import com.ducks.shops.database.entity.ShopProductsWithSizesEntity
 import com.ducks.shops.common.mapper.toDto
 import com.ducks.shops.common.model.SeasonModel
 import com.ducks.shops.common.model.getSeasonModelById
-import com.ducks.shops.common.database.rowmappers.mapToCategoryDTO
-import com.ducks.shops.common.database.rowmappers.mapToChildSizeDTO
-import com.ducks.shops.common.database.rowmappers.mapToColorDTO
-import com.ducks.shops.common.database.rowmappers.mapToSearchShopProductDTO
-import com.ducks.shops.common.database.table.*
+import com.ducks.shops.database.rowmappers.mapToCategoryDTO
+import com.ducks.shops.database.rowmappers.mapToChildSizeDTO
+import com.ducks.shops.database.rowmappers.mapToColorDTO
+import com.ducks.shops.database.rowmappers.mapToSearchShopProductDTO
 import com.ducks.shops.common.dto.*
+import com.ducks.shops.database.table.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq

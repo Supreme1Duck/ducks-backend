@@ -1,6 +1,6 @@
 package com.ducks.shops.common.repository
 
-import com.ducks.shops.common.database.entity.ShopProductColorsEntity
+import com.ducks.shops.database.entity.ShopProductColorsEntity
 import com.ducks.shops.common.model.ShopProductColorModel
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 

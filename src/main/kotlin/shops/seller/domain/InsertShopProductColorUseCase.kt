@@ -1,6 +1,6 @@
 package com.ducks.shops.seller.domain
 
-import com.ducks.shops.common.database.entity.ShopProductColorsEntity
+import com.ducks.shops.database.entity.ShopProductColorsEntity
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 class InsertShopProductColorUseCase {

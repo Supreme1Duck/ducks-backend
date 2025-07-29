@@ -1,6 +1,6 @@
 package com.ducks.shops.seller.routing.request
 
-import com.ducks.shops.seller.data.model.UpdateMap
+import com.ducks.common.data.UpdateMap
 import kotlinx.serialization.Serializable
 
 @Serializable

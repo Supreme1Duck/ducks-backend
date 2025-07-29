@@ -1,6 +1,6 @@
 package com.ducks.shops.common.repository
 
-import com.ducks.shops.common.database.table.ShopProductsWithSizesTable
+import com.ducks.shops.database.table.ShopProductsWithSizesTable
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere

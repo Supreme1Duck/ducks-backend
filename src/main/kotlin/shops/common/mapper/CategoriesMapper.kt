@@ -1,6 +1,6 @@
 package com.ducks.shops.common.mapper
 
-import com.ducks.shops.common.database.entity.ShopProductCategoryEntity
+import com.ducks.shops.database.entity.ShopProductCategoryEntity
 import com.ducks.shops.common.model.ShopProductCategoryModel
 
 fun ShopProductCategoryEntity.mapToModel(): ShopProductCategoryModel {

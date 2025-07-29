@@ -2,9 +2,9 @@ package com.ducks.shops.seller.routing.routes
 
 import com.ducks.shops.common.model.ShopProductModel
 import com.ducks.shops.seller.analytics.SellersAnalytics
-import com.ducks.shops.seller.data.ShopImageRepository
-import com.ducks.shops.seller.data.model.DeleteImageResult
-import com.ducks.shops.seller.data.model.SaveImageResult
+import com.ducks.shops.seller.domain.ShopImageRepository
+import com.ducks.common.data.DeleteImageResult
+import com.ducks.common.data.SaveImageResult
 import com.ducks.shops.seller.domain.ShopProductInteractor
 import com.ducks.shops.seller.getSellerPrincipal
 import com.ducks.shops.seller.routing.request.CreateProductRequest

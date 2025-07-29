@@ -8,6 +8,7 @@ import com.ducks.shops.seller.domain.InsertShopProductColorUseCase
 import com.ducks.shops.seller.domain.ShopProductInteractor
 import com.ducks.shops.common.repository.*
 import com.ducks.shops.seller.di.sellerModule
+import com.ducks.shops.seller.domain.ShopImageRepository
 import org.koin.dsl.module
 
 val shopsModule = module {
@@ -17,11 +18,12 @@ val shopsModule = module {
 
     // Repository
     single { ShopsRepository(get()) }
-    single { ShopProductsRepository(get()) }
+    single { ShopProductsRepository(get(), get()) }
     single { ShopProductCategoryRepository() }
     single { ShopProductColorsRepository() }
     single { ShopProductSizesRepository() }
     single { ShopProductsWithSizesRepository() }
+    single { ShopImageRepository() }
 
     // Data sources
     single { ShopDataSource(get()) }

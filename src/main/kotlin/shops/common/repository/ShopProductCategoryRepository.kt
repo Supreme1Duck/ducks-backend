@@ -1,6 +1,6 @@
 package com.ducks.shops.common.repository
 
-import com.ducks.shops.common.database.entity.ShopProductCategoryEntity
+import com.ducks.shops.database.entity.ShopProductCategoryEntity
 import com.ducks.shops.common.dto.ShopProductCategoryDTO
 import com.ducks.shops.common.mapper.mapToModel
 import com.ducks.shops.common.model.ShopProductCategoryModel

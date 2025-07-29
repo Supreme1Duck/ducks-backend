@@ -1,6 +1,6 @@
 package com.ducks.shops.common.repository
 
-import com.ducks.shops.common.database.entity.ShopProductSizeEntity
+import com.ducks.shops.database.entity.ShopProductSizeEntity
 import com.ducks.shops.common.dto.ShopProductChildSizeDTO
 import com.ducks.shops.common.dto.ShopProductSizeDTO
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction

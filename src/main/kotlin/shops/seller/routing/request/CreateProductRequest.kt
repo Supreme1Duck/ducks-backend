@@ -1,7 +1,7 @@
 package com.ducks.shops.seller.routing.request
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import util.BigDecimalSerializer
 import java.math.BigDecimal
 
 @Serializable
@@ -15,6 +15,6 @@ data class CreateProductRequest(
     val brandName: String,
     val mainImageUrl: String,
     val imageUrls: List<String>,
-    @Contextual
+    @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal?,
 )

@@ -1,8 +1,8 @@
 package com.ducks.shops.common.data
 
-import com.ducks.shops.common.database.entity.ShopEntity
-import com.ducks.shops.common.database.rowmappers.mapToShopPreviewDTO
-import com.ducks.shops.common.database.table.ShopTable
+import com.ducks.shops.database.entity.ShopEntity
+import com.ducks.shops.database.rowmappers.mapToShopPreviewDTO
+import com.ducks.shops.database.table.ShopTable
 import com.ducks.shops.common.dto.ShopDTO
 import com.ducks.shops.common.dto.ShopPreviewDTO
 import com.ducks.shops.common.mapper.entityToDto

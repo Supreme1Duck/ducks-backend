@@ -1,8 +1,8 @@
 package com.ducks.shops.common.repository
 
 import com.ducks.shops.common.data.ShopDataSource
-import com.ducks.shops.common.database.entity.ShopEntity
-import com.ducks.shops.common.database.table.ShopTable
+import com.ducks.shops.database.entity.ShopEntity
+import com.ducks.shops.database.table.ShopTable
 import com.ducks.shops.common.dto.ShopDTO
 import com.ducks.shops.common.dto.ShopPreviewDTO
 import com.ducks.shops.common.model.ShopModel
