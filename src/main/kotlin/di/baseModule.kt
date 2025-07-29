@@ -1,10 +1,10 @@
 package com.ducks.di
 
-import com.ducks.service.JwtService
+import com.ducks.admin.adminsModule
+import com.ducks.coffeeshops.coffeeShopsModule
+import com.ducks.shops.shopsModule
 import org.koin.dsl.module
 
 fun baseModule() = module {
-    includes(userModule())
-
-    single { JwtService(get(), get()) }
+    includes(adminsModule, userModule, shopsModule, coffeeShopsModule)
 }

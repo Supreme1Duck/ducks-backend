@@ -1,20 +1,21 @@
-package com.ducks.routing
+package com.ducks.routings
 
+import com.ducks.auth.client.JWTClientService
 import com.ducks.mapper.UserMapper
 import com.ducks.repository.UserRepository
-import com.ducks.routing.request.LoginRequest
-import com.ducks.routing.request.OtpRequest
-import com.ducks.service.JwtService
+import com.ducks.routings.request.LoginRequest
+import com.ducks.routings.request.OtpRequest
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.core.parameter.parametersOf
 import org.koin.ktor.ext.inject
 
-fun Route.loginRoute(
+fun Route.clientLoginRoute(
     userRepository: UserRepository
 ) {
-    val jwtService by application.inject<JwtService>()
+    val jwtService by application.inject<JWTClientService> { parametersOf(application) }
 
     post("/otp/generate") {
         val request = call.receive<OtpRequest>()
@@ -33,7 +34,7 @@ fun Route.loginRoute(
             val user = UserMapper.loginRequestToUser(request)
 
             userRepository.saveUser(user)
-            val token = jwtService.createJwtToken(user.phoneNumber)
+            val token = jwtService.generateClientToken(user.phoneNumber)
 
             call.respond(message = token.toString(), status = HttpStatusCode.OK)
         } else {

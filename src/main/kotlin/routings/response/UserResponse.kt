@@ -1,4 +1,4 @@
-package com.ducks.routing.response
+package com.ducks.routings.response
 
 import com.ducks.util.UUIDSerializer
 import kotlinx.serialization.Serializable

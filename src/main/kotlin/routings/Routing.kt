@@ -1,14 +1,11 @@
 package com.ducks.routings
 
+import com.ducks.admin.route.adminRoute
+import com.ducks.auth.JWT_ADMIN_NAME
 import com.ducks.repository.UserRepository
-import com.ducks.routing.loginRoute
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
 
 fun Application.configureRouting() {
@@ -16,18 +13,12 @@ fun Application.configureRouting() {
     val userRepository by inject<UserRepository>()
 
     routing {
-        loginRoute(userRepository)
+        clientLoginRoute(userRepository)
 
-        authenticate {
-            route("/api") {
-                get("/nothing") {
-                    val phone = call.principal<JWTPrincipal>()?.payload?.getClaim("userPhoneNumber")?.asString()
+        commonRoute()
 
-                    println("User phone number -> $phone")
-
-                    call.respond(HttpStatusCode.OK, "Hello Andrew Duck!")
-                }
-            }
+        authenticate(JWT_ADMIN_NAME) {
+            adminRoute()
         }
     }
 }
