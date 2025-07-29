@@ -1,17 +1,16 @@
 package com.ducks.shops.common.data
 
-import com.ducks.shops.database.entity.ShopProductEntity
-import com.ducks.shops.database.entity.ShopProductsWithSizesEntity
+import com.ducks.shops.common.dto.*
 import com.ducks.shops.common.mapper.toDto
 import com.ducks.shops.common.model.SeasonModel
 import com.ducks.shops.common.model.getSeasonModelById
+import com.ducks.shops.database.entity.ShopProductEntity
+import com.ducks.shops.database.entity.ShopProductsWithSizesEntity
 import com.ducks.shops.database.rowmappers.mapToCategoryDTO
 import com.ducks.shops.database.rowmappers.mapToChildSizeDTO
 import com.ducks.shops.database.rowmappers.mapToColorDTO
 import com.ducks.shops.database.rowmappers.mapToSearchShopProductDTO
-import com.ducks.shops.common.dto.*
 import com.ducks.shops.database.table.*
-import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
@@ -165,29 +164,21 @@ class ShopProductsDataSource {
     }
 
     fun getShopProduct(
-        id: Long,
+        productId: Long,
         sizes: List<ShopProductChildSizeDTO>,
     ): ShopProductDTO {
-        return ShopProductEntity[id].toDto(sizes)
+        return ShopProductEntity[productId].toDto(sizes)
     }
 
     fun requestSizesByProduct(
-        id: Long
+        productId: Long
     ): List<ShopProductChildSizeDTO> {
         return ShopProductsWithSizesTable
             .join(ShopProductSizeTable, JoinType.INNER, ShopProductsWithSizesTable.size, ShopProductSizeTable.id)
             .select(ShopProductSizeTable.columns)
-            .where(ShopProductsWithSizesTable.product eq id)
+            .where(ShopProductsWithSizesTable.product eq productId)
             .map {
                 it.mapToChildSizeDTO()
             }
-    }
-
-    private fun mapAggregatedSizesToDTO(jsonSizes: String) =
-        Json.decodeFromString<List<ShopProductChildSizeDTO>>(jsonSizes)
-
-    private fun uploadImageUrl() {
-//        val fileName = "${UUID.randomUUID()}.$ext"
-//        val file = File("uploads/$fileName")
     }
 }
