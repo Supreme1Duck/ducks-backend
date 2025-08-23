@@ -1,6 +1,6 @@
 package com.ducks.admin.database
 
-import com.ducks.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 

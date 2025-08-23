@@ -3,7 +3,7 @@ package com.ducks.admin.repository
 import com.ducks.admin.database.ShopCredentialsTable
 import com.ducks.admin.repository.result.CreateShopResult
 import com.ducks.admin.request.CreateShopRequest
-import com.ducks.shops.database.table.ShopTable
+import com.ducks.features.shops.database.table.ShopTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId

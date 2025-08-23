@@ -1,0 +1,21 @@
+package com.ducks.features.coffeeshops.seller.data
+
+const val UPDATE_MAP_COFFEE_SHOP_NAME = "name"
+const val UPDATE_MAP_COFFEE_SHOP_ADDRESS = "address"
+const val UPDATE_MAP_COFFEE_SHOP_DESCRIPTION = "description"
+const val UPDATE_MAP_COFFEE_SHOP_CLOSED = "isTemporaryClosed"
+const val UPDATE_MAP_COFFEE_SHOP_TAGS = "tags"
+const val UPDATE_MAP_COFFEE_SHOP_CLOSEST_COOK_TIME = "closestCookTime"
+const val UPDATE_MAP_COFFEE_SHOP_COOK_TIME = "cookTime"
+const val UPDATE_MAP_COFFEE_SHOP_IMAGES = "imageUrls"
+const val UPDATE_MAP_COFFEE_SHOP_SEATS = "seatsCapacity"
+
+const val UPDATE_MAP_COFFEE_PRODUCT_NAME = "name"
+const val UPDATE_MAP_COFFEE_PRODUCT_DESCRIPTION = "description"
+const val UPDATE_MAP_COFFEE_PRODUCT_SIZE = "sizes"
+const val UPDATE_MAP_COFFEE_PRODUCT_IMAGE = "imageUrl"
+const val UPDATE_MAP_COFFEE_PRODUCT_CATEGORY = "category"
+const val UPDATE_MAP_COFFEE_PRODUCT_CARBOHYDRATES = "carbohydrates"
+const val UPDATE_MAP_COFFEE_PRODUCT_FATS = "fats"
+const val UPDATE_MAP_COFFEE_PRODUCT_PROTEIN = "protein"
+const val UPDATE_MAP_COFFEE_PRODUCT_CALORIES = "calories"

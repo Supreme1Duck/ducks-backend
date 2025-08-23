@@ -4,9 +4,9 @@ import com.ducks.admin.database.CoffeeShopCredentialsTable
 import com.ducks.admin.database.ShopCredentialsTable
 import com.ducks.admin.repository.result.CreateShopResult
 import com.ducks.admin.request.CreateCoffeeShopRequest
-import com.ducks.coffeeshops.database.CoffeeProductCategoryTable
-import com.ducks.coffeeshops.database.CoffeeShopTable
-import com.ducks.coffeeshops.seller.domain.SellerConstructorsRepository
+import com.ducks.features.coffeeshops.database.CoffeeProductCategoryTable
+import com.ducks.features.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.coffeeshops.seller.domain.SellerConstructorsRepository
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert

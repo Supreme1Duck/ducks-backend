@@ -3,15 +3,16 @@ package com.ducks.auth.client
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.ducks.auth.DucksJWTService
-import com.ducks.repository.UserRepository
 import com.ducks.auth.Roles
+import com.ducks.features.user.data.UsersRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.jwt.*
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 class JWTClientService(
     application: Application,
-    private val userRepository: UserRepository,
+    private val userRepository: UsersRepository,
 ) : DucksJWTService(application) {
     companion object {
         const val PHONE_CLAIM = "userPhoneNumberClaim"
@@ -23,7 +24,12 @@ class JWTClientService(
 
     fun customValidator(credential: JWTCredential): JWTClientPrincipal? {
         val userPhone = extractPhoneNumber(credential)
-        val user = userPhone?.let(userRepository::getUserByPhoneNumber)
+
+        val user = runBlocking {
+            userPhone?.let {
+                userRepository.getUserByPhone(it)
+            }
+        }
 
         return user?.let {
             if (audienceMatches(credential)) {

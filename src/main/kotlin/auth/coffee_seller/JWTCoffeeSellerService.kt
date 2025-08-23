@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.ducks.auth.DucksJWTService
 import com.ducks.auth.Roles
-import com.ducks.coffeeshops.common.domain.CoffeeShopsRepository
+import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.jwt.*
 import java.util.*

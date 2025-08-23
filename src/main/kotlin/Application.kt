@@ -3,7 +3,7 @@ package com.ducks
 import com.ducks.database.installDB
 import com.ducks.plugin.installAuth
 import com.ducks.plugin.installDI
-import com.ducks.plugin.installSerialization
+import com.ducks.plugin.installServerPlugins
 import com.ducks.routings.configureRouting
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -14,7 +14,7 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 // Используется в application.yaml для старта сервера
 fun Application.module() {
 
-    installSerialization()
+    installServerPlugins()
     installDI()
     installAuth()
     installDB()

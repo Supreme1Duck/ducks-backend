@@ -1,0 +1,16 @@
+package com.ducks.features.shops.common.dto
+
+import kotlinx.serialization.Serializable
+import util.BigDecimalSerializer
+import java.math.BigDecimal
+
+@Serializable
+data class SearchShopProductDTO(
+    val id: Long,
+    val name: String,
+    val brandName: String?,
+    val shopName: String,
+    @Serializable(with = BigDecimalSerializer::class)
+    val price: BigDecimal?,
+    val imageUrls: List<String>,
+)

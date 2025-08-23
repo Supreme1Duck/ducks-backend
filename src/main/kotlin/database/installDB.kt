@@ -1,12 +1,12 @@
 package com.ducks.database
 
-import com.ducks.shops.seller.domain.ShopProductInteractor
-import com.ducks.shops.common.model.ShopModel
-import com.ducks.shops.common.model.ShopProductModel
-import com.ducks.shops.common.repository.ShopProductCategoryRepository
-import com.ducks.shops.common.repository.ShopProductSizesRepository
-import com.ducks.shops.common.repository.ShopProductsRepository
-import com.ducks.shops.common.repository.ShopsRepository
+import com.ducks.features.shops.seller.domain.ShopProductInteractor
+import com.ducks.features.shops.common.model.ShopModel
+import com.ducks.features.shops.common.model.ShopProductModel
+import com.ducks.features.shops.common.repository.ShopProductCategoryRepository
+import com.ducks.features.shops.common.repository.ShopProductSizesRepository
+import com.ducks.features.shops.common.repository.ShopProductsRepository
+import com.ducks.features.shops.common.repository.ShopsRepository
 import database.DatabaseFactory
 import io.ktor.server.application.*
 import kotlinx.coroutines.CoroutineScope
