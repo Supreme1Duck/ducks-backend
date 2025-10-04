@@ -1,10 +1,10 @@
 package com.ducks.features.coffeeshops.seller.data
 
+import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
 import com.ducks.features.coffeeshops.seller.routings.request.products.CoffeeProductSizeRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
-import com.ducks.common.data.UpdateMap
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
@@ -39,6 +39,7 @@ class SellerCoffeeProductDataSource {
                 }
 
                 table[imageUrl] = productRequest.imageUrl
+                table[secondsToCook] = productRequest.secondsToCook
 
                 table[carbohydrates] = productRequest.carbohydrates
                 table[protein] = productRequest.protein

@@ -1,16 +1,18 @@
 package com.ducks.features.coffeeshops.seller.routings
 
+import com.ducks.common.data.SaveImageResult
 import com.ducks.features.coffeeshops.seller.domain.CoffeeShopImageRepository
 import com.ducks.features.coffeeshops.seller.domain.SellerCoffeeProductRepository
 import com.ducks.features.coffeeshops.seller.domain.SellerCoffeeShopRepository
 import com.ducks.features.coffeeshops.seller.getCoffeeShopSellerPrincipal
-import com.ducks.common.data.SaveImageResult
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.DeleteCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCoffeeShopScheduleRequest
+import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTechnicalPauseRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.UpdateCoffeeShopRequest
 import com.ducks.features.shops.seller.getSellerPrincipal
+import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -24,7 +26,7 @@ fun Route.shopsAndProductsRoute() {
     val coffeeImagesRepository by application.inject<CoffeeShopImageRepository>()
 
     post("/shop/update") {
-        try {
+        ducksTryCatch {
             val request = call.receive<UpdateCoffeeShopRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
@@ -38,26 +40,48 @@ fun Route.shopsAndProductsRoute() {
             )
 
             call.respond(HttpStatusCode.NoContent)
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 
     post("/shops/schedule") {
-        try {
+        ducksTryCatch {
             val shopId = getSellerPrincipal().shopId
             val request = call.receive<SetCoffeeShopScheduleRequest>()
 
             coffeeShopsRepository.setSchedule(shopId, request)
 
             call.respond(HttpStatusCode.Created)
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
+        }
+    }
+
+    post("/shops/technical-pause") {
+        ducksTryCatch {
+            val shopId = getSellerPrincipal().shopId
+            val request = call.receive<SetTechnicalPauseRequest>()
+
+            coffeeShopsRepository.addTechnicalPause(
+                shopId = shopId,
+                startsAt = request.startsAt,
+                endsAt = request.endsAt
+            )
+
+            call.respond(HttpStatusCode.Created)
+        }
+    }
+
+    delete("/shops/technical-pause") {
+        ducksTryCatch {
+            val shopId = getSellerPrincipal().shopId
+            val pauseId = call.parameters["pauseId"]!!.toLong()
+
+            coffeeShopsRepository.deletePause(pauseId = pauseId, shopId = shopId)
+
+            call.respond(HttpStatusCode.Created)
         }
     }
 
     post("/product/create") {
-        try {
+        ducksTryCatch {
             val request = call.receive<CreateCoffeeProductRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
@@ -67,40 +91,33 @@ fun Route.shopsAndProductsRoute() {
             )
 
             call.respond(HttpStatusCode.Created)
-        } catch (e: Exception) {
-            println("$e")
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 
     post("/product/update") {
-        try {
+        ducksTryCatch {
             val request = call.receive<UpdateCoffeeProductRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
             coffeeProductsRepository.update(shopId = principalShopId, data = request)
 
             call.respond(HttpStatusCode.NoContent)
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 
     delete("/product/delete") {
-        try {
+        ducksTryCatch {
             val request = call.receive<DeleteCoffeeProductRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
             coffeeProductsRepository.delete(shopId = principalShopId, productId = request.productId)
 
             call.respond(HttpStatusCode.NoContent)
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 
     post("/image/upload") {
-        try {
+        ducksTryCatch {
             getCoffeeShopSellerPrincipal()
 
             val request = call.receiveMultipart()
@@ -120,13 +137,11 @@ fun Route.shopsAndProductsRoute() {
                     }
                 }
             }
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 
     post("/product/upload/image") {
-        try {
+        ducksTryCatch {
             getCoffeeShopSellerPrincipal()
 
             val request = call.receiveMultipart()
@@ -146,8 +161,6 @@ fun Route.shopsAndProductsRoute() {
                     }
                 }
             }
-        } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 }

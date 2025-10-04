@@ -15,7 +15,8 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
         userPhoneNumber = this[UserTable.phoneNumber],
         comment = this[CoffeeOrdersTable.comment],
         products = products,
-        isActive =  this[CoffeeOrdersTable.acceptedTime.isNotNull()] and this[CoffeeOrdersTable.finishedTime.isNull()]
+        isActive =  this[CoffeeOrdersTable.acceptedTime.isNotNull()] and this[CoffeeOrdersTable.finishedTime.isNull()],
+        price = this[CoffeeOrdersTable.price],
     )
 }
 
@@ -27,6 +28,6 @@ fun ResultRow.toOrderProductDTO(): OrderProductDTO {
         name = this[CoffeeOrderedProductsTable.productName],
         constructors = this[CoffeeOrderedProductsTable.constructors],
         imageUrl = this[CoffeeOrderedProductsTable.imageUrl],
-        price = this[CoffeeOrderedProductsTable.price],
+        size = this[CoffeeOrderedProductsTable.selectedSize],
     )
 }

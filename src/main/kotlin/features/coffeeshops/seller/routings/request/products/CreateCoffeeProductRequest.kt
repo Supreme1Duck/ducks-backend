@@ -14,6 +14,8 @@ data class CreateCoffeeProductRequest(
 
     val imageUrl: String,
 
+    val secondsToCook: Int,
+
     val carbohydrates: String? = null,
     val protein: String? = null,
     val fats: String? = null,

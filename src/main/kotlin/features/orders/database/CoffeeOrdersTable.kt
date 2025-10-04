@@ -12,11 +12,16 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
     val createdTime = long("created_timestamp")
     val acceptedTime = long("accepted_timestamp").nullable()
     val finishedTime = long("finished_time").nullable()
-    val cancelledBySellerTime = long("cancelled_by_seller_time").nullable()
-    val cancelledByClientTime = long("cancelled_by_client_time").nullable()
+    val isCancelledBySeller = bool("isCancelledBySeller").default(false)
     val cancelledMessage = text("cancelled_message").nullable()
+
+    val isExpired = bool("isExpired").default(false)
+    val isCancelledByClient = bool("isCancelledByClient").default(false)
 
     val comment = text("comment").nullable()
 
+    val price = decimal("price", precision = 15, scale = 2)
+
+    val timeToCookInMinutes = integer("time_to_cook_in_minutes")
     val estimatedFinishTime = long("estimated_finish_time").nullable()
 }

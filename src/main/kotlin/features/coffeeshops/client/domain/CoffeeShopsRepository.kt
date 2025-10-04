@@ -1,14 +1,17 @@
 package com.ducks.features.coffeeshops.client.domain
 
-import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
+import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopWithProductsDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
+import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
+import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 class CoffeeShopsRepository(
     private val shopsDataSource: CoffeeShopsDataSource,
     private val productDataSource: CoffeeProductsDataSource,
+    private val fetchAvailableOrdersTimeListRepository: FetchAvailableOrdersTimeListRepository,
 ) {
 
     suspend fun exists(shopId: Long): Boolean {
@@ -34,5 +37,15 @@ class CoffeeShopsRepository(
         return newSuspendedTransaction {
             shopsDataSource.getAllShops(lastId, limit)
         }
+    }
+
+    suspend fun getOrdersTimeList(
+        shopId: Long,
+        estimatedOrderFinishTimeInMinutes: Int,
+    ): List<Long> {
+        return fetchAvailableOrdersTimeListRepository.invoke(
+            shopId = shopId,
+            estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes,
+        ) ?: throw DucksBadRequestError("У кофешопа нет свободного время для заказа.")
     }
 }

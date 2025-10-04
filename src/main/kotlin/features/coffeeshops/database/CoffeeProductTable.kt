@@ -16,12 +16,14 @@ object CoffeeProductTable: LongIdTable("ducks_coffee_shop_product_table") {
 
     val shopId = reference("shop_id", CoffeeShopTable)
     val sizes = json(
-        "sizes",
+        name = "sizes",
         serialize = CoffeeShopSizeSerializer::serialize,
         deserialize = CoffeeShopSizeSerializer::deserialize,
     )
 
     val imageUrl = text("imageUrl")
+
+    val secondsToCook = integer("seconds_to_cook")
 
     val carbohydrates = varchar("carbohydrates", 15).nullable()
     val protein = varchar("protein", 15).nullable()

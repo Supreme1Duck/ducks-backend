@@ -1,8 +1,8 @@
 package com.ducks.features.coffeeshops.seller.data
 
+import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
-import com.ducks.common.data.UpdateMap
 import com.ducks.features.shops.database.table.ShopProductTable
 import com.ducks.features.shops.database.table.ShopTable
 import kotlinx.serialization.json.Json
@@ -38,10 +38,6 @@ class SellerCoffeeShopsDataSource {
 
                     UPDATE_MAP_COFFEE_SHOP_COOK_TIME -> {
                         table[secondsToCook] = Json.decodeFromJsonElement<Int>(it.value)
-                    }
-
-                    UPDATE_MAP_COFFEE_SHOP_CLOSEST_COOK_TIME -> {
-                        table[closestTimeToCookInMinutes] = Json.decodeFromJsonElement<Int>(it.value)
                     }
 
                     UPDATE_MAP_COFFEE_SHOP_CLOSED -> {

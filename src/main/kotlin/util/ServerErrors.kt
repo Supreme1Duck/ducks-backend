@@ -16,6 +16,8 @@ suspend fun RoutingContext.ducksTryCatch(
     } catch (e: DucksBadRequestError) {
         call.respond(HttpStatusCode.BadRequest, e.message.orEmpty())
     } catch (e: Exception) {
+        println("$e")
+        println(e.printStackTrace())
         call.respond(HttpStatusCode.InternalServerError, e.localizedMessage)
     }
 }

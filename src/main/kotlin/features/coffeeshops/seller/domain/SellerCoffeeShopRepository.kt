@@ -1,17 +1,18 @@
 package com.ducks.features.coffeeshops.seller.domain
 
+import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.coffeeshops.database.CoffeeShopTechnicalPausesTable
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
 import com.ducks.features.coffeeshops.seller.data.UPDATE_MAP_COFFEE_SHOP_IMAGES
-import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.seller.routings.request.shop.*
+import com.ducks.util.DucksBadRequestError
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.jdbc.batchInsert
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 class SellerCoffeeShopRepository(
@@ -30,6 +31,50 @@ class SellerCoffeeShopRepository(
                 val newImages = Json.decodeFromJsonElement<List<String>>(updateMap[UPDATE_MAP_COFFEE_SHOP_IMAGES]!!)
                 deleteUnusedImages(shopId, newImages)
             }
+        }
+    }
+
+    suspend fun addTechnicalPause(
+        shopId: Long,
+        startsAt: Long,
+        endsAt: Long,
+    ) {
+        return newSuspendedTransaction {
+            if (endsAt < System.currentTimeMillis() || endsAt <= startsAt) {
+                throw DucksBadRequestError("Неверное время окончания паузы!")
+            }
+
+            val activePauseAlreadyExists = CoffeeShopTechnicalPausesTable
+                .selectAll()
+                .where { (CoffeeShopTechnicalPausesTable.coffeeShop eq shopId) and (CoffeeShopTechnicalPausesTable.isActive eq true) }
+                .firstOrNull() != null
+
+            if (activePauseAlreadyExists) {
+                throw DucksBadRequestError("Мы пока не поддерживаем несколько активных пауз")
+            }
+
+            CoffeeShopTechnicalPausesTable.insert {
+                it[CoffeeShopTechnicalPausesTable.startsAt] = startsAt
+                it[CoffeeShopTechnicalPausesTable.endsAt] = endsAt
+                it[coffeeShop] = shopId
+            }
+        }
+    }
+
+    suspend fun deletePause(
+        pauseId: Long,
+        shopId: Long,
+    ) {
+        return newSuspendedTransaction {
+            CoffeeShopTechnicalPausesTable
+                .update(
+                    where = {
+                        (CoffeeShopTechnicalPausesTable.id eq pauseId) and
+                                (CoffeeShopTechnicalPausesTable.coffeeShop eq shopId)
+                    }
+                ) {
+                    it[isActive] = false
+                }
         }
     }
 

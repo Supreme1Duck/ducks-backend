@@ -21,16 +21,18 @@ class ObserveOrdersRepository {
         return newSuspendedTransaction {
             val orders = CoffeeOrdersTable
                 .join(
-                    UserTable,
+                    otherTable = UserTable,
                     joinType = JoinType.LEFT,
-                    CoffeeOrdersTable.userId,
-                    UserTable.id,
+                    onColumn = CoffeeOrdersTable.userId,
+                    otherColumn = UserTable.id,
                 )
                 .selectAll()
                 .where {
                     (isActive() or isPending()) and (CoffeeOrdersTable.coffeeShop eq shopId)
                 }
                 .map {
+                    // TODO добавить запрос на продукты заказа
+
                     it.mapToOrderDTO(emptyList())
                 }
 
@@ -63,9 +65,6 @@ class ObserveOrdersRepository {
     }
 
     private fun isPending(): Op<Boolean> {
-        return (CoffeeOrdersTable.acceptedTime.isNull()
-                and CoffeeOrdersTable.finishedTime.isNull()
-                and CoffeeOrdersTable.cancelledByClientTime.isNull()
-                and CoffeeOrdersTable.cancelledBySellerTime.isNull())
+        return (CoffeeOrdersTable.acceptedTime.isNull() and CoffeeOrdersTable.finishedTime.isNull())
     }
 }

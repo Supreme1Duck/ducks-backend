@@ -5,6 +5,7 @@ import com.ducks.plugin.installAuth
 import com.ducks.plugin.installDI
 import com.ducks.plugin.installServerPlugins
 import com.ducks.routings.configureRouting
+import com.ducks.service.runServices
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 
@@ -18,6 +19,8 @@ fun Application.module() {
     installDI()
     installAuth()
     installDB()
+
+    runServices()
 
     configureRouting()
 }

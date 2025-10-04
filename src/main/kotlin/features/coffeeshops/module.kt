@@ -9,18 +9,12 @@ import com.ducks.features.coffeeshops.seller.data.SellerCoffeeCategoriesReposito
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeConstructorsDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeProductDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
-import com.ducks.features.coffeeshops.seller.domain.CoffeeShopImageRepository
-import com.ducks.features.coffeeshops.seller.domain.SellerCoffeeProductRepository
-import com.ducks.features.coffeeshops.seller.domain.SellerCoffeeShopRepository
-import com.ducks.features.coffeeshops.seller.domain.SellerConstructorsRepository
-import com.ducks.features.coffeeshops.client.domain.ClientOrdersRepository
-import com.ducks.features.coffeeshops.seller.domain.ObserveOrdersRepository
-import com.ducks.features.coffeeshops.seller.domain.OrdersRepository
+import com.ducks.features.coffeeshops.seller.domain.*
 import org.koin.dsl.module
 
 val coffeeShopsModule = module {
 
-    single { CoffeeShopsRepository(get(), get()) }
+    single { CoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeProductsRepository(get()) }
 
     single { CoffeeShopsDataSource() }
@@ -40,6 +34,5 @@ val coffeeShopsModule = module {
     single { JWTCoffeeSellerService(get(), get()) }
 
     single { ObserveOrdersRepository() }
-    single { OrdersRepository() }
-    single { ClientOrdersRepository() }
+    single { SellerOrdersRepository(get()) }
 }

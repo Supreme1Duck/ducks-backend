@@ -32,8 +32,11 @@ fun Route.authRoute() {
         val request = call.receive<LoginRequest>()
 
         if (request.otp == "1234") {
-            userRepository.saveUser(request)
-            val token = jwtService.generateClientToken(request.phoneNumber)
+            val userId = userRepository.saveUserAndGetId(request = request)
+            val token = jwtService.generateClientToken(
+                userId = userId,
+                phoneNumber = request.phoneNumber,
+            )
 
             call.respond(message = token.toString(), status = HttpStatusCode.OK)
         } else {

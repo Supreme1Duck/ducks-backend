@@ -6,18 +6,20 @@ import java.math.BigDecimal
 
 @Serializable
 class CreateOrderRequest(
-    val clientId: Long,
     val shopId: Long,
     val products: List<OrderProductRequest>,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
     val comment: String?,
+
+    // Является ли заказ "ко времени"
+    val isToTime: Boolean = false,
+    val estimatedTimeToFinish: Long,
 )
 
 @Serializable
 class OrderProductRequest(
     val productId: Long,
-    val sizeId: Long?,
+    val sizeName: String,
     val constructorIds: List<Long>?,
-    val needToCook: Boolean,
 )

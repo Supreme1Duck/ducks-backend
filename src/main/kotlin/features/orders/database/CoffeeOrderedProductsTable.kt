@@ -1,19 +1,24 @@
 package com.ducks.features.orders.database
 
+import com.ducks.features.orders.database.model.ConstructorListSerializer
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.json.json
 
 object CoffeeOrderedProductsTable: LongIdTable("ducks_coffee_ordered_products_table") {
 
     val orderId = reference("order_id", CoffeeOrdersTable)
 
     val productName = text("product_name")
+    val productId = long("product_id")
     val imageUrl = text("image_url").nullable()
 
-    // Списки через запятую
-    val constructors = text("constructors").nullable()
-    val constructorIds = text("constructor_ids").nullable()
+    val constructors = json(
+        name = "constructors",
+        serialize = ConstructorListSerializer::serialize,
+        deserialize = ConstructorListSerializer::deserialize,
+    ).nullable()
 
-    val needToCook = bool("need_to_cook").default(false)
+    val selectedSize = text("size").nullable()
 
-    val price = decimal("price", precision = 15, scale = 2)
+    val secondsToCook = integer("seconds_to_cook").nullable()
 }

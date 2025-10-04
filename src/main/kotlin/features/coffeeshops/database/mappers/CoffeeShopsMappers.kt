@@ -48,7 +48,7 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
         lowestPrice = this[CoffeeShopTable.lowestPrice],
         workTime = workTime,
         seatsCapacity = this[CoffeeShopTable.seatsCapacity],
-        closestTime = this[CoffeeShopTable.closestTimeToCookInMinutes],
+        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
     )
 }
 
