@@ -49,9 +49,9 @@ class CalculateCoffeeShopsOrdersTimeService(
 
     private suspend fun updateShopsClosestTimeToTakeOrders(coffeeShopId: Long) {
         newSuspendedTransaction {
-            val allActiveOrdersEstimatedFinishTime = fetchAvailableOrdersTimeListRepository.getAllBusyTimeSlots(coffeeShopId)
+            val allBusyTimeSlots = fetchAvailableOrdersTimeListRepository.getAllBusyTimeSlots(coffeeShopId)
 
-            val closestTimeToTakeOrders = fetchAvailableOrdersTimeListRepository.calculateClosestTimeToTakeOrder(allActiveOrdersEstimatedFinishTime)
+            val closestTimeToTakeOrders = fetchAvailableOrdersTimeListRepository.calculateClosestTimeToTakeOrder(allBusyTimeSlots)
 
             updateDB(coffeeShopId = coffeeShopId, closestTimeToTakeOrders = closestTimeToTakeOrders)
         }

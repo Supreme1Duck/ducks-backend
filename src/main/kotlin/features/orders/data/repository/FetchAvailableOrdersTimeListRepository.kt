@@ -20,10 +20,16 @@ class FetchAvailableOrdersTimeListRepository {
 
             val busyTimeSlots = getAllBusyTimeSlots(shopId)
 
-            val closestTimeToTakeOrder = calculateClosestTimeToTakeOrder(busyTimeSlots) ?: return@newSuspendedTransaction null
+            val closestTimeToTakeOrder =
+                calculateClosestTimeToTakeOrder(busyTimeSlots) ?: return@newSuspendedTransaction null
 
             val availableOrderTimeList =
-                calculateAvailableOrderTimeList(closestTimeToTakeOrder, maxOrderTime, busyTimeSlots, estimatedOrderFinishTimeInMinutes)
+                calculateAvailableOrderTimeList(
+                    orderTimeStartsFrom = closestTimeToTakeOrder,
+                    maxOrderTime = maxOrderTime,
+                    busyTimeSlots = busyTimeSlots,
+                    estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes
+                )
 
             availableOrderTimeList
         }
@@ -112,26 +118,29 @@ class FetchAvailableOrdersTimeListRepository {
     private fun calculateAvailableOrderTimeList(
         orderTimeStartsFrom: Long,
         maxOrderTime: Long,
-        ordersList: List<BusyTimeSlotsData>,
+        busyTimeSlots: List<BusyTimeSlotsData>,
         estimatedOrderFinishTimeInMinutes: Int,
     ): List<Long> {
-        val estimatedOrderFinishTimeInLong = estimatedOrderFinishTimeInMinutes * 60_000
-        val ordersAvailableTimeList = mutableListOf<Long>()
-        var tempOrderTime = orderTimeStartsFrom
+        val durationMs = estimatedOrderFinishTimeInMinutes * 60_000L
+        val available = mutableListOf<Long>()
 
-        while (tempOrderTime < maxOrderTime + estimatedOrderFinishTimeInLong) {
-            var correct = true
-            ordersList.forEach {
-                if (tempOrderTime in it.startTime..it.endTime)
-                    correct = false
+        var tempTime = orderTimeStartsFrom
+
+        while (tempTime + durationMs <= maxOrderTime) {
+            val orderStart = tempTime
+            val orderEnd = tempTime + durationMs
+
+            val isAvailable = busyTimeSlots.none { busySlot ->
+                orderStart < busySlot.endTime && busySlot.startTime < orderEnd
             }
 
-            if (correct)
-                ordersAvailableTimeList.add(tempOrderTime)
+            if (isAvailable) {
+                available.add(tempTime)
+            }
 
-            tempOrderTime += 60_000
+            tempTime += 60_000L
         }
 
-        return ordersAvailableTimeList
+        return available
     }
 }
