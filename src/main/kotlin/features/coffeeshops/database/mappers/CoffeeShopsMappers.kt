@@ -28,6 +28,7 @@ fun ResultRow.mapToCoffeeProductPreviewDTO(): CoffeeShopProductPreviewDTO {
         name = this[CoffeeProductTable.name],
         imageUrl = this[CoffeeProductTable.imageUrl],
         price = this[CoffeeProductTable.priceFrom],
+        inStock = this[CoffeeProductTable.inStock],
         categoryId = this[CoffeeProductTable.categoryId].value,
     )
 }
@@ -66,6 +67,7 @@ fun ResultRow.mapToCoffeeProductWithDetailsDTO(): CoffeeProductWithDetailsDTO {
         imageUrl = this[CoffeeProductTable.imageUrl],
         minPrice = minPrice,
         minSize = "от $minSize",
+        inStock = this[CoffeeProductTable.inStock],
         nutrients = this[CoffeeProductTable.calories]?.let {
             NutrientsDTO(
                 calories = it,

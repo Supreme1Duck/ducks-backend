@@ -25,6 +25,8 @@ object CoffeeProductTable: LongIdTable("ducks_coffee_shop_product_table") {
 
     val secondsToCook = integer("seconds_to_cook")
 
+    val inStock = bool("in_stock").default(true)
+
     val carbohydrates = varchar("carbohydrates", 15).nullable()
     val protein = varchar("protein", 15).nullable()
     val fats = varchar("fats", 15).nullable()

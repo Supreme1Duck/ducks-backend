@@ -12,6 +12,7 @@ data class CoffeeProductWithDetailsDTO(
     @Serializable(with = BigDecimalSerializer::class)
     val minPrice: BigDecimal,
     val minSize: String,
+    val inStock: Boolean,
     val description: String?,
     val nutrients: NutrientsDTO?,
 )

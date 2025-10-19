@@ -93,6 +93,10 @@ class SellerCoffeeProductDataSource {
                             table[imageUrl] = Json.decodeFromJsonElement<String>(it.value)
                         }
 
+                        UPDATE_MAP_COFFEE_PRODUCT_STOCK -> {
+                            table[inStock] = Json.decodeFromJsonElement<Boolean>(it.value)
+                        }
+
                         UPDATE_MAP_COFFEE_PRODUCT_CARBOHYDRATES -> {
                             table[carbohydrates] = Json.decodeFromJsonElement<String?>(it.value)
                         }
