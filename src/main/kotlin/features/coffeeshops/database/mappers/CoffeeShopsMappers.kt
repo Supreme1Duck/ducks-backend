@@ -10,6 +10,7 @@ import com.ducks.features.coffeeshops.database.CoffeeProductTable
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
+import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import org.jetbrains.exposed.v1.core.ResultRow
 
 fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
@@ -42,6 +43,26 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
     }
 
     return CoffeeShopDetailsDTO(
+        id = this[CoffeeShopTable.id].value,
+        name = this[CoffeeShopTable.name],
+        address = this[CoffeeShopTable.address],
+        tags = this[CoffeeShopTable.tags],
+        lowestPrice = this[CoffeeShopTable.lowestPrice],
+        workTime = workTime,
+        seatsCapacity = this[CoffeeShopTable.seatsCapacity],
+        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
+    )
+}
+
+fun ResultRow.mapToSellerCoffeeShopDetailsDTO(): SellerCoffeeShopDetailsDTO {
+    val isClosed = this[CoffeeShopScheduleTable.isClosed]
+    val workTime = if (isClosed) {
+        "закрыто"
+    } else {
+        "${this[CoffeeShopScheduleTable.startTime]} - ${this[CoffeeShopScheduleTable.endTime]}"
+    }
+
+    return SellerCoffeeShopDetailsDTO(
         id = this[CoffeeShopTable.id].value,
         name = this[CoffeeShopTable.name],
         address = this[CoffeeShopTable.address],

@@ -1,7 +1,7 @@
 package com.ducks.features.coffeeshops.routings
 
 import com.ducks.auth.JWT_COFFEE_SELLER_NAME
-import com.ducks.coffeeshops.seller.routings.sellerAuthRoute
+import com.ducks.features.coffeeshops.seller.routings.sellerAuthRoute
 import com.ducks.features.coffeeshops.client.routings.clientRoute
 import com.ducks.features.coffeeshops.seller.routings.sellerOrdersRoute
 import com.ducks.features.coffeeshops.seller.routings.sellersRoute

@@ -25,6 +25,12 @@ fun Route.shopsAndProductsRoute() {
     val coffeeProductsRepository by application.inject<SellerCoffeeProductRepository>()
     val coffeeImagesRepository by application.inject<CoffeeShopImageRepository>()
 
+    get("/shop/details") {
+        val principalShopId = getCoffeeShopSellerPrincipal().shopId
+
+        call.respond(coffeeShopsRepository.getShopDetails(principalShopId))
+    }
+
     post("/shop/update") {
         ducksTryCatch {
             val request = call.receive<UpdateCoffeeShopRequest>()
@@ -43,7 +49,7 @@ fun Route.shopsAndProductsRoute() {
         }
     }
 
-    post("/shops/schedule") {
+    post("/shop/schedule") {
         ducksTryCatch {
             val shopId = getSellerPrincipal().shopId
             val request = call.receive<SetCoffeeShopScheduleRequest>()
@@ -54,7 +60,7 @@ fun Route.shopsAndProductsRoute() {
         }
     }
 
-    post("/shops/technical-pause") {
+    post("/shop/technical-pause") {
         ducksTryCatch {
             val shopId = getSellerPrincipal().shopId
             val request = call.receive<SetTechnicalPauseRequest>()
@@ -69,7 +75,7 @@ fun Route.shopsAndProductsRoute() {
         }
     }
 
-    delete("/shops/technical-pause") {
+    delete("/shop/technical-pause") {
         ducksTryCatch {
             val shopId = getSellerPrincipal().shopId
             val pauseId = call.parameters["pauseId"]!!.toLong()

@@ -1,4 +1,4 @@
-package com.ducks.coffeeshops.seller.routings
+package com.ducks.features.coffeeshops.seller.routings
 
 import com.ducks.admin.api.CoffeeShopCredentialsRepository
 import com.ducks.admin.repository.result.LoginResult

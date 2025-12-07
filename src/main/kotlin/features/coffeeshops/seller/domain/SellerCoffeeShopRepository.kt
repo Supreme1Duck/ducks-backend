@@ -4,21 +4,48 @@ import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTechnicalPausesTable
+import com.ducks.features.coffeeshops.database.mappers.mapToSellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
 import com.ducks.features.coffeeshops.seller.data.UPDATE_MAP_COFFEE_SHOP_IMAGES
+import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.shop.*
 import com.ducks.util.DucksBadRequestError
+import com.ducks.util.TriStateResult
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import java.time.LocalDate
 
 class SellerCoffeeShopRepository(
     private val sellerCoffeeShopDataSource: SellerCoffeeShopsDataSource,
     private val coffeeShopImageRepository: CoffeeShopImageRepository,
 ) {
+
+    suspend fun getShopDetails(shopId: Long): SellerCoffeeShopDetailsDTO {
+        return newSuspendedTransaction {
+            val currentDayOfWeek = LocalDate.now().dayOfWeek
+
+            println("$shopId")
+
+            CoffeeShopTable
+                .join(
+                    CoffeeShopScheduleTable,
+                    joinType = JoinType.LEFT,
+                    CoffeeShopTable.id,
+                    CoffeeShopScheduleTable.shopId,
+                )
+                .selectAll()
+                .where {
+                    (CoffeeShopTable.id eq shopId)
+                }.map {
+                    it.mapToSellerCoffeeShopDetailsDTO()
+                }.first()
+        }
+    }
 
     suspend fun updateShop(
         shopId: Long,
@@ -101,24 +128,32 @@ class SellerCoffeeShopRepository(
     }
 
     suspend fun setSchedule(shopId: Long, schedule: SetCoffeeShopScheduleRequest) {
-        newSuspendedTransaction {
-            CoffeeShopScheduleTable.deleteWhere {
-                CoffeeShopScheduleTable.shopId eq shopId
+        try {
+            newSuspendedTransaction {
+                if (schedule.schedule.size != 7 && schedule.schedule.any { (it.value?.startTime?.length!! > 5 || it.value?.endTime?.length!! > 5) }) {
+                    return@newSuspendedTransaction TriStateResult.Exception.BadRequestException("Неверный формат данных о расписании.")
+                }
+
+                CoffeeShopScheduleTable.deleteWhere {
+                    CoffeeShopScheduleTable.shopId eq shopId
+                }
+
+                val scheduleMap = schedule.schedule.map {
+                    mapDayOfWeek(it.key) to it.value
+                }
+
+                CoffeeShopScheduleTable.batchInsert(scheduleMap) { (dayOfWeek, scheduleData) ->
+                    this[CoffeeShopScheduleTable.shopId] = shopId
+                    this[CoffeeShopScheduleTable.dayOfWeek] = dayOfWeek
+
+                    this[CoffeeShopScheduleTable.isClosed] = scheduleData == null
+
+                    this[CoffeeShopScheduleTable.startTime] = scheduleData?.startTime
+                    this[CoffeeShopScheduleTable.endTime] = scheduleData?.endTime
+                }
             }
-
-            val scheduleMap = schedule.schedule.map {
-                mapDayOfWeek(it.key) to it.value
-            }
-
-            CoffeeShopScheduleTable.batchInsert(scheduleMap) { (dayOfWeek, scheduleData) ->
-                this[CoffeeShopScheduleTable.shopId] = shopId
-                this[CoffeeShopScheduleTable.dayOfWeek] = dayOfWeek
-
-                this[CoffeeShopScheduleTable.isClosed] = scheduleData == null
-
-                this[CoffeeShopScheduleTable.startTime] = scheduleData?.startTime
-                this[CoffeeShopScheduleTable.endTime] = scheduleData?.endTime
-            }
+        } catch (e: Exception) {
+            throw DucksBadRequestError("Ошибка при добавлении расписания - ${e.stackTrace}")
         }
     }
 

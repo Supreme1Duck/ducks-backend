@@ -48,6 +48,7 @@ class CoffeeShopsDataSource {
             .join(CoffeeShopScheduleTable, joinType = JoinType.LEFT, CoffeeShopTable.id, CoffeeShopScheduleTable.shopId)
             .selectAll()
             .where {
+                // TODO пересмотреть проверку dayofweek
                 (CoffeeShopTable.id eq shopId) and (CoffeeShopScheduleTable.dayOfWeek eq currentDayOfWeek.value)
             }.map {
                 it.mapToCoffeeShopDetailsDTO()

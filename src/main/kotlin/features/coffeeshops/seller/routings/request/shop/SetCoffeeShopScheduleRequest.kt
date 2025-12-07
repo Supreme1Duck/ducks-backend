@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SetCoffeeShopScheduleRequest(
-    val schedule: Map<String, WorkTime?>,
+    val schedule: Map<DayOfWeek, WorkTime?>,
 )
 
 @Serializable
@@ -12,6 +12,8 @@ data class WorkTime(
     val startTime: String,
     val endTime: String,
 )
+
+typealias DayOfWeek = String
 
 const val MONDAY_KEY = "monday"
 const val TUESDAY_KEY = "tuesday"
