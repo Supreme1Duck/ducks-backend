@@ -5,8 +5,9 @@ import com.ducks.features.coffeeshops.coffeeShopsModule
 import com.ducks.features.orders.ordersModule
 import com.ducks.features.user.usersModule
 import com.ducks.features.shops.shopsModule
+import com.ducks.service.serviceModule
 import org.koin.dsl.module
 
 fun baseModule() = module {
-    includes(adminsModule, usersModule, shopsModule, coffeeShopsModule, ordersModule)
+    includes(adminsModule, usersModule, shopsModule, coffeeShopsModule, ordersModule, serviceModule)
 }

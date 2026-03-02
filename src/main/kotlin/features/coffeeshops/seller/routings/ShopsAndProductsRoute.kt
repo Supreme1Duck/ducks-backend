@@ -11,7 +11,6 @@ import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCof
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCoffeeShopScheduleRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTechnicalPauseRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.UpdateCoffeeShopRequest
-import com.ducks.features.shops.seller.getSellerPrincipal
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -26,9 +25,29 @@ fun Route.shopsAndProductsRoute() {
     val coffeeImagesRepository by application.inject<CoffeeShopImageRepository>()
 
     get("/shop/details") {
-        val principalShopId = getCoffeeShopSellerPrincipal().shopId
+        ducksTryCatch {
+            val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
-        call.respond(coffeeShopsRepository.getShopDetails(principalShopId))
+            call.respond(coffeeShopsRepository.getShopDetails(principalShopId))
+        }
+    }
+
+    get("/shop/products") {
+        ducksTryCatch {
+            val principalShopId = getCoffeeShopSellerPrincipal().shopId
+
+            call.respond(coffeeProductsRepository.fetchProductsByShop(principalShopId))
+        }
+    }
+
+    get("/products/{id}") {
+        ducksTryCatch {
+            val productId = call.parameters["productId"]!!.toLong()
+
+            val product = coffeeProductsRepository.getProductDetails(productId)
+
+            call.respond(HttpStatusCode.OK, product)
+        }
     }
 
     post("/shop/update") {
@@ -36,14 +55,7 @@ fun Route.shopsAndProductsRoute() {
             val request = call.receive<UpdateCoffeeShopRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
-            if (principalShopId != request.shopId) {
-                throw IllegalStateException("Попытка обновить с чужим токеном")
-            }
-
-            coffeeShopsRepository.updateShop(
-                shopId = request.shopId,
-                updateMap = request.updateMap
-            )
+            coffeeShopsRepository.updateShop(principalShopId, request)
 
             call.respond(HttpStatusCode.NoContent)
         }
@@ -51,7 +63,7 @@ fun Route.shopsAndProductsRoute() {
 
     post("/shop/schedule") {
         ducksTryCatch {
-            val shopId = getSellerPrincipal().shopId
+            val shopId = getCoffeeShopSellerPrincipal().shopId
             val request = call.receive<SetCoffeeShopScheduleRequest>()
 
             coffeeShopsRepository.setSchedule(shopId, request)
@@ -62,7 +74,7 @@ fun Route.shopsAndProductsRoute() {
 
     post("/shop/technical-pause") {
         ducksTryCatch {
-            val shopId = getSellerPrincipal().shopId
+            val shopId = getCoffeeShopSellerPrincipal().shopId
             val request = call.receive<SetTechnicalPauseRequest>()
 
             coffeeShopsRepository.addTechnicalPause(
@@ -77,10 +89,9 @@ fun Route.shopsAndProductsRoute() {
 
     delete("/shop/technical-pause") {
         ducksTryCatch {
-            val shopId = getSellerPrincipal().shopId
-            val pauseId = call.parameters["pauseId"]!!.toLong()
+            val shopId = getCoffeeShopSellerPrincipal().shopId
 
-            coffeeShopsRepository.deletePause(pauseId = pauseId, shopId = shopId)
+            coffeeShopsRepository.deletePause(shopId = shopId)
 
             call.respond(HttpStatusCode.Created)
         }

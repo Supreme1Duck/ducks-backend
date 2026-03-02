@@ -13,6 +13,8 @@ data class CoffeeShopProductPreviewDTO(
     val inStock: Boolean,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
+    val minutesToCook: Int?,
+    val shopId: Long,
 )
 
 

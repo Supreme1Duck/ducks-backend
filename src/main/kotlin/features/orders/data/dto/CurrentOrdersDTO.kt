@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CurrentOrdersDTO(
-    val activeOrdersDTO: List<OrderDTO>?,
+    val activeOrders: List<OrderDTO>?,
     val pendingOrders: List<OrderDTO>,
 )

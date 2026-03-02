@@ -1,10 +1,10 @@
 package com.ducks.features.shops.seller.routing.routes
 
+import com.ducks.common.data.DeleteImageResult
+import com.ducks.common.data.SaveImageResult
 import com.ducks.features.shops.common.model.ShopProductModel
 import com.ducks.features.shops.seller.analytics.SellersAnalytics
 import com.ducks.features.shops.seller.domain.ShopImageRepository
-import com.ducks.common.data.DeleteImageResult
-import com.ducks.common.data.SaveImageResult
 import com.ducks.features.shops.seller.domain.ShopProductInteractor
 import com.ducks.features.shops.seller.getSellerPrincipal
 import com.ducks.features.shops.seller.routing.request.CreateProductRequest
@@ -56,7 +56,6 @@ fun Route.productsRoute() {
             shopProductInteractor.update(
                 shopId = shopId,
                 productId = product.id,
-                updateParametersMap = product.updateMap,
             )
 
             call.respond(HttpStatusCode.Created)

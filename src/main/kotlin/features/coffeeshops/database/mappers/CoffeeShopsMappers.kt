@@ -1,17 +1,17 @@
 package com.ducks.features.coffeeshops.database.mappers
 
-import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
-import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
-import com.ducks.features.coffeeshops.client.data.model.dto.NutrientsDTO
+import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProductPreviewDTO
-import com.ducks.features.coffeeshops.database.CoffeeProductCategoryTable
-import com.ducks.features.coffeeshops.database.CoffeeProductTable
-import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
-import com.ducks.features.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
+import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopActivePauseDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
+import com.ducks.features.orders.data.model.WorkTimeModel
 import org.jetbrains.exposed.v1.core.ResultRow
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
     return CoffeeShopPreviewDTO(
@@ -31,6 +31,8 @@ fun ResultRow.mapToCoffeeProductPreviewDTO(): CoffeeShopProductPreviewDTO {
         price = this[CoffeeProductTable.priceFrom],
         inStock = this[CoffeeProductTable.inStock],
         categoryId = this[CoffeeProductTable.categoryId].value,
+        minutesToCook = this[CoffeeProductTable.minutesToCook],
+        shopId = this[CoffeeProductTable.shopId].value,
     )
 }
 
@@ -51,52 +53,49 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
         workTime = workTime,
         seatsCapacity = this[CoffeeShopTable.seatsCapacity],
         closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
+        closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
     )
 }
 
-fun ResultRow.mapToSellerCoffeeShopDetailsDTO(): SellerCoffeeShopDetailsDTO {
-    val isClosed = this[CoffeeShopScheduleTable.isClosed]
+fun ResultRow.mapToSellerCoffeeShopDetailsDTO(
+    workTimeModel: WorkTimeModel?,
+    schedule: List<SellerCoffeeShopDetailsDTO.Schedule>,
+): SellerCoffeeShopDetailsDTO {
+    val isClosed = workTimeModel?.isClosed ?: true
+
     val workTime = if (isClosed) {
         "закрыто"
     } else {
-        "${this[CoffeeShopScheduleTable.startTime]} - ${this[CoffeeShopScheduleTable.endTime]}"
+        formatWorkTime(workTimeModel)
+    }
+
+    // Не ошибка, hasValue не работает
+    @Suppress("CONSTANT_CONDITION")
+    val hasActivePause = this[CoffeeShopTechnicalPausesTable.startsAt] != null
+
+    val activePause = if (hasActivePause) {
+        SellerCoffeeShopActivePauseDTO(
+            startsAt = this[CoffeeShopTechnicalPausesTable.startsAt],
+            endsAt = this[CoffeeShopTechnicalPausesTable.endsAt],
+        )
+    } else {
+        null
     }
 
     return SellerCoffeeShopDetailsDTO(
         id = this[CoffeeShopTable.id].value,
         name = this[CoffeeShopTable.name],
         address = this[CoffeeShopTable.address],
+        description = this[CoffeeShopTable.description],
+        imageUrls = this[CoffeeShopTable.imageUrls],
+        schedule = schedule,
         tags = this[CoffeeShopTable.tags],
         lowestPrice = this[CoffeeShopTable.lowestPrice],
         workTime = workTime,
         seatsCapacity = this[CoffeeShopTable.seatsCapacity],
-        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
-    )
-}
-
-fun ResultRow.mapToCoffeeProductWithDetailsDTO(): CoffeeProductWithDetailsDTO {
-    val sizes = this[CoffeeProductTable.sizes]
-    val minPrice = sizes.minOf {
-        it.price ?: 0.toBigDecimal()
-    }
-    val minSize = sizes.first().sizeValue
-
-    return CoffeeProductWithDetailsDTO(
-        id = this[CoffeeProductTable.id].value,
-        name = this[CoffeeProductTable.name],
-        description = this[CoffeeProductTable.description],
-        imageUrl = this[CoffeeProductTable.imageUrl],
-        minPrice = minPrice,
-        minSize = "от $minSize",
-        inStock = this[CoffeeProductTable.inStock],
-        nutrients = this[CoffeeProductTable.calories]?.let {
-            NutrientsDTO(
-                calories = it,
-                carbohydrates = this[CoffeeProductTable.carbohydrates]!!,
-                protein = this[CoffeeProductTable.protein]!!,
-                fats = this[CoffeeProductTable.fats]!!,
-            )
-        }
+        closestTimeToTakeOrder = this[CoffeeShopTable.closestTimeToTakeOrders],
+        activePause = activePause,
+        canTakeOrdersReason = this[CoffeeShopTable.canTakeOrdersReason],
     )
 }
 
@@ -105,4 +104,17 @@ fun ResultRow.mapToCategoryDTO(): CoffeeCategoryDTO {
         id = this[CoffeeProductCategoryTable.id].value,
         name = this[CoffeeProductCategoryTable.name]
     )
+}
+
+private fun formatWorkTime(workTimeModel: WorkTimeModel?) : String {
+    if (workTimeModel == null)
+        return "неизвестно"
+
+    val timeZone = ZoneId.of("Europe/Moscow") // UTC+3, без DST
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    val startTime = Instant.ofEpochMilli(workTimeModel.startTime).atZone(timeZone).toLocalTime()
+    val endTime = Instant.ofEpochMilli(workTimeModel.endTime).atZone(timeZone).toLocalTime()
+
+    return "${startTime.format(formatter)} - ${endTime.format(formatter)}"
 }

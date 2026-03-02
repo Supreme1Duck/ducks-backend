@@ -20,6 +20,7 @@ class CreateOrderRequest(
 @Serializable
 class OrderProductRequest(
     val productId: Long,
-    val sizeName: String,
+    val sizeId: String,
     val constructorIds: List<Long>?,
+    val quantity: Int?,
 )

@@ -1,64 +1,59 @@
 package com.ducks.features.coffeeshops.seller.domain
 
-import com.ducks.common.data.UpdateMap
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTechnicalPausesTable
 import com.ducks.features.coffeeshops.database.mappers.mapToSellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
-import com.ducks.features.coffeeshops.seller.data.UPDATE_MAP_COFFEE_SHOP_IMAGES
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.shop.*
+import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
+import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.util.DucksBadRequestError
-import com.ducks.util.TriStateResult
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import java.time.LocalDate
 
 class SellerCoffeeShopRepository(
     private val sellerCoffeeShopDataSource: SellerCoffeeShopsDataSource,
     private val coffeeShopImageRepository: CoffeeShopImageRepository,
+    private val fetchAvailableOrdersTimeListRepository: FetchAvailableOrdersTimeListRepository,
+    private val shopsClosestTimeService: CalculateCoffeeShopsOrdersTimeService,
 ) {
 
     suspend fun getShopDetails(shopId: Long): SellerCoffeeShopDetailsDTO {
         return newSuspendedTransaction {
-            val currentDayOfWeek = LocalDate.now().dayOfWeek
-
             println("$shopId")
 
             CoffeeShopTable
                 .join(
-                    CoffeeShopScheduleTable,
+                    otherTable = CoffeeShopTechnicalPausesTable,
                     joinType = JoinType.LEFT,
-                    CoffeeShopTable.id,
-                    CoffeeShopScheduleTable.shopId,
+                    onColumn = CoffeeShopTable.id,
+                    otherColumn = CoffeeShopTechnicalPausesTable.coffeeShop,
+                    additionalConstraint = {
+                        (CoffeeShopTechnicalPausesTable.isActive eq true)
+                    }
                 )
                 .selectAll()
                 .where {
                     (CoffeeShopTable.id eq shopId)
                 }.map {
-                    it.mapToSellerCoffeeShopDetailsDTO()
+                    val activeDaySchedule = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shopId)
+                    val schedule = sellerCoffeeShopDataSource.fetchSchedule(shopId)
+
+                    it.mapToSellerCoffeeShopDetailsDTO(activeDaySchedule, schedule)
                 }.first()
         }
     }
 
     suspend fun updateShop(
         shopId: Long,
-        updateMap: UpdateMap,
+        request: UpdateCoffeeShopRequest,
     ) {
-        return newSuspendedTransaction {
-            sellerCoffeeShopDataSource.update(shopId = shopId, updateMap = updateMap)
-
-            if (updateMap.containsKey(UPDATE_MAP_COFFEE_SHOP_IMAGES)) {
-                val newImages = Json.decodeFromJsonElement<List<String>>(updateMap[UPDATE_MAP_COFFEE_SHOP_IMAGES]!!)
-                deleteUnusedImages(shopId, newImages)
-            }
-        }
+        sellerCoffeeShopDataSource.update(shopId, request)
     }
 
     suspend fun addTechnicalPause(
@@ -77,7 +72,11 @@ class SellerCoffeeShopRepository(
                 .firstOrNull() != null
 
             if (activePauseAlreadyExists) {
-                throw DucksBadRequestError("Мы пока не поддерживаем несколько активных пауз")
+                throw DucksBadRequestError("Мы пока не поддерживаем несколько активных пауз!")
+            }
+
+            if (!isActivePauseValid(shopId, startsAt, endsAt)) {
+                throw DucksBadRequestError("Время паузы пересекается с одним из ваших заказов!")
             }
 
             CoffeeShopTechnicalPausesTable.insert {
@@ -85,53 +84,50 @@ class SellerCoffeeShopRepository(
                 it[CoffeeShopTechnicalPausesTable.endsAt] = endsAt
                 it[coffeeShop] = shopId
             }
+
+            shopsClosestTimeService.invoke(shopId)
         }
     }
 
+    // Проверяет пересекается ли время активных и pending заказов с новой паузой.
+    private fun isActivePauseValid(
+        shopId: Long,
+        pauseStartsAt: Long,
+        pauseEndsAt: Long,
+    ): Boolean {
+        val busyTimeSlots = fetchAvailableOrdersTimeListRepository.getAllBusyTimeSlots(shopId)
+
+        busyTimeSlots.forEach { slot ->
+            if (pauseStartsAt <= slot.endTime && slot.startTime <= pauseEndsAt) {
+                return false
+            }
+        }
+
+        return true
+    }
+
     suspend fun deletePause(
-        pauseId: Long,
         shopId: Long,
     ) {
         return newSuspendedTransaction {
             CoffeeShopTechnicalPausesTable
                 .update(
                     where = {
-                        (CoffeeShopTechnicalPausesTable.id eq pauseId) and
-                                (CoffeeShopTechnicalPausesTable.coffeeShop eq shopId)
+                        (CoffeeShopTechnicalPausesTable.coffeeShop eq shopId) and (CoffeeShopTechnicalPausesTable.isActive eq true)
                     }
                 ) {
                     it[isActive] = false
                 }
+
+            shopsClosestTimeService.invoke(shopId)
         }
-    }
-
-    private fun deleteUnusedImages(shopId: Long, imageUrls: List<String>): List<String> {
-        val existingImageUrls = CoffeeShopTable
-            .select(CoffeeShopTable.imageUrls)
-            .where { CoffeeShopTable.id eq shopId }
-            .map { it[CoffeeShopTable.imageUrls] }
-            .first()
-
-        val listToDelete = existingImageUrls?.mapNotNull {
-            if (imageUrls.contains(it)) {
-                null
-            } else {
-                it
-            }
-        }
-
-        listToDelete?.forEach {
-            coffeeShopImageRepository.deleteImage(shopId, it)
-        }
-
-        return imageUrls
     }
 
     suspend fun setSchedule(shopId: Long, schedule: SetCoffeeShopScheduleRequest) {
         try {
             newSuspendedTransaction {
                 if (schedule.schedule.size != 7 && schedule.schedule.any { (it.value?.startTime?.length!! > 5 || it.value?.endTime?.length!! > 5) }) {
-                    return@newSuspendedTransaction TriStateResult.Exception.BadRequestException("Неверный формат данных о расписании.")
+                    throw DucksBadRequestError("Неверный формат данных о расписании.")
                 }
 
                 CoffeeShopScheduleTable.deleteWhere {
@@ -152,6 +148,8 @@ class SellerCoffeeShopRepository(
                     this[CoffeeShopScheduleTable.endTime] = scheduleData?.endTime
                 }
             }
+        } catch (e: DucksBadRequestError) {
+            throw e
         } catch (e: Exception) {
             throw DucksBadRequestError("Ошибка при добавлении расписания - ${e.stackTrace}")
         }

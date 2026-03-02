@@ -19,13 +19,13 @@ val coffeeShopsModule = module {
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }
-    single { CoffeeShopImageRepository() }
+    single { CoffeeShopImageRepository(get()) }
 
     single { SellerCoffeeProductDataSource() }
     single { SellerCoffeeShopsDataSource() }
     single { SellerCoffeeCategoriesRepository() }
 
-    single { SellerCoffeeShopRepository(get(), get()) }
+    single { SellerCoffeeShopRepository(get(), get(), get(), get()) }
     single { SellerCoffeeProductRepository(get(), get()) }
 
     single { SellerCoffeeConstructorsDataSource() }

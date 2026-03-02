@@ -1,12 +1,11 @@
 package com.ducks.features.coffeeshops.seller.domain
 
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
-import com.ducks.features.coffeeshops.database.CoffeeShopTable.closestTimeToTakeOrders
-import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
@@ -23,7 +22,7 @@ class SellerOrdersRepository(
 
     suspend fun acceptOrder(orderId: Long, shopId: Long) {
         newSuspendedTransaction {
-            val currentTime = System.currentTimeMillis()
+            val currentTime = Clock.System.now().toEpochMilliseconds()
 
             val (isOrderCorrect, closestTimeToTakeOrders) = getAdditionalInfo(orderId, shopId)
                 ?: throw DucksBadRequestError("Попытка принять несуществующий заказ")
@@ -32,34 +31,12 @@ class SellerOrdersRepository(
                 throw DucksBadRequestError("Попытка принять невалидный заказ!")
             }
 
-            val secondsToCookAllProducts = CoffeeOrdersTable
-                .join(
-                    otherTable = CoffeeOrderedProductsTable,
-                    joinType = JoinType.LEFT,
-                    onColumn = CoffeeOrdersTable.id,
-                    otherColumn = CoffeeOrderedProductsTable.orderId
-                )
-                .selectAll()
-                .where {
-                    CoffeeOrdersTable.id eq orderId
-                }
-                .map {
-                    it[CoffeeOrderedProductsTable.secondsToCook]
-                }.sumOf {
-                    it ?: 0
-                }
-
-            val closestTimeToCook = closestTimeToTakeOrders ?: throw DucksBadRequestError("У вас нет свободного времени для принятия заказа!")
-
-            val estimatedTimeToFinish = closestTimeToCook + secondsToCookAllProducts.times(1000)
-
             CoffeeOrdersTable.update(
                 where = {
                     CoffeeOrdersTable.id eq orderId
                 }
             ) {
                 it[acceptedTime] = currentTime
-                it[estimatedFinishTime] = estimatedTimeToFinish
             }
         }
 
@@ -68,7 +45,7 @@ class SellerOrdersRepository(
 
     suspend fun cancelBySeller(orderId: Long, shopId: Long, message: String?) {
         newSuspendedTransaction {
-            val currentTime = System.currentTimeMillis()
+            val currentTime = Clock.System.now().toEpochMilliseconds()
 
             val isOrderCancellable = CoffeeOrdersTable
                 .selectAll()
@@ -139,7 +116,7 @@ class SellerOrdersRepository(
                 val isOrderCorrect =
                     it[CoffeeOrdersTable.acceptedTime] == null && it[CoffeeOrdersTable.finishedTime] == null
 
-                isOrderCorrect to it[closestTimeToTakeOrders]
+                isOrderCorrect to it[CoffeeShopTable.closestTimeToTakeOrders]
             }
             .firstOrNull()
     }

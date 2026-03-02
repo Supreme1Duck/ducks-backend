@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 class CancelBySellerRequest(
     val orderId: Long,
-    val message: String?,
+    val message: String? = null,
 )

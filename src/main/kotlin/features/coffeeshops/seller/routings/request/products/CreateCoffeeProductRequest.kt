@@ -14,7 +14,9 @@ data class CreateCoffeeProductRequest(
 
     val imageUrl: String,
 
-    val secondsToCook: Int,
+    val minutesToCook: Int?,
+
+    val constructors: List<CoffeeCreateConstructorRequest>? = null,
 
     val carbohydrates: String? = null,
     val protein: String? = null,
@@ -24,8 +26,28 @@ data class CreateCoffeeProductRequest(
 
 @Serializable
 data class CoffeeProductSizeRequest(
+    val id: String,
     val sizeName: String? = null,
-    val sizeValue: String? = null,
+    val sizeValue: String,
     @Serializable(with = BigDecimalSerializer::class)
-    val price: BigDecimal?,
+    val price: BigDecimal,
+)
+
+@Serializable
+data class CoffeeCreateConstructorRequest(
+    val category: CoffeeCategoryConstructorRequest,
+    val constructors: List<CoffeeConstructorRequest>,
+)
+
+@Serializable
+data class CoffeeCategoryConstructorRequest(
+    val id: Long,
+    val defaultConstructorIds: List<Long>? = null,
+    val maxSelection: Int? = null,
+    val minSelection: Int? = null,
+)
+
+@Serializable
+data class CoffeeConstructorRequest(
+    val id: Long,
 )

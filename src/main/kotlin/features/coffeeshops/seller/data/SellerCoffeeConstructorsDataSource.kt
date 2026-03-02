@@ -1,16 +1,18 @@
 package com.ducks.features.coffeeshops.seller.data
 
-import com.ducks.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
 import com.ducks.features.coffeeshops.database.CoffeeConstructorCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
 import com.ducks.features.coffeeshops.database.mappers.mapToConstructorCategoryDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToConstructorDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoriesWithConstructorsDTO
+import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoryDTO
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
 import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -27,10 +29,9 @@ class SellerCoffeeConstructorsDataSource {
                     table[CoffeeConstructorCategoryTable.shopId] = shopId
 
                     table[name] = category.name
-                    table[maxSelection] = category.maxSelection
                 }.value
 
-                val insertedConstructorIds = category.constructors.map { constructor ->
+                category.constructors.map { constructor ->
                     CoffeeConstructorsTable.insertAndGetId { table ->
                         table[CoffeeConstructorsTable.shopId] = shopId
                         table[categoryId] = containerId
@@ -38,14 +39,6 @@ class SellerCoffeeConstructorsDataSource {
                         table[name] = constructor.name
                         table[isInStock] = constructor.isInStock
                     }.value
-                }
-
-                category.defaultConstructorNumber?.let {
-                    updateDefaultConstructor(
-                        categoryId = containerId,
-                        insertedConstructorIds = insertedConstructorIds,
-                        defaultConstructorNumber = it,
-                    )
                 }
             }
         } catch (e: Exception) {
@@ -60,12 +53,10 @@ class SellerCoffeeConstructorsDataSource {
         return CoffeeConstructorCategoryTable.insertAndGetId { table ->
             table[CoffeeConstructorCategoryTable.shopId] = shopId
             table[name] = request.name
-            table[defaultConstructorId] = request.defaultConstructorId
-            table[maxSelection] = request.maxSelection
         }.value
     }
 
-    fun insertNew(
+    fun insertNewConstructor(
         shopId: Long,
         request: CreateConstructorRequest
     ): Long {
@@ -100,28 +91,46 @@ class SellerCoffeeConstructorsDataSource {
     fun fetchByShop(
         shopId: Long,
     ): SellerCoffeeCategoriesWithConstructorsDTO {
-        val map = CoffeeConstructorCategoryTable
+        // 1. Выполняем запрос с LEFT JOIN для получения всех категорий + их конструкторов
+        val results = CoffeeConstructorCategoryTable
             .join(
                 CoffeeConstructorsTable,
                 joinType = JoinType.LEFT,
                 onColumn = CoffeeConstructorCategoryTable.id,
-                CoffeeConstructorsTable.categoryId
+                otherColumn = CoffeeConstructorsTable.categoryId
             )
             .selectAll()
-            .where {
-                CoffeeConstructorCategoryTable.shopId eq shopId
-            }
-            .map {
-                val category = it.mapToConstructorCategoryDTO()
-                val constructor = it.mapToConstructorDTO()
+            .where { CoffeeConstructorCategoryTable.shopId eq shopId }
+            .orderBy(CoffeeConstructorCategoryTable.name, SortOrder.ASC)
+            .toList()
 
-                category to constructor
+        // 2. Группируем результаты по категориям
+        val categoriesWithConstructors = results
+            .groupBy { row ->
+                // Маппим категорию из результата (она всегда есть благодаря основной таблице)
+                row.mapToConstructorCategoryDTO()
             }
-            .associate {
-                it.first to it.second
-            }
+            .map { (category, rows) ->
+                // 3. Для каждой категории собираем список конструкторов (фильтруем null из-за LEFT JOIN)
+                val constructors = rows
+                    .map { row ->
+                        // Конструктор может быть null если у категории нет конструкторов (LEFT JOIN)
+                        row.mapToConstructorDTO()
+                    }
+                    .sortedBy { it.id } // Сортируем конструкторы внутри категории
 
-        return SellerCoffeeCategoriesWithConstructorsDTO(map)
+                // 4. Формируем DTO для категории + её конструкторов
+                SellerCoffeeCategoryDTO(
+                    category = category,
+                    constructors = constructors
+                )
+            }
+            .sortedBy { it.category.id } // Сортируем категории
+
+        // 5. Возвращаем финальный результат
+        return SellerCoffeeCategoriesWithConstructorsDTO(
+            data = categoriesWithConstructors
+        )
     }
 
     fun setInStock(
@@ -131,18 +140,6 @@ class SellerCoffeeConstructorsDataSource {
             .update(where = { CoffeeConstructorsTable.id eq request.constructorId }) {
                 it[isInStock] = request.isInStock
             }
-    }
-
-    private fun updateDefaultConstructor(
-        categoryId: Long,
-        insertedConstructorIds: List<Long>,
-        defaultConstructorNumber: Int,
-    ) {
-        CoffeeConstructorCategoryTable.update(where = {
-            CoffeeConstructorCategoryTable.id eq categoryId
-        }) {
-            it[defaultConstructorId] = insertedConstructorIds[defaultConstructorNumber]
-        }
     }
 
     private val basicConstructorsList = listOf(

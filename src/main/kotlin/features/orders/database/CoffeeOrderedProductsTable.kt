@@ -20,5 +20,8 @@ object CoffeeOrderedProductsTable: LongIdTable("ducks_coffee_ordered_products_ta
 
     val selectedSize = text("size").nullable()
 
-    val secondsToCook = integer("seconds_to_cook").nullable()
+    val price = decimal("price", precision = 15, scale = 2).nullable()
+
+    val minutesToCook = integer("minutes_to_cook").nullable()
+    val quantity = integer("quantity")
 }

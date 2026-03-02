@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class CoffeeConstructorCategoryDTO(
     val id: Long,
     val name: String,
-    val defaultConstructorId: Long?,
+    val defaultConstructorIds: List<Long>?,
     val maxSelection: Int?,
+    val minSelection: Int?,
 )

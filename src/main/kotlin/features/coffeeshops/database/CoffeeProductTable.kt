@@ -12,8 +12,6 @@ object CoffeeProductTable: LongIdTable("ducks_coffee_shop_product_table") {
     val priceFrom = decimal("price", precision = 10, scale = 2)
     val categoryId = reference("category_id", CoffeeProductCategoryTable)
 
-    val constructorsId = reference("constructors", CoffeeProductsWithConstructorsTable).nullable()
-
     val shopId = reference("shop_id", CoffeeShopTable)
     val sizes = json(
         name = "sizes",
@@ -23,7 +21,7 @@ object CoffeeProductTable: LongIdTable("ducks_coffee_shop_product_table") {
 
     val imageUrl = text("imageUrl")
 
-    val secondsToCook = integer("seconds_to_cook")
+    val minutesToCook = integer("minutes_to_cook").nullable()
 
     val inStock = bool("in_stock").default(true)
 

@@ -1,9 +1,9 @@
 package com.ducks.admin.repository
 
 import com.ducks.admin.database.ShopCredentialsTable
-import com.ducks.admin.repository.result.CreateShopResult
 import com.ducks.admin.request.CreateShopRequest
 import com.ducks.features.shops.database.table.ShopTable
+import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -14,7 +14,7 @@ class AdminShopsRepository {
     suspend fun createNewShop(
         data: CreateShopRequest,
         createdByAdminID: Long,
-    ): CreateShopResult {
+    ) {
         return newSuspendedTransaction {
             try {
                 val shopId = ShopTable.insertAndGetId {
@@ -30,11 +30,9 @@ class AdminShopsRepository {
                     it[createdBy] = createdByAdminID
                     it[ShopCredentialsTable.shopId] = shopId
                 }
-
-                CreateShopResult.Success
             } catch (e: ExposedSQLException) {
                 if (e.message?.contains("unique constraint") == true) {
-                    CreateShopResult.AlreadyExists
+                    throw DucksBadRequestError("Кофешоп с таким УНП уже сущетствует")
                 } else {
                     throw e
                 }

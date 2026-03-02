@@ -12,4 +12,5 @@ data class CoffeeShopDetailsDTO(
     val tags: List<String>?,
     val seatsCapacity: Int,
     val closestTime: Long?,
+    val closestTimeReason: Int,
 )

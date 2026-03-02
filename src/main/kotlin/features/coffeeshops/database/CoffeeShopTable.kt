@@ -27,12 +27,18 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
 
     val isTemporaryClosed = bool("isTemporaryClosed").default(false)
 
-    // если null - то в кофейне нет свободного времени для заказа
-    val closestTimeToTakeOrders = long("closest_time_to_take_orders").nullable()
-
     // По умолчанию для всех продуктов.
-    val secondsToCook = integer("seconds_to_cook").default(120)
+    val minutesToCook = integer("minutes_to_cook").default(2)
 
     val seatsCapacity = integer("seatsCapacity").default(10)
     val lowestPrice = integer("lowestPrice").nullable()
+
+    // если null - то в кофейне нет свободного времени для заказа
+    val closestTimeToTakeOrders = long("closest_time_to_take_orders").nullable()
+
+    // 0 - принимает заказы
+    // 1 - только короткий заказ
+    // 2 - вне времени работы заведения
+    // 3 - Очередь заказов в сумме больше 1 часа
+    val canTakeOrdersReason = integer("can_take_orders_reason").nullable()
 }

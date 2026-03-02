@@ -10,7 +10,6 @@ import com.ducks.features.shops.database.table.ShopTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.LocalDate
 
@@ -45,11 +44,12 @@ class CoffeeShopsDataSource {
         val currentDayOfWeek = LocalDate.now().dayOfWeek
 
         return CoffeeShopTable
-            .join(CoffeeShopScheduleTable, joinType = JoinType.LEFT, CoffeeShopTable.id, CoffeeShopScheduleTable.shopId)
+            .join(CoffeeShopScheduleTable, joinType = JoinType.LEFT, CoffeeShopTable.id, CoffeeShopScheduleTable.shopId) {
+                CoffeeShopScheduleTable.dayOfWeek eq currentDayOfWeek.value
+            }
             .selectAll()
             .where {
-                // TODO пересмотреть проверку dayofweek
-                (CoffeeShopTable.id eq shopId) and (CoffeeShopScheduleTable.dayOfWeek eq currentDayOfWeek.value)
+                CoffeeShopTable.id eq shopId
             }.map {
                 it.mapToCoffeeShopDetailsDTO()
             }.first()

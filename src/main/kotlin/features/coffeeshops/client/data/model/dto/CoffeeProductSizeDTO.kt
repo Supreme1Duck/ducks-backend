@@ -7,10 +7,11 @@ import java.math.BigDecimal
 
 @Serializable
 data class CoffeeProductSizeDTO(
+    val id: String,
     val sizeName: String?,
-    val sizeValue: String?,
+    val sizeValue: String,
     @Serializable(with = BigDecimalSerializer::class)
-    val price: BigDecimal?,
+    val price: BigDecimal,
 )
 
 object CoffeeShopSizeSerializer{

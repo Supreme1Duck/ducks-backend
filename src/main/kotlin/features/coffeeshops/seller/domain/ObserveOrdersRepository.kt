@@ -31,8 +31,6 @@ class ObserveOrdersRepository {
                     (isActive() or isPending()) and (CoffeeOrdersTable.coffeeShop eq shopId)
                 }
                 .map {
-                    // TODO добавить запрос на продукты заказа
-
                     it.mapToOrderDTO(emptyList())
                 }
 
@@ -54,7 +52,7 @@ class ObserveOrdersRepository {
             }
 
             CurrentOrdersDTO(
-                activeOrdersDTO = activeOrders,
+                activeOrders = activeOrders,
                 pendingOrders = pendingOrders,
             )
         }

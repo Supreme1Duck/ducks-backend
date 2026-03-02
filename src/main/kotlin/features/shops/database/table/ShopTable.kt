@@ -9,9 +9,16 @@ object ShopTable : LongIdTable("ducks_shop_table") {
     val name = citext("name", length = 50)
     val description = text("description").nullable()
     val address = citext("address", length = 100)
+
     val photoUrls = jsonb(
         name = "photoUrls",
         serialize = StringListSerializer::serialize,
         deserialize = StringListSerializer::deserialize
     )
+
+    val tags = jsonb(
+        name = "tags",
+        serialize = StringListSerializer::serialize,
+        deserialize = StringListSerializer::deserialize
+    ).nullable()
 }

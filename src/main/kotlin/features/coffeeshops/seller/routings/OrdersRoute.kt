@@ -26,7 +26,7 @@ fun Route.sellerOrdersRoute() {
         }
     }
 
-    post("/accept/order") {
+    post("/order/accept") {
         ducksTryCatch {
             val shopId = getCoffeeShopSellerPrincipal().shopId
             val orderId = call.receive<Long>()
@@ -37,7 +37,7 @@ fun Route.sellerOrdersRoute() {
         }
     }
 
-    post("/cancel/order") {
+    post("/order/cancel") {
         ducksTryCatch {
             val shopId = getCoffeeShopSellerPrincipal().shopId
             val request = call.receive<CancelBySellerRequest>()
@@ -52,7 +52,7 @@ fun Route.sellerOrdersRoute() {
         }
     }
 
-    post("/finish/order") {
+    post("/order/finish") {
         ducksTryCatch {
             val shopId = getCoffeeShopSellerPrincipal().shopId
             val orderId = call.receive<Long>()

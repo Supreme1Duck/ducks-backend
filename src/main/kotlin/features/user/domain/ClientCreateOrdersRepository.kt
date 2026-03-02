@@ -13,6 +13,7 @@ import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.*
@@ -33,13 +34,22 @@ class ClientCreateOrdersRepository(
         newSuspendedTransaction {
             val clientId = getUserIdByPhone(clientPhoneNumber)
 
+            // Получаем полный список продуктов с дубликатами если их несколько.
+            val allProducts = buildList {
+                request.products.forEach { request ->
+                    repeat(request.quantity ?: 1) {
+                        add(request)
+                    }
+                }
+            }
+
             if (userHasActiveOrder(clientId)) {
                 throw DucksBadRequestError("Вы не можете создать новый заказ, когда у вас есть активный заказ")
             }
 
-            val (estimatedTimeToFinish, secondsToCookAllProducts) = calculateOrderFinishTime(
+            val (estimatedTimeToFinish, minutesToCookAllProducts) = calculateOrderFinishTimeMs(
                 request.shopId,
-                request.products.map { it.productId },
+                allProducts.map { it.productId },
             )
 
             if (estimatedTimeToFinish == null) {
@@ -51,7 +61,12 @@ class ClientCreateOrdersRepository(
                 throw DucksBadRequestError("Это время было только что занято, попробуйте еще раз.")
             }
 
-            val currentTime = System.currentTimeMillis()
+            val currentTime = Clock.System.now().toEpochMilliseconds()
+
+            // Не больше полутора часа от текущего времени
+            if (request.estimatedTimeToFinish > currentTime + 90 * 60_000) {
+                throw DucksBadRequestError("Время заказа должно быть не позже полутора часа.")
+            }
 
             val orderId = CoffeeOrdersTable.insertAndGetId {
                 it[createdTime] = currentTime
@@ -59,8 +74,8 @@ class ClientCreateOrdersRepository(
                 it[userId] = clientId
                 it[comment] = request.comment
 
-                it[estimatedFinishTime] = estimatedTimeToFinish
-                it[timeToCookInMinutes] = secondsToCookAllProducts / 60
+                it[estimatedFinishTime] = request.estimatedTimeToFinish
+                it[timeToCookInMinutes] = minutesToCookAllProducts
 
                 // будет посчитана в конце
                 it[price] = 0.toBigDecimal()
@@ -74,7 +89,7 @@ class ClientCreateOrdersRepository(
                     CoffeeProductTable.name,
                     CoffeeProductTable.imageUrl,
                     CoffeeProductTable.sizes,
-                    CoffeeProductTable.secondsToCook,
+                    CoffeeProductTable.minutesToCook,
                 )
                 .where {
                     CoffeeProductTable.id inList allProductIds
@@ -84,17 +99,19 @@ class ClientCreateOrdersRepository(
                         id = it[CoffeeProductTable.id].value,
                         name = it[CoffeeProductTable.name],
                         imageUrl = it[CoffeeProductTable.imageUrl],
-                        secondsToCook = it[CoffeeProductTable.secondsToCook],
+                        minutesToCook = it[CoffeeProductTable.minutesToCook],
 
                         // Будут заполнены дальше
                         constructors = emptyList(),
                         size = null,
+                        quantity = 0,
+                        price = null,
                     )
                 }
 
             val orderedProducts = request.products.map { requestProduct ->
                 val size = getSelectedSize(
-                    sizeName = requestProduct.sizeName,
+                    sizeId = requestProduct.sizeId,
                     productId = requestProduct.productId
                 )
 
@@ -103,25 +120,38 @@ class ClientCreateOrdersRepository(
                     requestedConstructorIds = requestProduct.constructorIds ?: emptyList(),
                 )
 
+                val price = calculateProductPrice(
+                    size = size,
+                    constructors = constructors,
+                    quantity = requestProduct.quantity ?: 1,
+                )
+
                 val orderedProduct = emptyOrderedProducts.first { it.id == requestProduct.productId }
                     .copy(
                         constructors = constructors,
-                        size = size
+                        size = size,
+                        quantity = requestProduct.quantity ?: 1,
+                        price = price,
                     )
 
                 orderedProduct
             }
 
-            val orderPrice = calculateOrderPrice(orderedProducts)
+            val orderPrice = orderedProducts.sumOf { it.price ?: 0.toBigDecimal() }
 
-            CoffeeOrderedProductsTable.batchInsert(orderedProducts) {
+            CoffeeOrderedProductsTable.batchInsert(orderedProducts) { product ->
                 this[CoffeeOrderedProductsTable.orderId] = orderId
-                this[CoffeeOrderedProductsTable.productName] = it.name
-                this[CoffeeOrderedProductsTable.productId] = it.id
-                this[CoffeeOrderedProductsTable.imageUrl] = it.imageUrl
-                this[CoffeeOrderedProductsTable.selectedSize] = it.size?.sizeName
-                this[CoffeeOrderedProductsTable.constructors] = it.constructors
-                this[CoffeeOrderedProductsTable.secondsToCook] = it.secondsToCook
+                this[CoffeeOrderedProductsTable.productName] = product.name
+                this[CoffeeOrderedProductsTable.productId] = product.id
+                this[CoffeeOrderedProductsTable.imageUrl] = product.imageUrl
+                // Возможно ошибка присваивать sizeName а не size id...
+                this[CoffeeOrderedProductsTable.selectedSize] = product.size?.sizeName
+                this[CoffeeOrderedProductsTable.constructors] = product.constructors
+                this[CoffeeOrderedProductsTable.minutesToCook] = product.minutesToCook?.let {
+                    it * product.quantity
+                }
+                this[CoffeeOrderedProductsTable.quantity] = product.quantity
+                this[CoffeeOrderedProductsTable.price] = product.price
             }
 
             CoffeeOrdersTable.update(
@@ -137,7 +167,7 @@ class ClientCreateOrdersRepository(
     }
 
     private fun getSelectedSize(
-        sizeName: String,
+        sizeId: String,
         productId: Long
     ): CoffeeProductSizeDTO? {
         return CoffeeProductTable
@@ -145,7 +175,7 @@ class ClientCreateOrdersRepository(
             .where {
                 CoffeeProductTable.id eq productId
             }.map {
-                it[CoffeeProductTable.sizes].first { it.sizeName == sizeName }
+                it[CoffeeProductTable.sizes].first { it.id == sizeId }
             }.firstOrNull()
     }
 
@@ -204,33 +234,39 @@ class ClientCreateOrdersRepository(
         return clientId
     }
 
-    private fun calculateOrderPrice(products: List<OrderedProduct>): BigDecimal {
-        return products.sumOf {
-            val productPrice = it.size?.price ?: 0.toBigDecimal()
-            val constructorsPrice = it.constructors.sumOf { it.price ?: 0.toBigDecimal() }
+    private fun calculateProductPrice(
+        size: CoffeeProductSizeDTO?,
+        constructors: List<OrderedProductConstructorDBModel>,
+        quantity: Int,
+    ): BigDecimal {
+        val sizePrice = size?.price ?: 0.toBigDecimal()
+        val constructorsPrice = constructors.sumOf { it.price ?: 0.toBigDecimal() }
 
-            productPrice + constructorsPrice
-        }
+        val singleProductPrice = sizePrice + constructorsPrice
+
+        return singleProductPrice.times(quantity.toBigDecimal())
     }
 
-    private fun calculateOrderFinishTime(
+    private fun calculateOrderFinishTimeMs(
         shopId: Long,
         productIds: List<Long>,
     ): Pair<Long?, Int> {
         // Делаем так потому что обычным select + where можно не получить два продукта с одинаковым id.
-        val secondsToCook = productIds.map {
+        val minutesToCook = productIds.mapNotNull {
             CoffeeProductTable
-                .select(CoffeeProductTable.secondsToCook)
+                .select(CoffeeProductTable.minutesToCook)
                 .where {
                     CoffeeProductTable.id eq it
+                }.firstNotNullOfOrNull {
+                    it[CoffeeProductTable.minutesToCook]
                 }
-                .map {
-                    it[CoffeeProductTable.secondsToCook]
-                }
-                .first()
-        }.sumOf { it }
+        }.takeIf {
+            it.isNotEmpty()
+        }?.sumOf {
+            it
+        } ?: 0
 
-        val closestTimeToStart = CoffeeShopTable
+        val closestTimeToStartMs = CoffeeShopTable
             .select(CoffeeShopTable.closestTimeToTakeOrders)
             .where {
                 CoffeeShopTable.id eq shopId
@@ -240,13 +276,11 @@ class ClientCreateOrdersRepository(
             }
             .first()
 
-        val secondsToCookAllProducts = secondsToCook.times(1000)
-
-        val timeToFinish = closestTimeToStart?.let {
-            it + secondsToCookAllProducts
+        val timeToFinishMs = closestTimeToStartMs?.let {
+            it + minutesToCook.times(60_000)
         }
 
-        return timeToFinish to secondsToCookAllProducts
+        return timeToFinishMs to minutesToCook
     }
 
     private data class OrderedProduct(
@@ -255,6 +289,8 @@ class ClientCreateOrdersRepository(
         val size: CoffeeProductSizeDTO?,
         val imageUrl: String,
         val constructors: List<OrderedProductConstructorDBModel>,
-        val secondsToCook: Int,
+        val minutesToCook: Int?,
+        val quantity: Int,
+        val price: BigDecimal?,
     )
 }

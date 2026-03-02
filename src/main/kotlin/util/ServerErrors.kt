@@ -14,10 +14,11 @@ suspend fun RoutingContext.ducksTryCatch(
     try {
         tryLambda()
     } catch (e: DucksBadRequestError) {
+        println("$e")
         call.respond(HttpStatusCode.BadRequest, e.message.orEmpty())
     } catch (e: Exception) {
         println("$e")
         println(e.printStackTrace())
-        call.respond(HttpStatusCode.InternalServerError, e.localizedMessage)
+        call.respond(HttpStatusCode.InternalServerError, e.message ?: e.localizedMessage)
     }
 }

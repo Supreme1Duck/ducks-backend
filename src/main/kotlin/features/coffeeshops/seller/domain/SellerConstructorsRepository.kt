@@ -2,7 +2,7 @@ package com.ducks.features.coffeeshops.seller.domain
 
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeConstructorsDataSource
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoriesWithConstructorsDTO
-import com.ducks.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
@@ -39,7 +39,7 @@ class SellerConstructorsRepository(
         request: CreateConstructorRequest
     ): Long {
         return suspendTransaction {
-            dataSource.insertNew(shopId = shopId, request = request)
+            dataSource.insertNewConstructor(shopId = shopId, request = request)
         }
     }
 

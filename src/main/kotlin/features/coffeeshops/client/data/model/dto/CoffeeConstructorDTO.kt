@@ -10,6 +10,6 @@ data class CoffeeConstructorDTO(
     val name: String,
     val categoryId: Long,
     @Serializable(with = BigDecimalSerializer::class)
-    val price: BigDecimal?,
+    val price: BigDecimal? = null,
     val isInStock: Boolean,
 )

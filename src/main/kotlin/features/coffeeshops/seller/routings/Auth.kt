@@ -4,6 +4,7 @@ import com.ducks.admin.api.CoffeeShopCredentialsRepository
 import com.ducks.admin.repository.result.LoginResult
 import com.ducks.auth.SellerLoginRequest
 import com.ducks.auth.coffee_seller.JWTCoffeeSellerService
+import com.ducks.features.shops.seller.routing.response.SignInResponse
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -29,7 +30,12 @@ fun Route.sellerAuthRoute() {
                 is LoginResult.Success -> {
                     val token = jwtService.generateSellerToken(result.shopId)
 
-                    call.respond(token.toString())
+                    call.respond(
+                        SignInResponse(
+                            id = result.shopId,
+                            token = token.toString(),
+                        )
+                    )
                 }
             }
         } catch (e: Exception) {

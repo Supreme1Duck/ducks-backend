@@ -1,25 +1,19 @@
 package com.ducks.features.shops.common.repository
 
-import com.ducks.common.data.UpdateMap
 import com.ducks.features.shops.common.data.ShopProductsDataSource
-import com.ducks.features.shops.database.table.ShopProductTable
 import com.ducks.features.shops.common.dto.SearchResultDTO
 import com.ducks.features.shops.common.dto.ShopProductDTO
 import com.ducks.features.shops.common.dto.ShopProductPreviewDTO
 import com.ducks.features.shops.common.model.SeasonModel
 import com.ducks.features.shops.common.model.ShopProductModel
-import com.ducks.features.shops.seller.data.model.*
+import com.ducks.features.shops.database.table.ShopProductTable
 import com.ducks.features.shops.seller.domain.ShopImageRepository
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.update
-import java.math.BigDecimal
 
 class ShopProductsRepository(
     private val dataSource: ShopProductsDataSource,
@@ -49,45 +43,8 @@ class ShopProductsRepository(
     fun updateProduct(
         shopId: Long,
         productId: Long,
-        updateMap: UpdateMap,
     ) {
-        ShopProductTable.update(where = {
-            (ShopProductTable.shop eq shopId) and (ShopProductTable.id eq productId)
-        }) { table ->
-            updateMap.forEach {
-                when (it.key) {
-                    SELLER_PRODUCT_MAP_NAME_KEY -> {
-                        table[name] = Json.decodeFromJsonElement<String>(it.value)
-                    }
 
-                    SELLER_PRODUCT_MAP_DESCRIPTION_KEY -> {
-                        table[description] = Json.decodeFromJsonElement<String?>(it.value)
-                    }
-
-                    SELLER_PRODUCT_MAP_BRANDNAME_KEY -> {
-                        table[brandName] = Json.decodeFromJsonElement<String?>(it.value)
-                    }
-
-                    SELLER_PRODUCT_MAP_PRICE_KEY -> {
-                        table[price] = Json.decodeFromJsonElement<BigDecimal?>(it.value)
-                    }
-
-                    SELLER_PRODUCT_MAP_IMAGES_KEY -> {
-                        val imageUrls = Json.decodeFromJsonElement<List<String>>(it.value)
-                        deleteUnusedImages(shopId = productId, productId = shopId, imageUrls = imageUrls)
-                        table[ShopProductTable.imageUrls] = imageUrls
-                    }
-
-                    SELLER_PRODUCT_MAP_CATEGORY_KEY -> {
-                        table[category] = Json.decodeFromJsonElement<Long>(it.value)
-                    }
-
-                    SELLER_PRODUCT_MAP_SEASON_KEY -> {
-                        table[seasonId] = Json.decodeFromJsonElement<Int?>(it.value)
-                    }
-                }
-            }
-        }
     }
 
     private fun deleteUnusedImages(shopId: Long, productId: Long, imageUrls: List<String>): List<String> {

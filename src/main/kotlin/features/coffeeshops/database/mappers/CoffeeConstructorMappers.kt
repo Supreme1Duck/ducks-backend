@@ -1,17 +1,15 @@
 package com.ducks.features.coffeeshops.database.mappers
 
-import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeConstructorCategoryDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeConstructorDTO
 import com.ducks.features.coffeeshops.database.CoffeeConstructorCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
+import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeConstructorCategoryDTO
 import org.jetbrains.exposed.v1.core.ResultRow
 
-fun ResultRow.mapToConstructorCategoryDTO(): CoffeeConstructorCategoryDTO {
-    return CoffeeConstructorCategoryDTO(
+fun ResultRow.mapToConstructorCategoryDTO(): SellerCoffeeConstructorCategoryDTO {
+    return SellerCoffeeConstructorCategoryDTO(
         id = this[CoffeeConstructorCategoryTable.id].value,
         name = this[CoffeeConstructorCategoryTable.name],
-        defaultConstructorId = this[CoffeeConstructorCategoryTable.defaultConstructorId],
-        maxSelection = this[CoffeeConstructorCategoryTable.maxSelection],
     )
 }
 

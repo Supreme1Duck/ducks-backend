@@ -2,7 +2,7 @@ package com.ducks.features.coffeeshops.seller.routings
 
 import com.ducks.features.coffeeshops.seller.domain.SellerConstructorsRepository
 import com.ducks.features.coffeeshops.seller.getCoffeeShopSellerPrincipal
-import com.ducks.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest

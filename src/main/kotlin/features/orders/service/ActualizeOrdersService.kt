@@ -1,30 +1,34 @@
 package com.ducks.features.orders.service
 
 import com.ducks.features.orders.database.CoffeeOrdersTable
+import com.ducks.service.MinuteChangeNotifierService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 
-class ActualizeOrdersService {
+class ActualizeOrdersService(
+    private val changeNotifierService: MinuteChangeNotifierService,
+) {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    // Закрывает активные заказы которые старше 3 минут
+    // Закрывает активные заказы которые старше 7 минут
     operator fun invoke() {
-        coroutineScope.launch {
-            while (true) {
-                delay(5_000L)
+        changeNotifierService.observe()
+            .onEach {
                 newSuspendedTransaction {
-                    val threeMinInMs = 3 * 60 * 1_000
-                    val currentTime = System.currentTimeMillis()
-                    val nonActualizedOrderTime = currentTime - threeMinInMs
+                    val sevenMinInMs = 7 * 60_000
+                    val currentTime = Clock.System.now().toEpochMilliseconds()
+                    val nonActualizedOrderTime = currentTime - sevenMinInMs
 
                     CoffeeOrdersTable.update(
                         where = {
@@ -34,9 +38,17 @@ class ActualizeOrdersService {
                         it[finishedTime] = currentTime
                         it[isExpired] = true
                     }
+
+                    CoffeeOrdersTable.update(
+                        where = {
+                            isAcceptedNotFinished(currentTime)
+                        }
+                    ) {
+                        it[estimatedFinishTime] = currentTime
+                    }
                 }
             }
-        }
+            .launchIn(coroutineScope)
     }
 
     private fun isNotAccepted(
@@ -45,5 +57,11 @@ class ActualizeOrdersService {
         return (CoffeeOrdersTable.createdTime less nonActualizedOrderTime) and
                 (CoffeeOrdersTable.acceptedTime eq null) and
                 (CoffeeOrdersTable.finishedTime eq null)
+    }
+
+    private fun isAcceptedNotFinished(currentTime: Long): Op<Boolean> {
+        return (CoffeeOrdersTable.acceptedTime neq null) and
+                (CoffeeOrdersTable.finishedTime eq null) and
+                (CoffeeOrdersTable.estimatedFinishTime less currentTime)
     }
 }

@@ -1,18 +1,36 @@
 package com.ducks.features.coffeeshops.seller.domain
 
+import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
+import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProductPreviewDTO
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
+import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductPreviewDTO
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeProductDataSource
-import com.ducks.features.coffeeshops.seller.data.UPDATE_MAP_COFFEE_PRODUCT_IMAGE
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 class SellerCoffeeProductRepository(
     private val dataSource: SellerCoffeeProductDataSource,
     private val imageRepository: CoffeeShopImageRepository,
 ) {
+
+    suspend fun fetchProductsByShop(shopId: Long): List<CoffeeShopProductPreviewDTO> {
+        return newSuspendedTransaction {
+            CoffeeProductTable
+                .selectAll()
+                .where {
+                    CoffeeProductTable.shopId eq shopId
+                }
+                .map {
+                    it.mapToCoffeeProductPreviewDTO()
+                }
+        }
+    }
+
+    suspend fun getProductDetails(productId: Long): CoffeeProductWithDetailsDTO {
+        return dataSource.getProductDetails(productId)
+    }
 
     suspend fun insert(
         shopId: Long,
@@ -32,29 +50,8 @@ class SellerCoffeeProductRepository(
             dataSource.updateProduct(
                 shopId = shopId,
                 productId = data.productId,
-                updateMap = data.updateMap
             )
-
-            if (data.updateMap.containsKey(UPDATE_MAP_COFFEE_PRODUCT_IMAGE)) {
-                deleteUnusedImage(shopId, data.productId)
-            }
         }
-    }
-
-    private fun deleteUnusedImage(shopId: Long, productId: Long) {
-        val imageUrl = CoffeeProductTable
-            .select(CoffeeProductTable.imageUrl)
-            .where {
-                (CoffeeProductTable.shopId eq shopId) and (CoffeeProductTable.id eq productId)
-            }
-            .map {
-                it[CoffeeProductTable.imageUrl]
-            }
-            .first()
-
-        imageRepository.deleteProductImage(
-            imageUrl = imageUrl,
-        )
     }
 
     suspend fun delete(

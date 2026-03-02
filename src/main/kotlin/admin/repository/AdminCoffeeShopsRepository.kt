@@ -31,19 +31,7 @@ class AdminCoffeeShopsRepository(
         sellersConstructorsRepository.insertBasic(shopId = shopId)
     }
 
-    private suspend fun addSchedules(shopId: Long, workTime: List<WorkTime>) {
-        val request = SetCoffeeShopScheduleRequest(
-            mapOf(
-                MONDAY_KEY to workTime[0],
-                TUESDAY_KEY to workTime[1],
-                WEDNESDAY_KEY to workTime[2],
-                THURSDAY_KEY to workTime[3],
-                FRIDAY_KEY to workTime[4],
-                SATURDAY_KEY to workTime[5],
-                SUNDAY_KEY to workTime[6],
-            )
-        )
-
+    private suspend fun addSchedules(shopId: Long, request: SetCoffeeShopScheduleRequest) {
         repository.setSchedule(
             shopId = shopId,
             schedule = request,
@@ -72,7 +60,7 @@ class AdminCoffeeShopsRepository(
             }
         } catch (e: ExposedSQLException) {
             if (e.message?.contains("unique constraint") == true) {
-                throw DucksBadRequestError("Кофешоп уже существует!")
+                throw DucksBadRequestError("Кофешоп с таким унп уже существует")
             } else {
                 throw DucksBadRequestError("Неизвестная SQL ошибка")
             }

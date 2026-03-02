@@ -4,8 +4,6 @@ import com.ducks.features.orders.data.dto.OrderDTO
 import com.ducks.features.orders.data.dto.OrderProductDTO
 import com.ducks.features.user.database.UserTable
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNotNull
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
 
 fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
 
@@ -15,13 +13,13 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
         userPhoneNumber = this[UserTable.phoneNumber],
         comment = this[CoffeeOrdersTable.comment],
         products = products,
-        isActive =  this[CoffeeOrdersTable.acceptedTime.isNotNull()] and this[CoffeeOrdersTable.finishedTime.isNull()],
+        isActive = (this[CoffeeOrdersTable.acceptedTime] != null) and (this[CoffeeOrdersTable.finishedTime] == null),
+        estimatedFinishTime = this[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
         price = this[CoffeeOrdersTable.price],
     )
 }
 
 fun ResultRow.toOrderProductDTO(): OrderProductDTO {
-
     return OrderProductDTO(
         id = this[CoffeeOrderedProductsTable.id].value,
         orderId = this[CoffeeOrderedProductsTable.orderId].value,
@@ -29,5 +27,7 @@ fun ResultRow.toOrderProductDTO(): OrderProductDTO {
         constructors = this[CoffeeOrderedProductsTable.constructors],
         imageUrl = this[CoffeeOrderedProductsTable.imageUrl],
         size = this[CoffeeOrderedProductsTable.selectedSize],
+        price = this[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
+        quantity = this[CoffeeOrderedProductsTable.quantity],
     )
 }

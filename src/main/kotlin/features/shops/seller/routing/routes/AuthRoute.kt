@@ -3,6 +3,7 @@ package com.ducks.features.shops.seller.routing.routes
 import com.ducks.admin.api.ShopCredentialsRepository
 import com.ducks.auth.SellerLoginRequest
 import com.ducks.auth.seller.JWTSellerService
+import com.ducks.features.shops.seller.routing.response.SignInResponse
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -21,7 +22,12 @@ fun Route.authRoute() {
 
             val token = jwtService.generateSellerToken(shopId)
 
-            call.respond(token.toString())
+            call.respond(
+                SignInResponse(
+                    id = shopId,
+                    token = token.toString(),
+                )
+            )
         } catch (e: Exception) {
             call.respond(e.printStackTrace())
         }

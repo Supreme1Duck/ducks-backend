@@ -12,6 +12,7 @@ data class OrderDTO(
     val products: List<OrderProductDTO>,
     val isActive: Boolean,
     val comment: String?,
+    val estimatedFinishTime: Long,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
 )

@@ -7,6 +7,7 @@ import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
@@ -80,7 +81,7 @@ class ClientsOrdersRepository(
             } else if (isOrderAccepted) {
                 throw DucksBadRequestError("Заказ уже принят!")
             } else {
-                val currentTime = System.currentTimeMillis()
+                val currentTime = Clock.System.now().toEpochMilliseconds()
 
                 CoffeeOrdersTable
                     .update(
