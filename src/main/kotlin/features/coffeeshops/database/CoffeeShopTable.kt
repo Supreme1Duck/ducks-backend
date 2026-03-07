@@ -30,7 +30,9 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
     // По умолчанию для всех продуктов.
     val minutesToCook = integer("minutes_to_cook").default(2)
 
-    val seatsCapacity = integer("seatsCapacity").default(10)
+    val tablesCapacity = integer("tablesCapacity").default(10)
+    val freeTables = integer("freeTables").default(10)
+
     val lowestPrice = integer("lowestPrice").nullable()
 
     // если null - то в кофейне нет свободного времени для заказа

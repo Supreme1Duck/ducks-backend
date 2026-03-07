@@ -61,6 +61,12 @@ class SellerCoffeeShopsDataSource {
         }
     }
 
+    fun updateFreeTables(shopId: Long, freeTables: Int) {
+        CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
+            it[CoffeeShopTable.freeTables] = freeTables
+        }
+    }
+
     private fun isShopAvailableToShow(shopId: Long): Boolean {
         val hasAllInfo = CoffeeShopTable
             .selectAll()

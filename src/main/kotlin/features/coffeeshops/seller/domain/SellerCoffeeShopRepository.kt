@@ -56,6 +56,12 @@ class SellerCoffeeShopRepository(
         sellerCoffeeShopDataSource.update(shopId, request)
     }
 
+    suspend fun updateFreeTables(shopId: Long, freeTables: Int) {
+        return newSuspendedTransaction {
+            sellerCoffeeShopDataSource.updateFreeTables(shopId, freeTables)
+        }
+    }
+
     suspend fun addTechnicalPause(
         shopId: Long,
         startsAt: Long,

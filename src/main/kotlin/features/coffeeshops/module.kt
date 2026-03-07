@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
+import com.ducks.features.coffeeshops.seller.analytics.CoffeeSellerAnalyticsRepository
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeCategoriesRepository
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeConstructorsDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeProductDataSource
@@ -35,4 +36,5 @@ val coffeeShopsModule = module {
 
     single { ObserveOrdersRepository() }
     single { SellerOrdersRepository(get()) }
+    single { CoffeeSellerAnalyticsRepository() }
 }

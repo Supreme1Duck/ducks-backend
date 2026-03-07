@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops.seller.domain
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeConstructorsDataSource
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoriesWithConstructorsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.SaveConstructorsRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
@@ -16,6 +17,12 @@ class SellerConstructorsRepository(
     suspend fun fetchByShop(shopId: Long): SellerCoffeeCategoriesWithConstructorsDTO {
         return newSuspendedTransaction {
             dataSource.fetchByShop(shopId = shopId)
+        }
+    }
+
+    suspend fun saveConstructors(shopId: Long, request: SaveConstructorsRequest) {
+        return newSuspendedTransaction {
+            dataSource.saveConstructors(shopId = shopId, request = request)
         }
     }
 

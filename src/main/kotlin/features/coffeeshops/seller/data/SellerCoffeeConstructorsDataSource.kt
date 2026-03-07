@@ -1,19 +1,17 @@
 package com.ducks.features.coffeeshops.seller.data
 
-import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
 import com.ducks.features.coffeeshops.database.CoffeeConstructorCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
 import com.ducks.features.coffeeshops.database.mappers.mapToConstructorCategoryDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToConstructorDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoriesWithConstructorsDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeCategoryDTO
-import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
-import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
-import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.*
 import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -43,6 +41,60 @@ class SellerCoffeeConstructorsDataSource {
             }
         } catch (e: Exception) {
             throw DucksBadRequestError("Ошибка при добавлении базовых сущностей кофешопа")
+        }
+    }
+
+    fun saveConstructors(shopId: Long, request: SaveConstructorsRequest) {
+        val existingCategoryIds = request.categories.map { it.id }.filter { it >= 0 }
+
+        // Удаляем категории (и их конструкторы каскадно), которых нет в запросе
+        CoffeeConstructorCategoryTable.deleteWhere {
+            (CoffeeConstructorCategoryTable.shopId eq shopId) and
+                (CoffeeConstructorCategoryTable.id notInList existingCategoryIds)
+        }
+
+        request.categories.forEach { category ->
+            val categoryId = if (category.id < 0) {
+                CoffeeConstructorCategoryTable.insertAndGetId { table ->
+                    table[CoffeeConstructorCategoryTable.shopId] = shopId
+                    table[name] = category.categoryName
+                }.value
+            } else {
+                CoffeeConstructorCategoryTable.update(
+                    where = { CoffeeConstructorCategoryTable.id eq category.id }
+                ) { table ->
+                    table[name] = category.categoryName
+                }
+                category.id
+            }
+
+            val existingConstructorIds = category.constructors.map { it.id }.filter { it >= 0 }
+
+            // Удаляем конструкторы категории, которых нет в запросе
+            CoffeeConstructorsTable.deleteWhere {
+                (CoffeeConstructorsTable.categoryId eq categoryId) and
+                    (CoffeeConstructorsTable.id notInList existingConstructorIds)
+            }
+
+            category.constructors.forEach { constructor ->
+                if (constructor.id < 0) {
+                    CoffeeConstructorsTable.insertAndGetId { table ->
+                        table[CoffeeConstructorsTable.shopId] = shopId
+                        table[CoffeeConstructorsTable.categoryId] = categoryId
+                        table[name] = constructor.name
+                        table[price] = constructor.price?.toBigDecimal()
+                        table[isInStock] = constructor.isInStock
+                    }
+                } else {
+                    CoffeeConstructorsTable.update(
+                        where = { CoffeeConstructorsTable.id eq constructor.id }
+                    ) { table ->
+                        table[name] = constructor.name
+                        table[price] = constructor.price?.toBigDecimal()
+                        table[isInStock] = constructor.isInStock
+                    }
+                }
+            }
         }
     }
 

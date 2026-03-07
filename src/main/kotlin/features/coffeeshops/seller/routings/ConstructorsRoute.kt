@@ -5,7 +5,9 @@ import com.ducks.features.coffeeshops.seller.getCoffeeShopSellerPrincipal
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorCategoryRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.CreateConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
+import com.ducks.features.coffeeshops.seller.routings.request.constructor.SaveConstructorsRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
+import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -25,6 +27,20 @@ fun Route.constructorsRoute() {
                 call.respond(HttpStatusCode.OK, data)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        post("/save") {
+            ducksTryCatch {
+                val shopId = getCoffeeShopSellerPrincipal().shopId
+                val request = call.receive<SaveConstructorsRequest>()
+
+                constructorsRepository.saveConstructors(
+                    shopId = shopId,
+                    request = request
+                )
+
+                call.respond(HttpStatusCode.Created)
             }
         }
 

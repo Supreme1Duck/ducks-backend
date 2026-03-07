@@ -50,6 +50,17 @@ fun Route.shopsAndProductsRoute() {
         }
     }
 
+    post("/shop/free-tables") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val freeTables = call.receive<Int>()
+
+            coffeeShopsRepository.updateFreeTables(shopId, freeTables)
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
     post("/shop/update") {
         ducksTryCatch {
             val request = call.receive<UpdateCoffeeShopRequest>()
