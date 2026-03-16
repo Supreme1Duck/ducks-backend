@@ -17,9 +17,7 @@ class SellerCoffeeCategoriesRepository {
         return newSuspendedTransaction {
             CoffeeProductCategoryTable
                 .selectAll()
-                .map {
-                    it.mapToCategoryDTO()
-                }
+                .map { it.mapToCategoryDTO() }
         }
     }
 

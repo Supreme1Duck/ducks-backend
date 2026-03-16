@@ -6,7 +6,6 @@ import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopPreview
-import com.ducks.features.shops.database.table.ShopTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
@@ -30,8 +29,8 @@ class CoffeeShopsDataSource {
     ): List<CoffeeShopPreviewDTO> {
          return CoffeeShopTable
             .selectAll()
-            .where(ShopTable.id less (lastId ?: Long.MAX_VALUE))
-            .orderBy(ShopTable.id, SortOrder.DESC)
+            .where(CoffeeShopTable.id less (lastId ?: Long.MAX_VALUE))
+            .orderBy(CoffeeShopTable.id, SortOrder.DESC)
             .limit(limit ?: Int.MAX_VALUE)
             .map {
                 it.mapToCoffeeShopPreview()

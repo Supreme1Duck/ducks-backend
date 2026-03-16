@@ -19,7 +19,9 @@ fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
         name = this[CoffeeShopTable.name],
         address = this[CoffeeShopTable.address],
         tags = this[CoffeeShopTable.tags],
+        isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         pricesStartsFrom = this[CoffeeShopTable.lowestPrice],
+        images = this[CoffeeShopTable.imageUrls].orEmpty()
     )
 }
 
@@ -52,6 +54,7 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
         lowestPrice = this[CoffeeShopTable.lowestPrice],
         workTime = workTime,
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
+        isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         freeTables = this[CoffeeShopTable.freeTables],
         closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
         closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
@@ -92,6 +95,7 @@ fun ResultRow.mapToSellerCoffeeShopDetailsDTO(
         schedule = schedule,
         tags = this[CoffeeShopTable.tags],
         lowestPrice = this[CoffeeShopTable.lowestPrice],
+        isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         workTime = workTime,
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
         freeTables = this[CoffeeShopTable.freeTables],

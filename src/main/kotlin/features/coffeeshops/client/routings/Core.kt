@@ -24,7 +24,7 @@ fun Route.clientRoute() {
         }
     }
 
-    get("/shop/{id}") {
+    get("/shop/{shopId}") {
         ducksTryCatch {
             val shopId = call.parameters["shopId"]!!.toLong()
 

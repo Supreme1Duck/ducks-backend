@@ -26,6 +26,7 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
     ).nullable()
 
     val isTemporaryClosed = bool("isTemporaryClosed").default(false)
+    val temporaryClosedReason = text("temporaryClosedReason").nullable()
 
     // По умолчанию для всех продуктов.
     val minutesToCook = integer("minutes_to_cook").default(2)

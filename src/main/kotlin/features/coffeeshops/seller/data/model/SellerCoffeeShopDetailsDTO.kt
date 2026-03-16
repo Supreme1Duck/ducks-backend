@@ -11,6 +11,7 @@ data class SellerCoffeeShopDetailsDTO(
     val imageUrls: List<String>?,
     val lowestPrice: Int?,
     val workTime: String,
+    val isTemporaryClosed: Boolean,
     val schedule: List<Schedule>,
     val tags: List<String>?,
     val tablesCapacity: Int,

@@ -10,6 +10,7 @@ import com.ducks.features.coffeeshops.seller.routings.request.products.DeleteCof
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCoffeeShopScheduleRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTechnicalPauseRequest
+import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTemporaryClosedRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.UpdateCoffeeShopRequest
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
@@ -47,6 +48,17 @@ fun Route.shopsAndProductsRoute() {
             val product = coffeeProductsRepository.getProductDetails(productId)
 
             call.respond(HttpStatusCode.OK, product)
+        }
+    }
+
+    post("/shop/temporary-closed") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val request = call.receive<SetTemporaryClosedRequest>()
+
+            coffeeShopsRepository.updateTemporaryClosed(shopId, request.isClosed, request.reason)
+
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 

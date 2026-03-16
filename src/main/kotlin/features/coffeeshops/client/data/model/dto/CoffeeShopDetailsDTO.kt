@@ -10,6 +10,7 @@ data class CoffeeShopDetailsDTO(
     val lowestPrice: Int?,
     val workTime: String,
     val tags: List<String>?,
+    val isTemporaryClosed: Boolean,
     val tablesCapacity: Int,
     val freeTables: Int,
     val closestTime: Long?,

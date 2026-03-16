@@ -7,6 +7,8 @@ data class CoffeeShopPreviewDTO(
     val id: Long,
     val name: String,
     val address: String,
+    val images: List<String>,
     val tags: List<String>?,
+    val isTemporaryClosed: Boolean,
     val pricesStartsFrom: Int? = null,
 )

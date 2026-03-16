@@ -61,6 +61,13 @@ class SellerCoffeeShopsDataSource {
         }
     }
 
+    fun updateTemporaryClosed(shopId: Long, isClosed: Boolean, reason: String?) {
+        CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
+            it[isTemporaryClosed] = isClosed
+            it[temporaryClosedReason] = if (isClosed) reason?.takeIf { r -> r.isNotBlank() } else null
+        }
+    }
+
     fun updateFreeTables(shopId: Long, freeTables: Int) {
         CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
             it[CoffeeShopTable.freeTables] = freeTables
