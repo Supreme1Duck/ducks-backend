@@ -1,6 +1,7 @@
 package com.ducks.features.coffeeshops.database.mappers
 
 import com.ducks.features.coffeeshops.client.data.model.dto.*
+import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProductPreviewDTO
 import com.ducks.features.coffeeshops.database.CoffeeConstructorCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
 import com.ducks.features.coffeeshops.database.CoffeeModifiedConstructorCategoryTable
@@ -74,5 +75,54 @@ fun List<ResultRow>.mapToCoffeeProductWithDetailsDTO(): CoffeeProductWithDetails
 
     return product.copy(
         constructors = constructorsByCategory,
+    )
+}
+
+fun List<ResultRow>.mapToProductPreviewDTO(): CoffeeShopProductPreviewDTO {
+    val firstRow = this.first()
+
+    val constructors = this
+        .filter { it[CoffeeConstructorsTable.id] != null }
+        .groupBy { row ->
+            CoffeeConstructorCategoryDTO(
+                id = row[CoffeeConstructorCategoryTable.id].value,
+                name = row[CoffeeConstructorCategoryTable.name],
+                defaultConstructorIds = row[CoffeeModifiedConstructorCategoryTable.defaultConstructorIds],
+                maxSelection = row[CoffeeModifiedConstructorCategoryTable.maxSelection],
+                minSelection = row[CoffeeModifiedConstructorCategoryTable.minSelection],
+            )
+        }
+        .map { (category, rows) ->
+            CoffeeConstructorsDTO(
+                category = category,
+                constructors = rows.map { row ->
+                    CoffeeConstructorDTO(
+                        id = row[CoffeeConstructorsTable.id].value,
+                        name = row[CoffeeConstructorsTable.name],
+                        price = row[CoffeeConstructorsTable.price],
+                        categoryId = row[CoffeeConstructorsTable.categoryId].value,
+                        isInStock = row[CoffeeConstructorsTable.isInStock],
+                    )
+                }
+            )
+        }
+
+    return CoffeeShopProductPreviewDTO(
+        id = firstRow[CoffeeProductTable.id].value,
+        name = firstRow[CoffeeProductTable.name],
+        imageUrl = firstRow[CoffeeProductTable.imageUrl],
+        categoryId = firstRow[CoffeeProductTable.categoryId].value,
+        inStock = firstRow[CoffeeProductTable.inStock],
+        minutesToCook = firstRow[CoffeeProductTable.minutesToCook],
+        shopId = firstRow[CoffeeProductTable.shopId].value,
+        sizes = firstRow[CoffeeProductTable.sizes],
+        constructors = constructors,
+        description = firstRow[CoffeeProductTable.description],
+        nutrients = NutrientsDTO(
+            calories = firstRow[CoffeeProductTable.calories],
+            carbohydrates = firstRow[CoffeeProductTable.carbohydrates],
+            protein = firstRow[CoffeeProductTable.protein],
+            fats = firstRow[CoffeeProductTable.fats],
+        ),
     )
 }

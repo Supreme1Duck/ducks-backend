@@ -1,12 +1,12 @@
 package com.ducks.features.coffeeshops.seller.domain
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
-import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProductPreviewDTO
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
-import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductPreviewDTO
+import com.ducks.features.coffeeshops.database.mappers.mapToSellerCoffeeProductPreviewDTO
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeProductDataSource
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
+import features.coffeeshops.seller.data.model.CoffeeShopProductSellerPreviewDTO
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
@@ -15,7 +15,7 @@ class SellerCoffeeProductRepository(
     private val imageRepository: CoffeeShopImageRepository,
 ) {
 
-    suspend fun fetchProductsByShop(shopId: Long): List<CoffeeShopProductPreviewDTO> {
+    suspend fun fetchProductsByShop(shopId: Long): List<CoffeeShopProductSellerPreviewDTO> {
         return newSuspendedTransaction {
             CoffeeProductTable
                 .selectAll()
@@ -23,7 +23,7 @@ class SellerCoffeeProductRepository(
                     CoffeeProductTable.shopId eq shopId
                 }
                 .map {
-                    it.mapToCoffeeProductPreviewDTO()
+                    it.mapToSellerCoffeeProductPreviewDTO()
                 }
         }
     }

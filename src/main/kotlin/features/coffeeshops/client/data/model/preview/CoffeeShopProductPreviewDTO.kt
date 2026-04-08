@@ -1,8 +1,9 @@
 package com.ducks.features.coffeeshops.client.data.model.preview
 
+import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeConstructorsDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.NutrientsDTO
 import kotlinx.serialization.Serializable
-import util.BigDecimalSerializer
-import java.math.BigDecimal
 
 @Serializable
 data class CoffeeShopProductPreviewDTO(
@@ -11,11 +12,10 @@ data class CoffeeShopProductPreviewDTO(
     val imageUrl: String,
     val categoryId: Long,
     val inStock: Boolean,
-    @Serializable(with = BigDecimalSerializer::class)
-    val price: BigDecimal,
     val minutesToCook: Int?,
     val shopId: Long,
+    val sizes: List<CoffeeProductSizeDTO>,
+    val constructors: List<CoffeeConstructorsDTO>,
+    val description: String?,
+    val nutrients: NutrientsDTO?,
 )
-
-
-

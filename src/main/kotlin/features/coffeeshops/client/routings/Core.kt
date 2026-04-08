@@ -2,8 +2,10 @@ package com.ducks.features.coffeeshops.client.routings
 
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
+import com.ducks.features.coffeeshops.client.routings.request.EstimateCookingTimeRequest
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
@@ -41,6 +43,14 @@ fun Route.clientRoute() {
             val product = coffeeProductsRepository.getProduct(productId)
 
             call.respond(HttpStatusCode.OK, product)
+        }
+    }
+
+    post("/products/estimate-cooking-time") {
+        ducksTryCatch {
+            val request = call.receive<EstimateCookingTimeRequest>()
+            val estimate = coffeeProductsRepository.estimateCookingTime(request)
+            call.respond(HttpStatusCode.OK, estimate)
         }
     }
 

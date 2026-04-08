@@ -7,6 +7,7 @@ data class CoffeeShopDetailsDTO(
     val id: Long,
     val name: String,
     val address: String,
+    val imageUrls: List<String>?,
     val lowestPrice: Int?,
     val workTime: String,
     val tags: List<String>?,

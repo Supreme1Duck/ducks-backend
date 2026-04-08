@@ -2,12 +2,12 @@ package com.ducks.features.coffeeshops.database.mappers
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
-import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProductPreviewDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopActivePauseDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.orders.data.model.WorkTimeModel
+import features.coffeeshops.seller.data.model.CoffeeShopProductSellerPreviewDTO
 import org.jetbrains.exposed.v1.core.ResultRow
 import java.time.Instant
 import java.time.ZoneId
@@ -25,8 +25,9 @@ fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
     )
 }
 
-fun ResultRow.mapToCoffeeProductPreviewDTO(): CoffeeShopProductPreviewDTO {
-    return CoffeeShopProductPreviewDTO(
+
+fun ResultRow.mapToSellerCoffeeProductPreviewDTO(): CoffeeShopProductSellerPreviewDTO {
+    return CoffeeShopProductSellerPreviewDTO(
         id = this[CoffeeProductTable.id].value,
         name = this[CoffeeProductTable.name],
         imageUrl = this[CoffeeProductTable.imageUrl],
@@ -50,13 +51,14 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
         id = this[CoffeeShopTable.id].value,
         name = this[CoffeeShopTable.name],
         address = this[CoffeeShopTable.address],
+        imageUrls = this[CoffeeShopTable.imageUrls],
         tags = this[CoffeeShopTable.tags],
         lowestPrice = this[CoffeeShopTable.lowestPrice],
         workTime = workTime,
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
         isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         freeTables = this[CoffeeShopTable.freeTables],
-        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders],
+        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders]?.plus(6 * 60 * 1000L),
         closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
     )
 }

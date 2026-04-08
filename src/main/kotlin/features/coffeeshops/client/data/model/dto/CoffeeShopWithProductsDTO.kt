@@ -7,5 +7,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CoffeeShopWithProductsDTO(
     val shop: CoffeeShopDetailsDTO,
-    val products: Map<CoffeeCategoryDTO, CoffeeShopProductPreviewDTO>,
+    val products: List<ProductsByCategoryDTO>,
+)
+
+@Serializable
+data class ProductsByCategoryDTO(
+    val category: CoffeeCategoryDTO,
+    val products: List<CoffeeShopProductPreviewDTO>,
 )
