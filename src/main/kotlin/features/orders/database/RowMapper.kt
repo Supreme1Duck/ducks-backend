@@ -15,7 +15,7 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
         products = products,
         isActive = (this[CoffeeOrdersTable.acceptedTime] != null) and (this[CoffeeOrdersTable.finishedTime] == null),
         estimatedFinishTime = this[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
-        price = this[CoffeeOrdersTable.price],
+        price = this[CoffeeOrdersTable.totalPrice],
     )
 }
 

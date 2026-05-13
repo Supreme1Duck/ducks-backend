@@ -27,7 +27,7 @@ class CoffeeShopsDataSource {
         lastId: Long?,
         limit: Int?,
     ): List<CoffeeShopPreviewDTO> {
-         return CoffeeShopTable
+        return CoffeeShopTable
             .selectAll()
             .where(CoffeeShopTable.id less (lastId ?: Long.MAX_VALUE))
             .orderBy(CoffeeShopTable.id, SortOrder.DESC)

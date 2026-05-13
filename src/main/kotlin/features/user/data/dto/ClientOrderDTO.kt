@@ -5,15 +5,14 @@ import util.BigDecimalSerializer
 import java.math.BigDecimal
 
 @Serializable
-data class ActiveOrderDTO(
+data class ClientOrderDTO(
     val id: Long,
     val shopName: String,
-    val isAccepted: Boolean,
+    val createdAt: Long,
     val estimatedFinishTime: Long,
-
-    val products: List<ActiveOrderProductDTO>,
+    val products: List<ClientOrderProductDTO>,
+    val comment: String?,
+    val isActive: Boolean,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
-    @Serializable(with = BigDecimalSerializer::class)
-    val tips: BigDecimal?,
 )

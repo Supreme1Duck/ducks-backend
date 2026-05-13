@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops.client.domain
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopWithProductsDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.OrderTimeDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.util.DucksBadRequestError
@@ -35,17 +36,28 @@ class CoffeeShopsRepository(
 
     suspend fun getShopsList(lastId: Long?, limit: Int?): List<CoffeeShopPreviewDTO> {
         return newSuspendedTransaction {
-            shopsDataSource.getAllShops(lastId, limit)
+            val shops = shopsDataSource.getAllShops(lastId, limit)
+            shops.map { shop ->
+                val workTime = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shop.id)
+                shop.copy(
+                    openTime = workTime?.startTime,
+                    closeTime = workTime?.endTime,
+                )
+            }
         }
     }
 
     suspend fun getOrdersTimeList(
         shopId: Long,
-        estimatedOrderFinishTimeInMinutes: Int,
-    ): List<Long> {
-        return fetchAvailableOrdersTimeListRepository.invoke(
-            shopId = shopId,
-            estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes,
-        ) ?: throw DucksBadRequestError("У кофешопа нет свободного время для заказа.")
+        productIds: List<Long>,
+    ): OrderTimeDTO {
+        return newSuspendedTransaction {
+            val minutesToCook = productDataSource.estimateCookingTime(productIds).minutesToCook
+            val timestamps = fetchAvailableOrdersTimeListRepository.invoke(
+                shopId = shopId,
+                estimatedOrderFinishTimeInMinutes = minutesToCook,
+            ) ?: throw DucksBadRequestError("У кофешопа нет свободного время для заказа.")
+            OrderTimeDTO(availableTimestamps = timestamps)
+        }
     }
 }

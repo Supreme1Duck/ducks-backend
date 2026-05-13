@@ -47,7 +47,7 @@ class FetchAvailableOrdersTimeListRepository {
                     estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes
                 )
 
-            availableOrderTimeList
+            filterByMinInterval(availableOrderTimeList, estimatedOrderFinishTimeInMinutes)
         }
     }
 
@@ -292,6 +292,24 @@ class FetchAvailableOrdersTimeListRepository {
             startTime = startDateTime,
             endTime = endDateTime,
         )
+    }
+
+    /**
+     * Фильтрует список временных меток так, чтобы между соседними элементами
+     * разница была строго больше 3 минут. Это позволяет не показывать клиенту
+     * слишком близкие варианты времени заказа. Каждая метка сдвигается вперёд
+     * на время приготовления заказа — таким образом клиент видит время готовности,
+     * а не время начала приготовления.
+     */
+    private fun filterByMinInterval(timestamps: List<Long>, estimatedOrderFinishTimeInMinutes: Int): List<Long> {
+        val threeMinutesInMs = 3 * 60_000L
+        val cookingTimeMs = estimatedOrderFinishTimeInMinutes * 60_000L
+        return timestamps.fold(mutableListOf()) { acc, timestamp ->
+            if (acc.isEmpty() || timestamp - (acc.last() - cookingTimeMs) > threeMinutesInMs) {
+                acc.add(timestamp + cookingTimeMs)
+            }
+            acc
+        }
     }
 
     private fun roundWithLowSeconds(closestTimeToTakeOrders: Long): Long {

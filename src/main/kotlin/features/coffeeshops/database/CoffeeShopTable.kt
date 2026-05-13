@@ -44,4 +44,6 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
     // 2 - вне времени работы заведения
     // 3 - Очередь заказов в сумме больше 1 часа
     val canTakeOrdersReason = integer("can_take_orders_reason").nullable()
+
+    val rating = double("rating")
 }

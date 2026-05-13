@@ -16,4 +16,5 @@ data class CoffeeShopDetailsDTO(
     val freeTables: Int,
     val closestTime: Long?,
     val closestTimeReason: Int,
+    val rating: Double,
 )

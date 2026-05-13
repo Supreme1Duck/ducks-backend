@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops.client.routings
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
 import com.ducks.features.coffeeshops.client.routings.request.EstimateCookingTimeRequest
+import com.ducks.features.coffeeshops.client.routings.request.OrderTimeRequest
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -54,12 +55,11 @@ fun Route.clientRoute() {
         }
     }
 
-    get("/shop/order-time") {
+    post("/shop/order-time") {
         ducksTryCatch {
-            val shopId = call.parameters["shopId"]!!.toLong()
-            val estimatedOrderFinishTimeInMinutes = call.parameters["estimatedOrderFinishTimeInMinutes"]!!.toInt()
+            val request = call.receive<OrderTimeRequest>()
 
-            val availableTimesToOrder = coffeeShopsRepository.getOrdersTimeList(shopId, estimatedOrderFinishTimeInMinutes)
+            val availableTimesToOrder = coffeeShopsRepository.getOrdersTimeList(request.shopId, request.productIds)
 
             call.respond(availableTimesToOrder)
         }

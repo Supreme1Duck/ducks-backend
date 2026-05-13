@@ -23,7 +23,11 @@ fun Route.ordersRoute() {
 
             val activeOrder = clientsOrdersRepository.getActiveOrder(userId)
 
-            call.respond(HttpStatusCode.OK, activeOrder)
+            if (activeOrder != null) {
+                call.respond(HttpStatusCode.OK, activeOrder)
+            } else {
+                call.respond(HttpStatusCode.NoContent)
+            }
         }
     }
 
@@ -35,6 +39,16 @@ fun Route.ordersRoute() {
             createOrdersRepository.createOrder(request, clientPhoneNumber)
 
             call.respond(HttpStatusCode.Created)
+        }
+    }
+
+    get("orders") {
+        ducksTryCatch {
+            val userId = getClientPrincipal().userId
+
+            val orders = clientsOrdersRepository.getOrders(userId)
+
+            call.respond(HttpStatusCode.OK, orders)
         }
     }
 

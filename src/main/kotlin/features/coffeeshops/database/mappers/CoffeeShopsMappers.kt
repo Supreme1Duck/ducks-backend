@@ -21,7 +21,8 @@ fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
         tags = this[CoffeeShopTable.tags],
         isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         pricesStartsFrom = this[CoffeeShopTable.lowestPrice],
-        images = this[CoffeeShopTable.imageUrls].orEmpty()
+        images = this[CoffeeShopTable.imageUrls].orEmpty(),
+        rating = this[CoffeeShopTable.rating],
     )
 }
 
@@ -60,6 +61,7 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
         freeTables = this[CoffeeShopTable.freeTables],
         closestTime = this[CoffeeShopTable.closestTimeToTakeOrders]?.plus(6 * 60 * 1000L),
         closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
+        rating = this[CoffeeShopTable.rating],
     )
 }
 

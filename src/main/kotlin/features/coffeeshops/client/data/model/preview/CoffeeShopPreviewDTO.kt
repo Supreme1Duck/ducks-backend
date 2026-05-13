@@ -11,4 +11,7 @@ data class CoffeeShopPreviewDTO(
     val tags: List<String>?,
     val isTemporaryClosed: Boolean,
     val pricesStartsFrom: Int? = null,
+    val openTime: Long? = null,
+    val closeTime: Long? = null,
+    val rating: Double,
 )

@@ -77,8 +77,12 @@ class ClientCreateOrdersRepository(
                 it[estimatedFinishTime] = request.estimatedTimeToFinish
                 it[timeToCookInMinutes] = minutesToCookAllProducts
 
-                // будет посчитана в конце
+                it[tips] = request.tips
+                it[isToTime] = request.isToTime
+
+                // будут посчитаны в конце
                 it[price] = 0.toBigDecimal()
+                it[totalPrice] = 0.toBigDecimal()
             }
 
             val allProductIds = request.products.map { it.productId }
@@ -160,6 +164,7 @@ class ClientCreateOrdersRepository(
                 }
             ) {
                 it[price] = orderPrice
+                it[totalPrice] = orderPrice + (request.tips ?: 0.toBigDecimal())
             }
         }
 

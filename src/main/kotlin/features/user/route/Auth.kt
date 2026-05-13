@@ -31,7 +31,7 @@ fun Route.authRoute() {
     post("/otp/verify") {
         val request = call.receive<LoginRequest>()
 
-        if (request.otp == "1234") {
+        if (request.otp == "123456") {
             val userId = userRepository.saveUserAndGetId(request = request)
             val token = jwtService.generateClientToken(
                 userId = userId,

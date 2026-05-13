@@ -21,6 +21,10 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
     val comment = text("comment").nullable()
 
     val price = decimal("price", precision = 15, scale = 2)
+    val tips = decimal("tips", precision = 15, scale = 2).nullable()
+    val totalPrice = decimal("total_price", precision = 15, scale = 2)
+
+    val isToTime = bool("is_to_time").default(false)
 
     val timeToCookInMinutes = integer("time_to_cook_in_minutes")
     val estimatedFinishTime = long("estimated_finish_time").nullable()

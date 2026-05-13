@@ -5,6 +5,9 @@ import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.data.dto.ActiveOrderDTO
+import com.ducks.features.user.data.dto.ActiveOrderProductDTO
+import com.ducks.features.user.data.dto.ClientOrderDTO
+import com.ducks.features.user.data.dto.ClientOrderProductDTO
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -21,7 +24,7 @@ class ClientsOrdersRepository(
 ) {
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
 
-    suspend fun getActiveOrder(userId: Long): ActiveOrderDTO {
+    suspend fun getActiveOrder(userId: Long): ActiveOrderDTO? {
         return newSuspendedTransaction {
             val activeOrder = CoffeeOrdersTable
                 .join(
@@ -41,25 +44,78 @@ class ClientsOrdersRepository(
                         shopName = it[CoffeeShopTable.name],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
                         estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime]!!,
-                        products = "",
-                        price = it[CoffeeOrdersTable.price],
+                        products = emptyList(),
+                        price = it[CoffeeOrdersTable.totalPrice],
+                        tips = it[CoffeeOrdersTable.tips],
                     )
                 }
                 .firstOrNull()
 
-            val products = CoffeeOrdersTable
-                .join(
-                    otherTable = CoffeeOrderedProductsTable,
-                    joinType = JoinType.LEFT,
-                    onColumn = CoffeeOrderedProductsTable.orderId,
-                    otherColumn = CoffeeOrdersTable.id
-                )
-                .select(CoffeeOrderedProductsTable.productName)
-                .joinToString {
-                    it[CoffeeOrderedProductsTable.productName]
+            if (activeOrder != null) {
+                val products = CoffeeOrderedProductsTable
+                    .select(
+                        CoffeeOrderedProductsTable.productName,
+                        CoffeeOrderedProductsTable.price,
+                        CoffeeOrderedProductsTable.constructors,
+                    )
+                    .where { CoffeeOrderedProductsTable.orderId eq activeOrder.id }
+                    .map {
+                        ActiveOrderProductDTO(
+                            name = it[CoffeeOrderedProductsTable.productName],
+                            price = it[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
+                            constructors = it[CoffeeOrderedProductsTable.constructors]
+                                ?.joinToString { constructor -> constructor.name }
+                                ?: "",
+                        )
+                    }
+
+                activeOrder.copy(products = products)
+            } else {
+                null
+            }
+        }
+    }
+
+    suspend fun getOrders(userId: Long): List<ClientOrderDTO> {
+        return newSuspendedTransaction {
+            val orders = CoffeeOrdersTable
+                .join(CoffeeShopTable, joinType = JoinType.LEFT, CoffeeOrdersTable.coffeeShop, CoffeeShopTable.id)
+                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name)
+                .where { CoffeeOrdersTable.userId eq userId }
+                .map {
+                    ClientOrderDTO(
+                        id = it[CoffeeOrdersTable.id].value,
+                        shopName = it[CoffeeShopTable.name],
+                        createdAt = it[CoffeeOrdersTable.createdTime],
+                        estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
+                        products = emptyList(),
+                        comment = it[CoffeeOrdersTable.comment],
+                        isActive = it[CoffeeOrdersTable.finishedTime] == null,
+                        price = it[CoffeeOrdersTable.totalPrice],
+                    )
                 }
 
-            activeOrder?.copy(products = products) ?: throw DucksBadRequestError(message = "Активных заказов нет")
+            val products = CoffeeOrderedProductsTable
+                .select(
+                    CoffeeOrderedProductsTable.orderId,
+                    CoffeeOrderedProductsTable.productId,
+                    CoffeeOrderedProductsTable.productName,
+                    CoffeeOrderedProductsTable.imageUrl,
+                )
+                .where { CoffeeOrderedProductsTable.orderId inList orders.map { it.id } }
+                .groupBy { it[CoffeeOrderedProductsTable.orderId].value }
+
+            orders.map { order ->
+                order.copy(
+                    products = products[order.id]?.map {
+                        ClientOrderProductDTO(
+                            id = it[CoffeeOrderedProductsTable.productId],
+                            name = it[CoffeeOrderedProductsTable.productName],
+                            imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
+                        )
+                    } ?: emptyList()
+                )
+            }
         }
     }
 
