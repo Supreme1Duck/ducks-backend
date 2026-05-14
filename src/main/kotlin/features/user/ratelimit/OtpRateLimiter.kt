@@ -20,6 +20,7 @@ class OtpRateLimiter {
         // [2] = after 3rd call (3rd repeat) → 300s
         // [3] = after 4th+ call              → 1800s
         private val PHONE_COOLDOWNS = longArrayOf(60L, 300L, 300L, 1800L)
+        private const val PHONE_RESET_SECONDS = 1800L
 
         private const val IP_LIMIT = 10
         private const val IP_WINDOW_SECONDS = 3600L
@@ -30,16 +31,22 @@ class OtpRateLimiter {
      */
     fun checkPhoneLimit(phoneNumber: String): Long? {
         val state = phoneStates[phoneNumber] ?: return null
-        val cooldown = PHONE_COOLDOWNS[minOf(state.callCount - 1, PHONE_COOLDOWNS.size - 1)]
         val elapsed = Instant.now().epochSecond - state.lastCallTime.epochSecond
+        if (elapsed >= PHONE_RESET_SECONDS) return null
+        val cooldown = PHONE_COOLDOWNS[minOf(state.callCount - 1, PHONE_COOLDOWNS.size - 1)]
         return if (elapsed < cooldown) cooldown - elapsed else null
     }
 
     fun recordPhoneRequest(phoneNumber: String) {
         val now = Instant.now()
         phoneStates.compute(phoneNumber) { _, existing ->
-            if (existing == null) PhoneState(callCount = 1, lastCallTime = now)
-            else PhoneState(callCount = existing.callCount + 1, lastCallTime = now)
+            if (existing == null) {
+                PhoneState(callCount = 1, lastCallTime = now)
+            } else {
+                val elapsed = now.epochSecond - existing.lastCallTime.epochSecond
+                val count = if (elapsed >= PHONE_RESET_SECONDS) 1 else existing.callCount + 1
+                PhoneState(callCount = count, lastCallTime = now)
+            }
         }
     }
 
