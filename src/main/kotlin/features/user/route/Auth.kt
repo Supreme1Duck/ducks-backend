@@ -12,6 +12,18 @@ import io.ktor.server.routing.*
 import org.koin.core.parameter.parametersOf
 import org.koin.ktor.ext.inject
 
+private fun rateLimitMessage(waitSeconds: Long): String {
+    val minutes = (waitSeconds + 59) / 60
+    return "Повторная операция возможна через $minutes ${minuteWord(minutes)}."
+}
+
+private fun minuteWord(n: Long): String = when {
+    n % 100 in 11..19 -> "минут"
+    n % 10 == 1L -> "минуту"
+    n % 10 in 2..4 -> "минуты"
+    else -> "минут"
+}
+
 fun Route.authRoute() {
     val jwtService by application.inject<JWTClientService> { parametersOf(application) }
     val userRepository by application.inject<UsersRepository>()
@@ -27,14 +39,14 @@ fun Route.authRoute() {
             val ipWait = otpRateLimiter.checkIpLimit(ip)
             if (ipWait != null) {
                 call.response.headers.append(HttpHeaders.RetryAfter, ipWait.toString())
-                call.respond(HttpStatusCode.TooManyRequests)
+                call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(ipWait))
                 return@post
             }
 
             val phoneWait = otpRateLimiter.checkPhoneLimit(request.phoneNumber)
             if (phoneWait != null) {
                 call.response.headers.append(HttpHeaders.RetryAfter, phoneWait.toString())
-                call.respond(HttpStatusCode.TooManyRequests)
+                call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(phoneWait))
                 return@post
             }
 
