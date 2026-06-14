@@ -46,12 +46,10 @@ class SellerCoffeeProductRepository(
         shopId: Long,
         data: UpdateCoffeeProductRequest,
     ) {
-        return newSuspendedTransaction {
-            dataSource.updateProduct(
-                shopId = shopId,
-                productId = data.productId,
-            )
-        }
+        dataSource.updateProduct(
+            shopId = shopId,
+            productRequest = data,
+        )
     }
 
     suspend fun delete(

@@ -7,11 +7,8 @@ import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsD
 import com.ducks.features.coffeeshops.seller.routings.request.shop.UpdateCoffeeShopRequest
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.jdbc.batchInsert
 
 class SellerCoffeeShopsDataSource {
 
@@ -71,6 +68,21 @@ class SellerCoffeeShopsDataSource {
     fun updateFreeTables(shopId: Long, freeTables: Int) {
         CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
             it[CoffeeShopTable.freeTables] = freeTables
+        }
+    }
+
+    fun fetchHiddenShopIds(): List<Long> {
+        return CoffeeShopTable
+            .select(CoffeeShopTable.id)
+            .where { CoffeeShopTable.isShown eq false }
+            .map { it[CoffeeShopTable.id].value }
+    }
+
+    fun tryShowShop(shopId: Long) {
+        if (isShopAvailableToShow(shopId)) {
+            CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
+                it[isShown] = true
+            }
         }
     }
 

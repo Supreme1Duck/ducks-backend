@@ -1,8 +1,49 @@
 package com.ducks.features.coffeeshops.seller.routings.request.products
 
 import kotlinx.serialization.Serializable
+import util.BigDecimalSerializer
+import java.math.BigDecimal
 
 @Serializable
 data class UpdateCoffeeProductRequest(
     val productId: Long,
+    val name: String,
+    val description: String? = null,
+    val sizes: List<UpdateCoffeeProductSizeRequest>,
+    val categoryId: Long,
+    val imageUrl: String,
+    val minutesToCook: Int?,
+    val constructors: List<UpdateCoffeeConstructorRequest>? = null,
+    val carbohydrates: String? = null,
+    val protein: String? = null,
+    val fats: String? = null,
+    val calories: String? = null,
+)
+
+@Serializable
+data class UpdateCoffeeProductSizeRequest(
+    val id: String,
+    val sizeName: String? = null,
+    val sizeValue: String,
+    @Serializable(with = BigDecimalSerializer::class)
+    val price: BigDecimal,
+)
+
+@Serializable
+data class UpdateCoffeeConstructorRequest(
+    val category: UpdateCoffeeCategoryConstructorRequest,
+    val constructors: List<UpdateCoffeeConstructorItemRequest>,
+)
+
+@Serializable
+data class UpdateCoffeeCategoryConstructorRequest(
+    val id: Long,
+    val defaultConstructorIds: List<Long>? = null,
+    val maxSelection: Int? = null,
+    val minSelection: Int? = null,
+)
+
+@Serializable
+data class UpdateCoffeeConstructorItemRequest(
+    val id: Long,
 )

@@ -59,6 +59,7 @@ class CalculateCoffeeShopsOrdersTimeService(
             allCoffeeShopIds.forEach {
                 invoke(it)
             }
+
         }
     }
 

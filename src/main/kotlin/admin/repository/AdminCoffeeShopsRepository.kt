@@ -47,6 +47,7 @@ class AdminCoffeeShopsRepository(
                 val shopId = CoffeeShopTable.insertAndGetId {
                     it[name] = data.name
                     it[address] = data.address
+                    it[rating] = data.rating
                 }.value
 
                 CoffeeShopCredentialsTable.insert {

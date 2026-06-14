@@ -1,5 +1,6 @@
 package com.ducks.routings
 
+import com.ducks.admin.route.adminAuthRoute
 import com.ducks.admin.route.adminRoute
 import com.ducks.auth.JWT_ADMIN_NAME
 import io.ktor.server.application.*
@@ -10,6 +11,7 @@ fun Application.configureRouting() {
 
     routing {
         commonRoute()
+        adminAuthRoute()
 
         authenticate(JWT_ADMIN_NAME) {
             adminRoute()

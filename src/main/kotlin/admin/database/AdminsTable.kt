@@ -6,4 +6,6 @@ object AdminsTable : LongIdTable("ducks_admin_table") {
 
     val name = text("name")
     val secondName = text("second_name")
+    val login = text("login").uniqueIndex()
+    val password = text("password")
 }

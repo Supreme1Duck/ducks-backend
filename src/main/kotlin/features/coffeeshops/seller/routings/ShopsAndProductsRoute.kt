@@ -43,7 +43,7 @@ fun Route.shopsAndProductsRoute() {
 
     get("/products/{id}") {
         ducksTryCatch {
-            val productId = call.parameters["productId"]!!.toLong()
+            val productId = call.parameters["id"]!!.toLong()
 
             val product = coffeeProductsRepository.getProductDetails(productId)
 

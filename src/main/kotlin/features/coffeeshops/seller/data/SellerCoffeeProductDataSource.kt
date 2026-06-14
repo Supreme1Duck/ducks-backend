@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDet
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
+import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
@@ -127,14 +128,87 @@ class SellerCoffeeProductDataSource {
 
     suspend fun updateProduct(
         shopId: Long,
-        productId: Long,
+        productRequest: UpdateCoffeeProductRequest,
     ) {
+        newSuspendedTransaction {
+            val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
+                it.price
+            }.takeIf { it != BigDecimal.ZERO }
+                ?: throw IllegalArgumentException("Минимальная цена не может быть равна 0")
+
+            CoffeeProductTable.update({
+                (CoffeeProductTable.id eq productRequest.productId) and (CoffeeProductTable.shopId eq shopId)
+            }) { table ->
+                table[name] = productRequest.name
+                table[description] = productRequest.description
+                table[priceFrom] = pricesStartsFrom
+                table[categoryId] = productRequest.categoryId
+                table[imageUrl] = productRequest.imageUrl
+                table[minutesToCook] = productRequest.minutesToCook
+                table[carbohydrates] = productRequest.carbohydrates
+                table[protein] = productRequest.protein
+                table[fats] = productRequest.fats
+                table[calories] = productRequest.calories
+                table[sizes] = productRequest.sizes.map { sizeRequest ->
+                    CoffeeProductSizeDTO(
+                        id = sizeRequest.id,
+                        sizeName = sizeRequest.sizeName,
+                        sizeValue = sizeRequest.sizeValue,
+                        price = sizeRequest.price,
+                    )
+                }
+            }
+
+            // Удаляем старые конструкторы
+            val oldLinks = CoffeeProductsWithConstructorsTable
+                .select(CoffeeProductsWithConstructorsTable.modifiedCategory)
+                .where { CoffeeProductsWithConstructorsTable.product eq productRequest.productId }
+                .map { it[CoffeeProductsWithConstructorsTable.modifiedCategory].value }
+
+            CoffeeProductsWithConstructorsTable.deleteWhere {
+                CoffeeProductsWithConstructorsTable.product eq productRequest.productId
+            }
+
+            oldLinks.forEach { modifiedCategoryId ->
+                CoffeeModifiedConstructorCategoryTable.deleteWhere {
+                    CoffeeModifiedConstructorCategoryTable.id eq modifiedCategoryId
+                }
+            }
+
+            // Вставляем новые конструкторы
+            productRequest.constructors?.let { constructors ->
+                constructors.forEach { constructorRequest ->
+                    val categoryRequest = constructorRequest.category
+
+                    val categoryId = CoffeeConstructorCategoryTable
+                        .select(CoffeeConstructorCategoryTable.id)
+                        .where { CoffeeConstructorCategoryTable.id eq categoryRequest.id }
+                        .map { it[CoffeeConstructorCategoryTable.id].value }
+                        .first()
+
+                    val modifiedCategoryId = CoffeeModifiedConstructorCategoryTable.insertAndGetId { table ->
+                        table[CoffeeModifiedConstructorCategoryTable.categoryId] = categoryId
+                        table[defaultConstructorIds] = categoryRequest.defaultConstructorIds
+                        table[maxSelection] = categoryRequest.maxSelection
+                        table[minSelection] = categoryRequest.minSelection
+                    }
+
+                    constructorRequest.constructors.forEach { item ->
+                        CoffeeProductsWithConstructorsTable.insert {
+                            it[constructor] = item.id
+                            it[modifiedCategory] = modifiedCategoryId
+                            it[product] = productRequest.productId
+                        }
+                    }
+                }
+            }
+        }
     }
 
     suspend fun deleteProduct(shopId: Long, productId: Long) {
         newSuspendedTransaction {
             CoffeeProductTable.deleteWhere {
-                (CoffeeProductTable.shopId) eq shopId and (CoffeeProductTable.id eq productId)
+                (CoffeeProductTable.shopId eq shopId) and (CoffeeProductTable.id eq productId)
             }
         }
     }
