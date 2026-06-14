@@ -34,7 +34,6 @@ object DatabaseFactory {
         val flyway = Flyway.configure()
             .dataSource("jdbc:postgresql://localhost:5432/ducksdatabase", "andrewutko", password)
             .locations("filesystem:src/main/resources/db/migration")
-            .validateOnMigrate(false)
             .load()
 
         flyway.migrate()

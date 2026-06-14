@@ -35,8 +35,8 @@ class SellerCoffeeProductRepository(
     suspend fun insert(
         shopId: Long,
         data: CreateCoffeeProductRequest,
-    ) {
-        dataSource.insertProduct(
+    ): Long {
+        return dataSource.insertProduct(
             shopId = shopId,
             productRequest = data,
         )

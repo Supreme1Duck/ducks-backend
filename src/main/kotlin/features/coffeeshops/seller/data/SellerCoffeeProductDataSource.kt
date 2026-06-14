@@ -60,8 +60,8 @@ class SellerCoffeeProductDataSource {
     suspend fun insertProduct(
         shopId: Long,
         productRequest: CreateCoffeeProductRequest
-    ) {
-        newSuspendedTransaction {
+    ): Long {
+        return newSuspendedTransaction {
             val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
                 it.price
             }.takeIf { it != BigDecimal.ZERO }
@@ -123,6 +123,8 @@ class SellerCoffeeProductDataSource {
                     }
                 }
             }
+
+            productId.value
         }
     }
 

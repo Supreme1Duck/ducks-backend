@@ -125,12 +125,12 @@ fun Route.shopsAndProductsRoute() {
             val request = call.receive<CreateCoffeeProductRequest>()
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
-            coffeeProductsRepository.insert(
+            val productId = coffeeProductsRepository.insert(
                 shopId = principalShopId,
                 data = request
             )
 
-            call.respond(HttpStatusCode.Created)
+            call.respond(HttpStatusCode.Created, mapOf("id" to productId))
         }
     }
 
