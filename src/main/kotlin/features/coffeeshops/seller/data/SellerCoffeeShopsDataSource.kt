@@ -92,11 +92,8 @@ class SellerCoffeeShopsDataSource {
             .where {
                 CoffeeShopTable.id eq shopId and
                         CoffeeShopTable.name.notLike("") and
-                        CoffeeShopTable.address.notLike("")
-                // TODO вернуть в uncomment после дебага
-//                and
-//                        CoffeeShopTable.imageUrls.isNotNull() and
-//                        CoffeeShopTable.lowestPrice.isNotNull()
+                        CoffeeShopTable.address.notLike("") and
+                        CoffeeShopTable.imageUrls.isNotNull()
             }
             .empty()
             .not()
@@ -109,7 +106,20 @@ class SellerCoffeeShopsDataSource {
             .empty()
             .not()
 
-        return hasProducts && hasAllInfo
+        return hasAllInfo && hasProducts && hasFullSchedule(shopId)
+    }
+
+    private fun hasFullSchedule(shopId: Long): Boolean {
+        val scheduleRows = CoffeeShopScheduleTable
+            .selectAll()
+            .where { CoffeeShopScheduleTable.shopId eq shopId }
+            .toList()
+
+        return scheduleRows.count() == 7 && scheduleRows.all { row ->
+            row[CoffeeShopScheduleTable.isClosed] ||
+                    (!row[CoffeeShopScheduleTable.startTime].isNullOrEmpty() &&
+                            !row[CoffeeShopScheduleTable.endTime].isNullOrEmpty())
+        }
     }
 
     private fun getDayNameByIndex(dayOfWeek: Int): String {
