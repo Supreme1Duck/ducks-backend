@@ -6,4 +6,5 @@ fun Route.sellersRoute() {
     shopsAndProductsRoute()
     constructorsRoute()
     productCategoriesRoute()
+    sellerPinRoute()
 }

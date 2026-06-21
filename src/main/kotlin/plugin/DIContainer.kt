@@ -7,8 +7,9 @@ import org.koin.logger.SLF4JLogger
 
 
 fun Application.installDI() {
+    val baseUrl = environment.config.property("app.baseUrl").getString()
     install(Koin) {
         SLF4JLogger() // Включает логирование Koin
-        modules(baseModule())
+        modules(baseModule(baseUrl))
     }
 }

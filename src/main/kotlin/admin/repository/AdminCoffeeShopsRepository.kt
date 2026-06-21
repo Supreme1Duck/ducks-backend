@@ -54,7 +54,8 @@ class AdminCoffeeShopsRepository(
                     it[login] = data.unp
                     it[password] = data.initialPass
                     it[createdBy] = createdByAdminID
-                    it[ShopCredentialsTable.shopId] = shopId
+                    it[CoffeeShopCredentialsTable.shopId] = shopId
+                    it[pinCode] = data.pinCode
                 }
 
                 shopId

@@ -8,6 +8,6 @@ import com.ducks.features.shops.shopsModule
 import com.ducks.service.serviceModule
 import org.koin.dsl.module
 
-fun baseModule() = module {
-    includes(adminsModule, usersModule, shopsModule, coffeeShopsModule, ordersModule, serviceModule)
+fun baseModule(baseUrl: String) = module {
+    includes(adminsModule, usersModule, shopsModule, coffeeShopsModule(baseUrl), ordersModule, serviceModule)
 }

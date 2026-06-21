@@ -10,6 +10,7 @@ data class CreateCoffeeShopRequest(
     val unp: String,
     val initialPass: String,
     val rating: Double,
+    val pinCode: String,
     // Список из 7 элементов, с пн по пт.
     val workTime: SetCoffeeShopScheduleRequest,
 )

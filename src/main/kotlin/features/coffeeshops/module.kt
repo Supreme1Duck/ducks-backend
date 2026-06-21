@@ -10,18 +10,19 @@ import com.ducks.features.coffeeshops.seller.data.SellerCoffeeCategoriesReposito
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeConstructorsDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeProductDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
+import com.ducks.features.coffeeshops.seller.data.SellerPinCodeDataSource
 import com.ducks.features.coffeeshops.seller.domain.*
 import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityService
 import org.koin.dsl.module
 
-val coffeeShopsModule = module {
+fun coffeeShopsModule(baseUrl: String) = module {
 
     single { CoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeProductsRepository(get()) }
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }
-    single { CoffeeShopImageRepository(get()) }
+    single { CoffeeShopImageRepository(get(), baseUrl) }
 
     single { SellerCoffeeProductDataSource() }
     single { SellerCoffeeShopsDataSource() }
@@ -38,5 +39,6 @@ val coffeeShopsModule = module {
     single { ObserveOrdersRepository() }
     single { SellerOrdersRepository(get()) }
     single { CoffeeSellerAnalyticsRepository() }
+    single { SellerPinCodeDataSource() }
     single { ActualizeCoffeeShopsVisibilityService(get()) }
 }

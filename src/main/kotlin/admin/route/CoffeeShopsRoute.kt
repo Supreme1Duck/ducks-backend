@@ -3,7 +3,9 @@ package com.ducks.admin.route
 import com.ducks.admin.repository.AdminCoffeeShopsRepository
 import com.ducks.admin.request.CreateCoffeeCategoryRequest
 import com.ducks.admin.request.CreateCoffeeShopRequest
+import com.ducks.admin.request.SetPinCodeRequest
 import com.ducks.auth.admin.JWTAdminPrincipal
+import com.ducks.features.coffeeshops.seller.data.SellerPinCodeDataSource
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.server.auth.*
@@ -14,6 +16,7 @@ import org.koin.ktor.ext.inject
 
 fun Route.adminCoffeeShopsRoute() {
     val coffeeShopsRepository by application.inject<AdminCoffeeShopsRepository>()
+    val pinCodeDataSource by application.inject<SellerPinCodeDataSource>()
 
     route("/coffee-shops") {
         post("/create") {
@@ -23,6 +26,14 @@ fun Route.adminCoffeeShopsRoute() {
 
                 coffeeShopsRepository.createNewShop(request, adminId)
 
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+        post("/pin/set") {
+            ducksTryCatch {
+                val request = call.receive<SetPinCodeRequest>()
+                pinCodeDataSource.setPin(request.shopId, request.pin)
                 call.respond(HttpStatusCode.NoContent)
             }
         }

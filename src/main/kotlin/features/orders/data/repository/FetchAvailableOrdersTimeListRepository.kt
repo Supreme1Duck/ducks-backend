@@ -219,7 +219,7 @@ class FetchAvailableOrdersTimeListRepository {
         }.sortedBy { it.dayOfWeek }
 
         return targetDays.mapNotNull {
-            if (it.isClosed || it.startTime == null || it.endTime == null)
+            if (it.isClosed || it.startTime.isNullOrBlank() || it.endTime.isNullOrBlank())
                 return@mapNotNull null
 
             val daysDifference = it.dayOfWeek - todayDayOfWeek
@@ -262,7 +262,7 @@ class FetchAvailableOrdersTimeListRepository {
             } else {
                 null
             }
-        } ?: currentDay(schedule.first { it.dayOfWeek == todayDayOfWeek }) // просто берет расписание текущего дня если не попали ни в одно расписание
+        } ?: schedule.first { it.dayOfWeek == todayDayOfWeek }.takeIf { !it.isClosed && !it.startTime.isNullOrBlank() && !it.endTime.isNullOrBlank() }?.let { currentDay(it) }
     }
 
     private fun currentDay(

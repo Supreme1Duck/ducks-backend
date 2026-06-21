@@ -17,6 +17,7 @@ import java.util.*
 
 class CoffeeShopImageRepository(
     private val ktor: HttpClient,
+    private val baseUrl: String,
 ) {
 
     private val allowedExtensions = listOf("jpg", "jpeg", "png")
@@ -34,7 +35,7 @@ class CoffeeShopImageRepository(
 
         // TODO сделать полный улр
         val imagePath = "${UUID.randomUUID()}.jpg"
-        val imageUrl = "http://localhost:8080/coffee-shops/images/$imagePath"
+        val imageUrl = "$baseUrl/coffee-shops/images/$imagePath"
 
         val file = File(shopsFilePath, imagePath)
 
@@ -64,7 +65,7 @@ class CoffeeShopImageRepository(
         val imageWithoutBackground = removeBackgroundOnImage(imageBytes)
 
         val imagePath = "${UUID.randomUUID()}.jpg"
-        val imageUrl = "http://localhost:8080/coffee-shops/products/images/$imagePath"
+        val imageUrl = "$baseUrl/coffee-shops/products/images/$imagePath"
         val file = File(productsFilePath, imagePath)
 
         file.parentFile.mkdirs()

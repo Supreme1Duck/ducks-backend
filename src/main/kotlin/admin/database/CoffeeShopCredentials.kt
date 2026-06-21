@@ -11,4 +11,9 @@ object CoffeeShopCredentialsTable: LongIdTable("ducks_coffee_shop_credentials_ta
     val login = text("login").uniqueIndex()
     val password = text("password")
     val createdBy = reference("created_by", AdminsTable, onDelete = ReferenceOption.SET_NULL)
+
+    val pinCode = text("pin_code")
+    val pinFailedAttempts = integer("pin_failed_attempts").default(0)
+    val pinLastFailedAt = long("pin_last_failed_at").nullable()
+    val pinLockedUntil = long("pin_locked_until").nullable()
 }

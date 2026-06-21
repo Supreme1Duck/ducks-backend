@@ -8,6 +8,7 @@ import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.features.user.data.dto.ActiveOrderProductDTO
 import com.ducks.features.user.data.dto.ClientOrderDTO
 import com.ducks.features.user.data.dto.ClientOrderProductDTO
+import com.ducks.features.user.data.dto.OrderStatus
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -43,7 +44,7 @@ class ClientsOrdersRepository(
                         id = it[CoffeeOrdersTable.id].value,
                         shopName = it[CoffeeShopTable.name],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
-                        estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime]!!,
+                        estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         price = it[CoffeeOrdersTable.totalPrice],
                         tips = it[CoffeeOrdersTable.tips],
@@ -86,11 +87,14 @@ class ClientsOrdersRepository(
                     ClientOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
                         shopName = it[CoffeeShopTable.name],
-                        createdAt = it[CoffeeOrdersTable.createdTime],
-                        estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
+                        finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
-                        isActive = it[CoffeeOrdersTable.finishedTime] == null,
+                        status = when {
+                            it[CoffeeOrdersTable.isCancelledByClient] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
+                            else -> OrderStatus.IN_PROGRESS.value
+                        },
                         price = it[CoffeeOrdersTable.totalPrice],
                     )
                 }
