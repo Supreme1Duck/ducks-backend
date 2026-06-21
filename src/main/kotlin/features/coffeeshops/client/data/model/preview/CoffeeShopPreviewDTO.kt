@@ -13,5 +13,6 @@ data class CoffeeShopPreviewDTO(
     val pricesStartsFrom: Int? = null,
     val openTime: Long? = null,
     val closeTime: Long? = null,
+    val isClosed: Boolean = false,
     val rating: Double,
 )

@@ -23,7 +23,8 @@ class CoffeeShopsRepository(
 
     suspend fun getShop(shopId: Long): CoffeeShopWithProductsDTO {
         return newSuspendedTransaction {
-            val shop = shopsDataSource.getShopDetails(shopId)
+            val workTime = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shopId)
+            val shop = shopsDataSource.getShopDetails(shopId, workTime)
 
             val productsWithCategories = productDataSource.fetchByShop(shopId)
 
@@ -42,6 +43,7 @@ class CoffeeShopsRepository(
                 shop.copy(
                     openTime = workTime?.startTime,
                     closeTime = workTime?.endTime,
+                    isClosed = workTime?.isClosed ?: true,
                 )
             }
         }

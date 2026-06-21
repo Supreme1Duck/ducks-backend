@@ -1,6 +1,7 @@
 package com.ducks.features.coffeeshops.database.mappers
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.WorkTimeDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
@@ -40,12 +41,11 @@ fun ResultRow.mapToSellerCoffeeProductPreviewDTO(): CoffeeShopProductSellerPrevi
     )
 }
 
-fun ResultRow.mapToCoffeeShopDetailsDTO(): CoffeeShopDetailsDTO {
-    val isClosed = this[CoffeeShopScheduleTable.isClosed]
-    val workTime = if (isClosed) {
-        "закрыто"
+fun ResultRow.mapToCoffeeShopDetailsDTO(workTimeModel: WorkTimeModel?): CoffeeShopDetailsDTO {
+    val workTime = if (workTimeModel != null && !workTimeModel.isClosed) {
+        WorkTimeDTO(openTime = workTimeModel.startTime, closeTime = workTimeModel.endTime)
     } else {
-        "${this[CoffeeShopScheduleTable.startTime]} - ${this[CoffeeShopScheduleTable.endTime]}"
+        null
     }
 
     return CoffeeShopDetailsDTO(

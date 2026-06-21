@@ -2,15 +2,13 @@ package com.ducks.features.coffeeshops.client.data
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
-import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopPreview
-import org.jetbrains.exposed.v1.core.JoinType
+import com.ducks.features.orders.data.model.WorkTimeModel
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.LocalDate
 
 class CoffeeShopsDataSource {
 
@@ -39,18 +37,14 @@ class CoffeeShopsDataSource {
 
     fun getShopDetails(
         shopId: Long,
+        workTime: WorkTimeModel?,
     ) : CoffeeShopDetailsDTO {
-        val currentDayOfWeek = LocalDate.now().dayOfWeek
-
         return CoffeeShopTable
-            .join(CoffeeShopScheduleTable, joinType = JoinType.LEFT, CoffeeShopTable.id, CoffeeShopScheduleTable.shopId) {
-                CoffeeShopScheduleTable.dayOfWeek eq currentDayOfWeek.value
-            }
             .selectAll()
             .where {
                 CoffeeShopTable.id eq shopId
             }.map {
-                it.mapToCoffeeShopDetailsDTO()
+                it.mapToCoffeeShopDetailsDTO(workTime)
             }.first()
     }
 }

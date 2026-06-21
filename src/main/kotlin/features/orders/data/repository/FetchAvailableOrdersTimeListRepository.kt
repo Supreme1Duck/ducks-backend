@@ -206,6 +206,7 @@ class FetchAvailableOrdersTimeListRepository {
                 )
             }
 
+        // Offset - 3, что может быть в будущем ошибкой. Хардкод часового пояса.
         val today = Clock.System.now()
             .toJavaInstant()
             .atOffset(ZoneOffset.ofHours(3))
