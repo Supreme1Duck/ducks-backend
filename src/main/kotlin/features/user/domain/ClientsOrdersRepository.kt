@@ -134,6 +134,54 @@ class ClientsOrdersRepository(
         }
     }
 
+    suspend fun getOrder(orderId: Long, userId: Long): ClientOrderDTO? {
+        return newSuspendedTransaction {
+            val order = CoffeeOrdersTable
+                .join(CoffeeShopTable, joinType = JoinType.LEFT, CoffeeOrdersTable.coffeeShop, CoffeeShopTable.id)
+                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name + CoffeeShopTable.address)
+                .where { (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.userId eq userId) }
+                .map {
+                    ClientOrderDTO(
+                        id = it[CoffeeOrdersTable.id].value,
+                        shopName = it[CoffeeShopTable.name],
+                        shopAddress = it[CoffeeShopTable.address],
+                        finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
+                        products = emptyList(),
+                        comment = it[CoffeeOrdersTable.comment],
+                        status = when {
+                            it[CoffeeOrdersTable.isCancelledByClient] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
+                            else -> OrderStatus.IN_PROGRESS.value
+                        },
+                        price = it[CoffeeOrdersTable.totalPrice],
+                    )
+                }
+                .firstOrNull() ?: return@newSuspendedTransaction null
+
+            val products = CoffeeOrderedProductsTable
+                .select(
+                    CoffeeOrderedProductsTable.orderId,
+                    CoffeeOrderedProductsTable.productId,
+                    CoffeeOrderedProductsTable.productName,
+                    CoffeeOrderedProductsTable.imageUrl,
+                    CoffeeOrderedProductsTable.quantity,
+                    CoffeeOrderedProductsTable.price,
+                )
+                .where { CoffeeOrderedProductsTable.orderId eq orderId }
+                .map {
+                    ClientOrderProductDTO(
+                        id = it[CoffeeOrderedProductsTable.productId],
+                        name = it[CoffeeOrderedProductsTable.productName],
+                        imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
+                        quantity = it[CoffeeOrderedProductsTable.quantity],
+                        price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
+                    )
+                }
+
+            order.copy(products = products)
+        }
+    }
+
     suspend fun cancelOrder(orderId: Long, clientId: Long) {
         newSuspendedTransaction {
             val isOrderAccepted = CoffeeOrdersTable

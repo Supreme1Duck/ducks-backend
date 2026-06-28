@@ -33,6 +33,22 @@ fun Route.ordersRoute() {
         }
     }
 
+    get("order/{id}") {
+        ducksTryCatch {
+            val orderId = call.parameters["id"]?.toLongOrNull()
+                ?: return@ducksTryCatch call.respond(HttpStatusCode.BadRequest)
+            val userId = getClientPrincipal().userId
+
+            val order = clientsOrdersRepository.getOrder(orderId, userId)
+
+            if (order != null) {
+                call.respond(HttpStatusCode.OK, order)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
+            }
+        }
+    }
+
     post("order/create") {
         ducksTryCatch {
             val request = call.receive<CreateOrderRequest>()
