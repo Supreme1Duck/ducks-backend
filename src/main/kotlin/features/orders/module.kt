@@ -8,7 +8,7 @@ import org.koin.dsl.module
 
 val ordersModule = module {
 
-    single { ActualizeOrdersService(get()) }
+    single { ActualizeOrdersService(get(), get()) }
     single { CalculateCoffeeShopsOrdersTimeService(get(), get()) }
     single { FetchAvailableOrdersTimeListRepository() }
     single { ActualizeTechnicalPausesService(get()) }

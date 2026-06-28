@@ -36,18 +36,22 @@ fun Route.authRoute() {
             val ip = call.request.headers["X-Forwarded-For"]?.split(",")?.first()?.trim()
                 ?: call.request.local.remoteAddress
 
-            val ipWait = otpRateLimiter.checkIpLimit(ip)
-            if (ipWait != null) {
-                call.response.headers.append(HttpHeaders.RetryAfter, ipWait.toString())
-                call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(ipWait))
-                return@post
-            }
+            val isLocalhost = call.request.local.localHost in listOf("localhost", "127.0.0.1", "::1")
 
-            val phoneWait = otpRateLimiter.checkPhoneLimit(request.phoneNumber)
-            if (phoneWait != null) {
-                call.response.headers.append(HttpHeaders.RetryAfter, phoneWait.toString())
-                call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(phoneWait))
-                return@post
+            if (!isLocalhost) {
+                val ipWait = otpRateLimiter.checkIpLimit(ip)
+                if (ipWait != null) {
+                    call.response.headers.append(HttpHeaders.RetryAfter, ipWait.toString())
+                    call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(ipWait))
+                    return@post
+                }
+
+                val phoneWait = otpRateLimiter.checkPhoneLimit(request.phoneNumber)
+                if (phoneWait != null) {
+                    call.response.headers.append(HttpHeaders.RetryAfter, phoneWait.toString())
+                    call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(phoneWait))
+                    return@post
+                }
             }
 
             otpRateLimiter.recordIpRequest(ip)

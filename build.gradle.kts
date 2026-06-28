@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.migrations.flyway)
     implementation(libs.database.postgre)
     implementation("org.reflections:reflections:0.10.2")
+    implementation("com.google.firebase:firebase-admin:9.4.2")
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)

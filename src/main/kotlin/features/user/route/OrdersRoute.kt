@@ -1,6 +1,7 @@
 package com.ducks.features.user.route
 
 import com.ducks.features.coffeeshops.client.routings.request.CreateOrderRequest
+import com.ducks.features.user.data.UsersRepository
 import com.ducks.features.user.domain.ClientCreateOrdersRepository
 import com.ducks.features.user.domain.ClientsOrdersRepository
 import com.ducks.features.user.util.getClientPrincipal
@@ -16,6 +17,7 @@ fun Route.ordersRoute() {
 
     val createOrdersRepository by application.inject<ClientCreateOrdersRepository> { parametersOf(application) }
     val clientsOrdersRepository by application.inject<ClientsOrdersRepository> { parametersOf(application) }
+    val usersRepository by application.inject<UsersRepository>()
 
     get("order/active") {
         ducksTryCatch {
@@ -49,6 +51,15 @@ fun Route.ordersRoute() {
             val orders = clientsOrdersRepository.getOrders(userId)
 
             call.respond(HttpStatusCode.OK, orders)
+        }
+    }
+
+    post("device-token") {
+        ducksTryCatch {
+            val token = call.receive<String>()
+            val userId = getClientPrincipal().userId
+            usersRepository.updateFcmToken(userId, token)
+            call.respond(HttpStatusCode.OK)
         }
     }
 

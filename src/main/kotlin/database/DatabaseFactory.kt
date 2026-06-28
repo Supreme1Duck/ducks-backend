@@ -51,7 +51,11 @@ object DatabaseFactory {
 
         val existingHashes = getExistingHashes(migrationDir)
 
-        var lastMigrationVersion = existingHashes.count()
+        var lastMigrationVersion = File(migrationDir)
+            .listFiles { file -> file.name.endsWith(".sql") }
+            ?.mapNotNull { file ->
+                file.name.removePrefix("V").substringBefore("__").toIntOrNull()
+            }?.maxOrNull() ?: 0
 
         println("lastMigrationVersion - $lastMigrationVersion")
 

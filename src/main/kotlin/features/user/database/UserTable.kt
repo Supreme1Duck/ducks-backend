@@ -7,4 +7,5 @@ object UserTable: LongIdTable("ducks_user_table") {
     val phoneNumber = text("phone_number").uniqueIndex()
     val name = text("name").nullable()
     val secondName = text("second_name").nullable()
+    val fcmToken = text("fcm_token").nullable()
 }

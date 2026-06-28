@@ -14,6 +14,7 @@ enum class OrderStatus(val value: Int) {
 data class ClientOrderDTO(
     val id: Long,
     val shopName: String,
+    val shopAddress: String,
     val finishedAt: Long,
     val products: List<ClientOrderProductDTO>,
     val comment: String?,

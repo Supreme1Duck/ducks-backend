@@ -6,8 +6,9 @@ import java.math.BigDecimal
 
 @Serializable
 data class ActiveOrderProductDTO(
+    val id: Long,
     val name: String,
-    // Добавки через запятую
+    val quantity: Int,
     val constructors: String,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,

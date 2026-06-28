@@ -180,7 +180,7 @@ class ClientCreateOrdersRepository(
             .where {
                 CoffeeProductTable.id eq productId
             }.map {
-                it[CoffeeProductTable.sizes].first { it.id == sizeId }
+                it[CoffeeProductTable.sizes].firstOrNull { it.id == sizeId }
             }.firstOrNull()
     }
 

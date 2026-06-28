@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.update
 
 class UsersRepository {
 
@@ -42,6 +43,14 @@ class UsersRepository {
                 .map {
                     it.mapToUserDTO()
                 }.firstOrNull()
+        }
+    }
+
+    suspend fun updateFcmToken(userId: Long, token: String) {
+        newSuspendedTransaction {
+            UserTable.update({ UserTable.id eq userId }) {
+                it[fcmToken] = token
+            }
         }
     }
 

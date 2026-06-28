@@ -34,7 +34,7 @@ class ClientsOrdersRepository(
                     onColumn = CoffeeShopTable.id,
                     otherColumn = CoffeeOrdersTable.coffeeShop
                 )
-                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name)
+                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name + CoffeeShopTable.address)
                 .where {
                     (CoffeeOrdersTable.userId eq userId) and
                             (CoffeeOrdersTable.finishedTime eq null)
@@ -43,8 +43,10 @@ class ClientsOrdersRepository(
                     ActiveOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
                         shopName = it[CoffeeShopTable.name],
+                        shopAddress = it[CoffeeShopTable.address],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
                         estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
+                        // Будут заполнены дальше.
                         products = emptyList(),
                         price = it[CoffeeOrdersTable.totalPrice],
                         tips = it[CoffeeOrdersTable.tips],
@@ -55,14 +57,18 @@ class ClientsOrdersRepository(
             if (activeOrder != null) {
                 val products = CoffeeOrderedProductsTable
                     .select(
+                        CoffeeOrderedProductsTable.productId,
                         CoffeeOrderedProductsTable.productName,
                         CoffeeOrderedProductsTable.price,
+                        CoffeeOrderedProductsTable.quantity,
                         CoffeeOrderedProductsTable.constructors,
                     )
                     .where { CoffeeOrderedProductsTable.orderId eq activeOrder.id }
                     .map {
                         ActiveOrderProductDTO(
+                            id = it[CoffeeOrderedProductsTable.productId],
                             name = it[CoffeeOrderedProductsTable.productName],
+                            quantity = it[CoffeeOrderedProductsTable.quantity],
                             price = it[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
                             constructors = it[CoffeeOrderedProductsTable.constructors]
                                 ?.joinToString { constructor -> constructor.name }
@@ -81,12 +87,13 @@ class ClientsOrdersRepository(
         return newSuspendedTransaction {
             val orders = CoffeeOrdersTable
                 .join(CoffeeShopTable, joinType = JoinType.LEFT, CoffeeOrdersTable.coffeeShop, CoffeeShopTable.id)
-                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name)
+                .select(CoffeeOrdersTable.columns + CoffeeShopTable.name + CoffeeShopTable.address)
                 .where { CoffeeOrdersTable.userId eq userId }
                 .map {
                     ClientOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
                         shopName = it[CoffeeShopTable.name],
+                        shopAddress = it[CoffeeShopTable.address],
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
@@ -105,6 +112,8 @@ class ClientsOrdersRepository(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
                     CoffeeOrderedProductsTable.imageUrl,
+                    CoffeeOrderedProductsTable.quantity,
+                    CoffeeOrderedProductsTable.price,
                 )
                 .where { CoffeeOrderedProductsTable.orderId inList orders.map { it.id } }
                 .groupBy { it[CoffeeOrderedProductsTable.orderId].value }
@@ -116,6 +125,8 @@ class ClientsOrdersRepository(
                             id = it[CoffeeOrderedProductsTable.productId],
                             name = it[CoffeeOrderedProductsTable.productName],
                             imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
+                            quantity = it[CoffeeOrderedProductsTable.quantity],
+                            price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                         )
                     } ?: emptyList()
                 )

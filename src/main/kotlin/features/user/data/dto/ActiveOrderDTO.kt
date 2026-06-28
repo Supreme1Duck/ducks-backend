@@ -8,6 +8,7 @@ import java.math.BigDecimal
 data class ActiveOrderDTO(
     val id: Long,
     val shopName: String,
+    val shopAddress: String,
     val isAccepted: Boolean,
     val estimatedFinishTime: Long,
 

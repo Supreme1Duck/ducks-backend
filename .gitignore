@@ -4,6 +4,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Firebase credentials
+src/main/resources/firebase-adminsdk.json
+
 # Файлы миграции
 /src/main/resources/db/migration
 
