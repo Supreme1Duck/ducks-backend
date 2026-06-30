@@ -20,6 +20,10 @@ object CoffeeOrderedProductsTable: LongIdTable("ducks_coffee_ordered_products_ta
 
     val selectedSize = text("size").nullable()
 
+    val selectedSizeName = text("selected_size_name").nullable()
+    val selectedSizeValue = text("selected_size_value")
+    val selectedSizePrice = decimal("selected_size_price", precision = 15, scale = 2)
+
     val price = decimal("price", precision = 15, scale = 2).nullable()
 
     val minutesToCook = integer("minutes_to_cook").nullable()

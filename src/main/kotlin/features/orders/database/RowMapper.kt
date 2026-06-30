@@ -26,7 +26,8 @@ fun ResultRow.toOrderProductDTO(): OrderProductDTO {
         name = this[CoffeeOrderedProductsTable.productName],
         constructors = this[CoffeeOrderedProductsTable.constructors],
         imageUrl = this[CoffeeOrderedProductsTable.imageUrl],
-        size = this[CoffeeOrderedProductsTable.selectedSize],
+        sizeName = this[CoffeeOrderedProductsTable.selectedSizeName],
+        sizeValue = this[CoffeeOrderedProductsTable.selectedSizeValue],
         price = this[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
         quantity = this[CoffeeOrderedProductsTable.quantity],
     )

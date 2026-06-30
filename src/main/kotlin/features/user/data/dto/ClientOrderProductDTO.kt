@@ -9,6 +9,8 @@ data class ClientOrderProductDTO(
     val id: Long,
     val name: String,
     val imageUrl: String?,
+    val sizeName: String?,
+    val sizeValue: String,
     val quantity: Int,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,

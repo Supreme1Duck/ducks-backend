@@ -12,7 +12,8 @@ data class OrderProductDTO(
     val name: String,
     val constructors: List<OrderedProductConstructorDBModel>?,
     val imageUrl: String?,
-    val size: String?,
+    val sizeName: String?,
+    val sizeValue: String,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
     val quantity: Int,

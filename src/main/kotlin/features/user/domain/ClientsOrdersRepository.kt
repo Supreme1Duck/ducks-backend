@@ -112,6 +112,8 @@ class ClientsOrdersRepository(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
                     CoffeeOrderedProductsTable.imageUrl,
+                    CoffeeOrderedProductsTable.selectedSizeName,
+                    CoffeeOrderedProductsTable.selectedSizeValue,
                     CoffeeOrderedProductsTable.quantity,
                     CoffeeOrderedProductsTable.price,
                 )
@@ -125,6 +127,8 @@ class ClientsOrdersRepository(
                             id = it[CoffeeOrderedProductsTable.productId],
                             name = it[CoffeeOrderedProductsTable.productName],
                             imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
+                            sizeName = it[CoffeeOrderedProductsTable.selectedSizeName],
+                            sizeValue = it[CoffeeOrderedProductsTable.selectedSizeValue],
                             quantity = it[CoffeeOrderedProductsTable.quantity],
                             price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                         )
@@ -164,6 +168,8 @@ class ClientsOrdersRepository(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
                     CoffeeOrderedProductsTable.imageUrl,
+                    CoffeeOrderedProductsTable.selectedSizeName,
+                    CoffeeOrderedProductsTable.selectedSizeValue,
                     CoffeeOrderedProductsTable.quantity,
                     CoffeeOrderedProductsTable.price,
                 )
@@ -173,6 +179,8 @@ class ClientsOrdersRepository(
                         id = it[CoffeeOrderedProductsTable.productId],
                         name = it[CoffeeOrderedProductsTable.productName],
                         imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
+                        sizeName = it[CoffeeOrderedProductsTable.selectedSizeName],
+                        sizeValue = it[CoffeeOrderedProductsTable.selectedSizeValue],
                         quantity = it[CoffeeOrderedProductsTable.quantity],
                         price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                     )
