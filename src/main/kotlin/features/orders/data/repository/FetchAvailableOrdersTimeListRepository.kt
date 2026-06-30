@@ -17,9 +17,9 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.absoluteValue
 
 class FetchAvailableOrdersTimeListRepository {
 
@@ -183,14 +183,13 @@ class FetchAvailableOrdersTimeListRepository {
         return available
     }
 
+
     /**
      * Находит ближайшую смену (рабочий интервал) кофейни и возвращает её начало и конец в миллисекундах с эпохи (UTC).
      *
      * @return WorkTimeModel где даты в формате epoch milliseconds, или null, если расписание не найдено
      */
-    fun findShopsCurrentWorkTime(
-        shopId: Long,
-    ): WorkTimeModel? {
+    fun findShopsCurrentWorkTime(shopId: Long): WorkTimeModel? {
         val schedule = CoffeeShopTable
             .join(CoffeeShopScheduleTable, joinType = JoinType.LEFT, CoffeeShopTable.id, CoffeeShopScheduleTable.shopId)
             .select(CoffeeShopScheduleTable.columns)
@@ -206,90 +205,52 @@ class FetchAvailableOrdersTimeListRepository {
                 )
             }
 
-        // Offset - 3, что может быть в будущем ошибкой. Хардкод часового пояса.
-        val today = Clock.System.now()
-            .toJavaInstant()
-            .atOffset(ZoneOffset.ofHours(3))
-
-        val todayDayOfWeek = today.dayOfWeek.value
-
-        // Берем дни вчера, сегодня и завтра
-        val targetDays = schedule.filter { s ->
-            val diff = (s.dayOfWeek - todayDayOfWeek).mod(7)
-            diff == 0 || diff == 1 || diff == 6  // 0 = сегодня, 1 = завтра, 6 = вчера
-        }.sortedBy { it.dayOfWeek }
-
-        return targetDays.mapNotNull {
-            if (it.isClosed || it.startTime.isNullOrBlank() || it.endTime.isNullOrBlank())
-                return@mapNotNull null
-
-            val daysDifference = it.dayOfWeek - todayDayOfWeek
-            val targetDay = if (daysDifference >= 0) {
-                today.plusDays(daysDifference.toLong())
-            } else {
-                today.minusDays(daysDifference.absoluteValue.toLong())
-            }
-
-            val startTime = LocalTime.parse(it.startTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
-            val endTime = LocalTime.parse(it.endTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
-
-            val startDateTime = targetDay.toLocalDate().toEpochSecond(startTime, ZoneOffset.of(ZONE_ID)).times(1000)
-
-            // Если endTime <= startTime → смена идёт через полночь (+1 день)
-            val endDate = if (startTime > endTime && endTime != startTime) {
-                targetDay.plusDays(1)
-            } else {
-                targetDay
-            }
-
-            val endDateTime = endDate.toLocalDate().toEpochSecond(endTime, ZoneOffset.of(ZONE_ID)).times(1000)
-
-            WorkTimeModel(
-                dayOfWeek = it.dayOfWeek,
-                startTime = startDateTime,
-                endTime = endDateTime,
-                isClosed = false
-            )
-        }.firstNotNullOfOrNull {
-            val todayInMs = today.toEpochSecond().times(1000)
-
-            if (todayInMs > it.startTime && todayInMs < it.endTime) {
-                WorkTimeModel(
-                    dayOfWeek = it.dayOfWeek,
-                    startTime = it.startTime,
-                    endTime = it.endTime,
-                    isClosed = false
-                )
-            } else {
-                null
-            }
-        } ?: schedule.first { it.dayOfWeek == todayDayOfWeek }.takeIf { !it.isClosed && !it.startTime.isNullOrBlank() && !it.endTime.isNullOrBlank() }?.let { currentDay(it) }
+        // Offset +3 — хардкод часового пояса Москвы
+        val now = Clock.System.now().toJavaInstant().atOffset(ZoneOffset.ofHours(3))
+        return calculateWorkTime(schedule, now)
     }
 
-    private fun currentDay(
-        currentSchedule: Schedule
-    ) : WorkTimeModel {
-        val today = Clock.System.now()
-            .toJavaInstant()
-            .atOffset(ZoneOffset.ofHours(3))
+    internal fun calculateWorkTime(schedule: List<Schedule>, now: OffsetDateTime): WorkTimeModel? {
+        val candidateDays = listOf(now.minusDays(1), now, now.plusDays(1))
 
-        val startTime = LocalTime.parse(currentSchedule.startTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
-        val endTime = LocalTime.parse(currentSchedule.endTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
+        val activeShift = candidateDays.firstNotNullOfOrNull { day ->
+            val entry = schedule.firstOrNull { it.dayOfWeek == day.dayOfWeek.value } ?: return@firstNotNullOfOrNull null
+            if (entry.isClosed || entry.startTime.isNullOrBlank() || entry.endTime.isNullOrBlank()) return@firstNotNullOfOrNull null
 
-        val startDateTime = today.toLocalDate().toEpochSecond(startTime, ZoneOffset.of(ZONE_ID)).times(1000)
+            val workTime = buildWorkTimeForDay(entry, day)
+            val nowInMs = now.toEpochSecond() * 1000
+            workTime.takeIf { nowInMs in it.startTime..it.endTime }
+        }
 
-        // Если endTime <= startTime → смена идёт через полночь (+1 день)
+        if (activeShift != null) return activeShift
+
+        // Кофешоп не работает прямо сейчас — возвращаем ближайшую следующую смену (сегодня или завтра)
+        val nowInMs = now.toEpochSecond() * 1000
+        return listOf(now, now.plusDays(1)).firstNotNullOfOrNull { day ->
+            schedule.firstOrNull { it.dayOfWeek == day.dayOfWeek.value }
+                ?.takeIf { !it.isClosed && !it.startTime.isNullOrBlank() && !it.endTime.isNullOrBlank() }
+                ?.let { buildWorkTimeForDay(it, day) }
+                ?.takeIf { nowInMs < it.endTime }  // смена ещё не закончилась
+        }
+    }
+
+    private fun buildWorkTimeForDay(schedule: Schedule, day: OffsetDateTime): WorkTimeModel {
+        val startTime = LocalTime.parse(schedule.startTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
+        val endTime = LocalTime.parse(schedule.endTime, DateTimeFormatter.ofPattern(HH_MM_PATTERN))
+
+        val startDateTime = day.toLocalDate().toEpochSecond(startTime, ZoneOffset.of(ZONE_ID)).times(1000)
+
         val endDate = if (startTime > endTime && endTime != startTime) {
-            today.plusDays(1)
+            day.plusDays(1)
         } else {
-            today
+            day
         }
 
         val endDateTime = endDate.toLocalDate().toEpochSecond(endTime, ZoneOffset.of(ZONE_ID)).times(1000)
 
         return WorkTimeModel(
-            dayOfWeek = currentSchedule.dayOfWeek,
-            isClosed = currentSchedule.isClosed,
+            dayOfWeek = schedule.dayOfWeek,
+            isClosed = schedule.isClosed,
             startTime = startDateTime,
             endTime = endDateTime,
         )
@@ -323,7 +284,7 @@ class FetchAvailableOrdersTimeListRepository {
         return localTime.toEpochSecond(ZoneOffset.ofHours(3)).times(1000)
     }
 
-    private data class Schedule(
+    internal data class Schedule(
         val startTime: String?,
         val endTime: String?,
         val dayOfWeek: Int,
