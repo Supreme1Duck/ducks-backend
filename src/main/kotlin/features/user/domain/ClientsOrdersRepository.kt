@@ -100,7 +100,8 @@ class ClientsOrdersRepository(
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
                         status = when {
-                            it[CoffeeOrdersTable.isCancelledByClient] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
+                            it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
                             it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
                             else -> OrderStatus.IN_PROGRESS.value
                         },
@@ -155,7 +156,8 @@ class ClientsOrdersRepository(
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
                         status = when {
-                            it[CoffeeOrdersTable.isCancelledByClient] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
+                            it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
                             it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
                             else -> OrderStatus.IN_PROGRESS.value
                         },

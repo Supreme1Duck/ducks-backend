@@ -8,6 +8,7 @@ enum class OrderStatus(val value: Int) {
     IN_PROGRESS(0),
     COMPLETED(1),
     CANCELLED(2),
+    EXPIRED(3),
 }
 
 @Serializable

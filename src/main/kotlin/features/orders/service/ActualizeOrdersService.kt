@@ -48,6 +48,7 @@ class ActualizeOrdersService(
                         ) {
                             it[finishedTime] = currentTime
                             it[isExpired] = true
+                            it[isCancelledBySeller] = true
                         }
 
                         expiredOrders.forEach { (_, fcmToken) ->
