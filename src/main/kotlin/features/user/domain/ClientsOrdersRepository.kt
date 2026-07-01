@@ -1,8 +1,10 @@
 package com.ducks.features.user.domain
 
+import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
+import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.features.user.data.dto.ActiveOrderProductDTO
@@ -62,6 +64,7 @@ class ClientsOrdersRepository(
                         CoffeeOrderedProductsTable.price,
                         CoffeeOrderedProductsTable.quantity,
                         CoffeeOrderedProductsTable.constructors,
+                        CoffeeOrderedProductsTable.selectedSize,
                     )
                     .where { CoffeeOrderedProductsTable.orderId eq activeOrder.id }
                     .map {
@@ -70,9 +73,8 @@ class ClientsOrdersRepository(
                             name = it[CoffeeOrderedProductsTable.productName],
                             quantity = it[CoffeeOrderedProductsTable.quantity],
                             price = it[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
-                            constructors = it[CoffeeOrderedProductsTable.constructors]
-                                ?.joinToString { constructor -> constructor.name }
-                                ?: "",
+                            constructors = it[CoffeeOrderedProductsTable.constructors]?.toActiveOrderConstructors(),
+                            size = it[CoffeeOrderedProductsTable.selectedSize].toActiveOrderSize(),
                         )
                     }
 
@@ -112,8 +114,8 @@ class ClientsOrdersRepository(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
                     CoffeeOrderedProductsTable.imageUrl,
-                    CoffeeOrderedProductsTable.selectedSizeName,
-                    CoffeeOrderedProductsTable.selectedSizeValue,
+                    CoffeeOrderedProductsTable.selectedSize,
+                    CoffeeOrderedProductsTable.constructors,
                     CoffeeOrderedProductsTable.quantity,
                     CoffeeOrderedProductsTable.price,
                 )
@@ -127,8 +129,8 @@ class ClientsOrdersRepository(
                             id = it[CoffeeOrderedProductsTable.productId],
                             name = it[CoffeeOrderedProductsTable.productName],
                             imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
-                            sizeName = it[CoffeeOrderedProductsTable.selectedSizeName],
-                            sizeValue = it[CoffeeOrderedProductsTable.selectedSizeValue],
+                            size = it[CoffeeOrderedProductsTable.selectedSize].toClientOrderSize(),
+                            constructors = it[CoffeeOrderedProductsTable.constructors]?.toClientOrderConstructors(),
                             quantity = it[CoffeeOrderedProductsTable.quantity],
                             price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                         )
@@ -168,8 +170,8 @@ class ClientsOrdersRepository(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
                     CoffeeOrderedProductsTable.imageUrl,
-                    CoffeeOrderedProductsTable.selectedSizeName,
-                    CoffeeOrderedProductsTable.selectedSizeValue,
+                    CoffeeOrderedProductsTable.selectedSize,
+                    CoffeeOrderedProductsTable.constructors,
                     CoffeeOrderedProductsTable.quantity,
                     CoffeeOrderedProductsTable.price,
                 )
@@ -179,8 +181,8 @@ class ClientsOrdersRepository(
                         id = it[CoffeeOrderedProductsTable.productId],
                         name = it[CoffeeOrderedProductsTable.productName],
                         imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
-                        sizeName = it[CoffeeOrderedProductsTable.selectedSizeName],
-                        sizeValue = it[CoffeeOrderedProductsTable.selectedSizeValue],
+                        size = it[CoffeeOrderedProductsTable.selectedSize].toClientOrderSize(),
+                        constructors = it[CoffeeOrderedProductsTable.constructors]?.toClientOrderConstructors(),
                         quantity = it[CoffeeOrderedProductsTable.quantity],
                         price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                     )
@@ -230,5 +232,27 @@ class ClientsOrdersRepository(
 
             calculateCoffeeShopsOrdersTimeService.invoke(coffeeShopId)
         }
+    }
+
+    private fun CoffeeProductSizeDTO.toClientOrderSize() = ClientOrderProductDTO.Size(
+        id = id,
+        sizeName = sizeName,
+        sizeValue = sizeValue,
+        price = price,
+    )
+
+    private fun List<OrderedProductConstructorDBModel>.toClientOrderConstructors() = map {
+        ClientOrderProductDTO.Constructor(id = it.id, name = it.name, price = it.price)
+    }
+
+    private fun CoffeeProductSizeDTO.toActiveOrderSize() = ActiveOrderProductDTO.Size(
+        id = id,
+        sizeName = sizeName,
+        sizeValue = sizeValue,
+        price = price,
+    )
+
+    private fun List<OrderedProductConstructorDBModel>.toActiveOrderConstructors() = map {
+        ActiveOrderProductDTO.Constructor(id = it.id, name = it.name, price = it.price)
     }
 }

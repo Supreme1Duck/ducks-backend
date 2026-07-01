@@ -148,9 +148,7 @@ class ClientCreateOrdersRepository(
                 this[CoffeeOrderedProductsTable.productName] = product.name
                 this[CoffeeOrderedProductsTable.productId] = product.id
                 this[CoffeeOrderedProductsTable.imageUrl] = product.imageUrl
-                this[CoffeeOrderedProductsTable.selectedSizeName] = product.size?.sizeName
-                this[CoffeeOrderedProductsTable.selectedSizeValue] = product.size?.sizeValue ?: throw IllegalStateException("sizeValue is required")
-                this[CoffeeOrderedProductsTable.selectedSizePrice] = product.size?.price ?: throw IllegalStateException("sizePrice is required")
+                this[CoffeeOrderedProductsTable.selectedSize] = product.size ?: throw IllegalStateException("size is required")
                 this[CoffeeOrderedProductsTable.constructors] = product.constructors
                 this[CoffeeOrderedProductsTable.minutesToCook] = product.minutesToCook?.let {
                     it * product.quantity

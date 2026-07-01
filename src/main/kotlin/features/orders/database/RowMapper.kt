@@ -1,7 +1,9 @@
 package com.ducks.features.orders.database
 
+import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.orders.data.dto.OrderDTO
 import com.ducks.features.orders.data.dto.OrderProductDTO
+import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.user.database.UserTable
 import org.jetbrains.exposed.v1.core.ResultRow
 
@@ -24,11 +26,21 @@ fun ResultRow.toOrderProductDTO(): OrderProductDTO {
         id = this[CoffeeOrderedProductsTable.id].value,
         orderId = this[CoffeeOrderedProductsTable.orderId].value,
         name = this[CoffeeOrderedProductsTable.productName],
-        constructors = this[CoffeeOrderedProductsTable.constructors],
+        constructors = this[CoffeeOrderedProductsTable.constructors]?.toOrderProductConstructors(),
         imageUrl = this[CoffeeOrderedProductsTable.imageUrl],
-        sizeName = this[CoffeeOrderedProductsTable.selectedSizeName],
-        sizeValue = this[CoffeeOrderedProductsTable.selectedSizeValue],
+        size = this[CoffeeOrderedProductsTable.selectedSize].toOrderProductSize(),
         price = this[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
         quantity = this[CoffeeOrderedProductsTable.quantity],
     )
+}
+
+private fun CoffeeProductSizeDTO.toOrderProductSize() = OrderProductDTO.Size(
+    id = id,
+    sizeName = sizeName,
+    sizeValue = sizeValue,
+    price = price,
+)
+
+private fun List<OrderedProductConstructorDBModel>.toOrderProductConstructors() = map {
+    OrderProductDTO.Constructor(id = it.id, name = it.name, price = it.price)
 }

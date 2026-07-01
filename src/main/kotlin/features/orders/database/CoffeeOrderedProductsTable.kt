@@ -1,6 +1,7 @@
 package com.ducks.features.orders.database
 
 import com.ducks.features.orders.database.model.ConstructorListSerializer
+import com.ducks.features.orders.database.model.SelectedSizeSerializer
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.json.json
 
@@ -18,11 +19,11 @@ object CoffeeOrderedProductsTable: LongIdTable("ducks_coffee_ordered_products_ta
         deserialize = ConstructorListSerializer::deserialize,
     ).nullable()
 
-    val selectedSize = text("size").nullable()
-
-    val selectedSizeName = text("selected_size_name").nullable()
-    val selectedSizeValue = text("selected_size_value")
-    val selectedSizePrice = decimal("selected_size_price", precision = 15, scale = 2)
+    val selectedSize = json(
+        name = "selected_size",
+        serialize = SelectedSizeSerializer::serialize,
+        deserialize = SelectedSizeSerializer::deserialize,
+    )
 
     val price = decimal("price", precision = 15, scale = 2).nullable()
 
