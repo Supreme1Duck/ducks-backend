@@ -48,6 +48,7 @@ class ClientsOrdersRepository(
                         shopAddress = it[CoffeeShopTable.address],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
                         estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
+                        createdTime = it[CoffeeOrdersTable.createdTime],
                         // Будут заполнены дальше.
                         products = emptyList(),
                         price = it[CoffeeOrdersTable.totalPrice],
@@ -61,6 +62,7 @@ class ClientsOrdersRepository(
                     .select(
                         CoffeeOrderedProductsTable.productId,
                         CoffeeOrderedProductsTable.productName,
+                        CoffeeOrderedProductsTable.imageUrl,
                         CoffeeOrderedProductsTable.price,
                         CoffeeOrderedProductsTable.quantity,
                         CoffeeOrderedProductsTable.constructors,
@@ -71,6 +73,7 @@ class ClientsOrdersRepository(
                         ActiveOrderProductDTO(
                             id = it[CoffeeOrderedProductsTable.productId],
                             name = it[CoffeeOrderedProductsTable.productName],
+                            imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
                             quantity = it[CoffeeOrderedProductsTable.quantity],
                             price = it[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
                             constructors = it[CoffeeOrderedProductsTable.constructors]?.toActiveOrderConstructors(),

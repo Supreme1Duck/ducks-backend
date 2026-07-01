@@ -4,6 +4,7 @@ import com.ducks.features.coffeeshops.client.routings.request.CreateOrderRequest
 import com.ducks.features.user.data.UsersRepository
 import com.ducks.features.user.domain.ClientCreateOrdersRepository
 import com.ducks.features.user.domain.ClientsOrdersRepository
+import com.ducks.features.user.domain.ReorderPreviewRepository
 import com.ducks.features.user.util.getClientPrincipal
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
@@ -17,6 +18,7 @@ fun Route.ordersRoute() {
 
     val createOrdersRepository by application.inject<ClientCreateOrdersRepository> { parametersOf(application) }
     val clientsOrdersRepository by application.inject<ClientsOrdersRepository> { parametersOf(application) }
+    val reorderPreviewRepository by application.inject<ReorderPreviewRepository>()
     val usersRepository by application.inject<UsersRepository>()
 
     get("order/active") {
@@ -43,6 +45,22 @@ fun Route.ordersRoute() {
 
             if (order != null) {
                 call.respond(HttpStatusCode.OK, order)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
+            }
+        }
+    }
+
+    get("reorder-preview/{orderId}") {
+        ducksTryCatch {
+            val orderId = call.parameters["orderId"]?.toLongOrNull()
+                ?: return@ducksTryCatch call.respond(HttpStatusCode.BadRequest)
+            val userId = getClientPrincipal().userId
+
+            val preview = reorderPreviewRepository.getReorderPreview(orderId, userId)
+
+            if (preview != null) {
+                call.respond(HttpStatusCode.OK, preview)
             } else {
                 call.respond(HttpStatusCode.NotFound)
             }

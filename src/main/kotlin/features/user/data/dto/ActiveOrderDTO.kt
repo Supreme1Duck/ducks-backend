@@ -11,6 +11,7 @@ data class ActiveOrderDTO(
     val shopAddress: String,
     val isAccepted: Boolean,
     val estimatedFinishTime: Long,
+    val createdTime: Long,
 
     val products: List<ActiveOrderProductDTO>,
     @Serializable(with = BigDecimalSerializer::class)

@@ -8,6 +8,7 @@ import java.math.BigDecimal
 data class ActiveOrderProductDTO(
     val id: Long,
     val name: String,
+    val imageUrl: String?,
     val quantity: Int,
     val constructors: List<Constructor>?,
     val size: Size,
