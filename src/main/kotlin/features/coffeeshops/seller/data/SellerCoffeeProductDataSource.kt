@@ -85,11 +85,16 @@ class SellerCoffeeProductDataSource {
 
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
+                table[inStock] = productRequest.isInStock
 
                 table[carbohydrates] = productRequest.carbohydrates
                 table[protein] = productRequest.protein
                 table[fats] = productRequest.fats
-                table[calories] = productRequest.calories
+                table[calories] = calculateCalories(
+                    protein = productRequest.protein,
+                    fats = productRequest.fats,
+                    carbohydrates = productRequest.carbohydrates,
+                )
             }
 
             productRequest.constructors?.let { constructors ->
@@ -147,10 +152,15 @@ class SellerCoffeeProductDataSource {
                 table[categoryId] = productRequest.categoryId
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
+                table[inStock] = productRequest.isInStock
                 table[carbohydrates] = productRequest.carbohydrates
                 table[protein] = productRequest.protein
                 table[fats] = productRequest.fats
-                table[calories] = productRequest.calories
+                table[calories] = calculateCalories(
+                    protein = productRequest.protein,
+                    fats = productRequest.fats,
+                    carbohydrates = productRequest.carbohydrates,
+                )
                 table[sizes] = productRequest.sizes.map { sizeRequest ->
                     CoffeeProductSizeDTO(
                         id = sizeRequest.id,
@@ -213,5 +223,26 @@ class SellerCoffeeProductDataSource {
                 (CoffeeProductTable.shopId eq shopId) and (CoffeeProductTable.id eq productId)
             }
         }
+    }
+
+    suspend fun updateStock(shopId: Long, productId: Long, inStock: Boolean) {
+        newSuspendedTransaction {
+            CoffeeProductTable.update({
+                (CoffeeProductTable.id eq productId) and (CoffeeProductTable.shopId eq shopId)
+            }) { table ->
+                table[CoffeeProductTable.inStock] = inStock
+            }
+        }
+    }
+
+    /**
+     * Калорийность считается по формуле Атуотера (ккал на 100г продукта):
+     * белки * 4 + углеводы * 4 + жиры * 9.
+     * Если хотя бы один из компонентов не указан, калорийность не считается.
+     */
+    private fun calculateCalories(protein: Int?, fats: Int?, carbohydrates: Int?): Int? {
+        if (protein == null || fats == null || carbohydrates == null) return null
+
+        return protein * 4 + carbohydrates * 4 + fats * 9
     }
 }

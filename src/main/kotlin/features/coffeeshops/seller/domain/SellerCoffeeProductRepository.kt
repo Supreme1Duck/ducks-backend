@@ -60,4 +60,12 @@ class SellerCoffeeProductRepository(
             dataSource.deleteProduct(shopId, productId)
         }
     }
+
+    suspend fun updateStock(
+        shopId: Long,
+        productId: Long,
+        inStock: Boolean,
+    ) {
+        dataSource.updateStock(shopId = shopId, productId = productId, inStock = inStock)
+    }
 }

@@ -1,13 +1,13 @@
 package com.ducks.features.coffeeshops.client.data
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
-import com.ducks.features.coffeeshops.client.data.model.dto.CookingTimeEstimateDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.ProductsByCategoryDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToProductPreviewDTO
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class CoffeeProductsDataSource {
@@ -32,7 +32,7 @@ class CoffeeProductsDataSource {
             }
     }
 
-    fun estimateCookingTime(productIds: List<Long>): CookingTimeEstimateDTO {
+    fun calculateMinutesToCook(productIds: List<Long>): Int {
         val quantityById = productIds.groupingBy { it }.eachCount()
 
         val rows = CoffeeProductTable
@@ -44,9 +44,15 @@ class CoffeeProductsDataSource {
             val quantity = quantityById[it[CoffeeProductTable.id].value] ?: 1
             (it[CoffeeProductTable.minutesToCook] ?: 0) * quantity
         }
-        return CookingTimeEstimateDTO(
-            minutesToCook = totalMinutes + 1,
-        )
+        return totalMinutes + 1
+    }
+
+    fun getClosestTimeToTakeOrder(shopId: Long): Long? {
+        return CoffeeShopTable
+            .select(CoffeeShopTable.closestTimeToTakeOrders)
+            .where { CoffeeShopTable.id eq shopId }
+            .map { it[CoffeeShopTable.closestTimeToTakeOrders] }
+            .firstOrNull()
     }
 
     fun getProductDetails(productId: Long): CoffeeProductWithDetailsDTO {

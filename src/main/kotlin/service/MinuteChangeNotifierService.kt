@@ -25,7 +25,7 @@ class MinuteChangeNotifierService {
                 delay(millis)
 
                 val correctedNow = LocalDateTime.now()
-                timeStampState.value = correctedNow.toEpochSecond(ZoneOffset.ofHours(3))
+                timeStampState.value = correctedNow.toInstant(ZoneOffset.ofHours(3)).toEpochMilli()
 
                 delay(threeSecsDelay)
             }

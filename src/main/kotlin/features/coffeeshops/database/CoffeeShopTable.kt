@@ -46,4 +46,7 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
     val canTakeOrdersReason = integer("can_take_orders_reason").nullable()
 
     val rating = double("rating")
+
+    // FCM токен приложения продавца (для пушей о новых заказах)
+    val fcmToken = text("fcm_token").nullable()
 }

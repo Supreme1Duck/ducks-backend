@@ -6,6 +6,7 @@ build/
 
 # Firebase credentials
 src/main/resources/firebase-adminsdk.json
+src/main/resources/firebase-adminsdk-seller.json
 
 # Файлы миграции
 /src/main/resources/db/migration

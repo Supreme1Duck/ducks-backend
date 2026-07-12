@@ -8,6 +8,7 @@ import com.ducks.features.coffeeshops.seller.getCoffeeShopSellerPrincipal
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.DeleteCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
+import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateProductStockRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCoffeeShopScheduleRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTechnicalPauseRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTemporaryClosedRequest
@@ -59,6 +60,17 @@ fun Route.shopsAndProductsRoute() {
             coffeeShopsRepository.updateTemporaryClosed(shopId, request.isClosed, request.reason)
 
             call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
+    post("/device-token") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val token = call.receive<String>()
+
+            coffeeShopsRepository.updateFcmToken(shopId, token)
+
+            call.respond(HttpStatusCode.OK)
         }
     }
 
@@ -140,6 +152,21 @@ fun Route.shopsAndProductsRoute() {
             val principalShopId = getCoffeeShopSellerPrincipal().shopId
 
             coffeeProductsRepository.update(shopId = principalShopId, data = request)
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
+    post("/product/stock") {
+        ducksTryCatch {
+            val request = call.receive<UpdateProductStockRequest>()
+            val principalShopId = getCoffeeShopSellerPrincipal().shopId
+
+            coffeeProductsRepository.updateStock(
+                shopId = principalShopId,
+                productId = request.productId,
+                inStock = request.inStock,
+            )
 
             call.respond(HttpStatusCode.NoContent)
         }

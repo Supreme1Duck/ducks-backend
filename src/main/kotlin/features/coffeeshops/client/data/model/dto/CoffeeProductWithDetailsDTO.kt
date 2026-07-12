@@ -30,8 +30,8 @@ data class CoffeeConstructorsDTO(
 
 @Serializable
 data class NutrientsDTO(
-    val calories: String?,
-    val carbohydrates: String?,
-    val protein: String?,
-    val fats: String?,
+    val calories: Int?,
+    val carbohydrates: Int?,
+    val protein: Int?,
+    val fats: Int?,
 )

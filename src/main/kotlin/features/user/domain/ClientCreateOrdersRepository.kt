@@ -11,6 +11,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
+import com.ducks.service.PushNotificationService
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -26,12 +27,13 @@ class ClientCreateOrdersRepository(
 ) {
 
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
+    private val pushNotificationService by application.inject<PushNotificationService>()
 
     suspend fun createOrder(
         request: CreateOrderRequest,
         clientPhoneNumber: String,
     ) {
-        newSuspendedTransaction {
+        val sellerFcmToken = newSuspendedTransaction {
             val clientId = getUserIdByPhone(clientPhoneNumber)
 
             // Получаем полный список продуктов с дубликатами если их несколько.
@@ -165,9 +167,27 @@ class ClientCreateOrdersRepository(
                 it[price] = orderPrice
                 it[totalPrice] = orderPrice + (request.tips ?: 0.toBigDecimal())
             }
+
+            getShopFcmToken(request.shopId)
         }
 
         calculateCoffeeShopsOrdersTimeService(request.shopId)
+
+        sellerFcmToken?.let {
+            pushNotificationService.sendToSeller(
+                fcmToken = it,
+                title = "Новый заказ",
+                body = "У вас новый заказ, посмотрите детали.",
+            )
+        }
+    }
+
+    private fun getShopFcmToken(shopId: Long): String? {
+        return CoffeeShopTable
+            .select(CoffeeShopTable.fcmToken)
+            .where { CoffeeShopTable.id eq shopId }
+            .map { it[CoffeeShopTable.fcmToken] }
+            .firstOrNull()
     }
 
     private fun getSelectedSize(

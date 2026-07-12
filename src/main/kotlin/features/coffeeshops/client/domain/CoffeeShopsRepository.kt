@@ -54,7 +54,7 @@ class CoffeeShopsRepository(
         productIds: List<Long>,
     ): OrderTimeDTO {
         return newSuspendedTransaction {
-            val minutesToCook = productDataSource.estimateCookingTime(productIds).minutesToCook
+            val minutesToCook = productDataSource.calculateMinutesToCook(productIds)
             val timestamps = fetchAvailableOrdersTimeListRepository.invoke(
                 shopId = shopId,
                 estimatedOrderFinishTimeInMinutes = minutesToCook,

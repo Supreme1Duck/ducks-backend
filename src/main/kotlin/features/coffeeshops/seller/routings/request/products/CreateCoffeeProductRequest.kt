@@ -16,12 +16,13 @@ data class CreateCoffeeProductRequest(
 
     val minutesToCook: Int?,
 
+    val isInStock: Boolean = true,
+
     val constructors: List<CoffeeCreateConstructorRequest>? = null,
 
-    val carbohydrates: String? = null,
-    val protein: String? = null,
-    val fats: String? = null,
-    val calories: String? = null,
+    val carbohydrates: Int? = null,
+    val protein: Int? = null,
+    val fats: Int? = null,
 )
 
 @Serializable

@@ -3,6 +3,8 @@ package com.ducks.features.coffeeshops.seller.domain
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
+import com.ducks.features.user.database.UserTable
+import com.ducks.service.PushNotificationService
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -19,9 +21,10 @@ class SellerOrdersRepository(
 ) {
 
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
+    private val pushNotificationService by application.inject<PushNotificationService>()
 
     suspend fun acceptOrder(orderId: Long, shopId: Long) {
-        newSuspendedTransaction {
+        val fcmToken = newSuspendedTransaction {
             val currentTime = Clock.System.now().toEpochMilliseconds()
 
             val (isOrderCorrect, closestTimeToTakeOrders) = getAdditionalInfo(orderId, shopId)
@@ -38,13 +41,23 @@ class SellerOrdersRepository(
             ) {
                 it[acceptedTime] = currentTime
             }
+
+            getFcmToken(orderId)
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+
+        fcmToken?.let {
+            pushNotificationService.send(
+                fcmToken = it,
+                title = "Заказ принят",
+                body = "Ваш заказ принят и скоро будет готов.",
+            )
+        }
     }
 
     suspend fun cancelBySeller(orderId: Long, shopId: Long, message: String?) {
-        newSuspendedTransaction {
+        val fcmToken = newSuspendedTransaction {
             val currentTime = Clock.System.now().toEpochMilliseconds()
 
             val isOrderCancellable = CoffeeOrdersTable
@@ -70,13 +83,23 @@ class SellerOrdersRepository(
                 it[isCancelledBySeller] = true
                 it[cancelledMessage] = message
             }
+
+            getFcmToken(orderId)
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+
+        fcmToken?.let {
+            pushNotificationService.send(
+                fcmToken = it,
+                title = "Заказ отменён",
+                body = if (message.isNullOrBlank()) "Ваш заказ был отменён." else "Ваш заказ был отменён: $message",
+            )
+        }
     }
 
     suspend fun finishOrder(orderId: Long, shopId: Long) {
-        newSuspendedTransaction {
+        val fcmToken = newSuspendedTransaction {
             val currentTime = System.currentTimeMillis()
 
             val isOrderCanBeFinished = CoffeeOrdersTable
@@ -100,9 +123,28 @@ class SellerOrdersRepository(
             ) {
                 it[finishedTime] = currentTime
             }
+
+            getFcmToken(orderId)
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+
+        fcmToken?.let {
+            pushNotificationService.send(
+                fcmToken = it,
+                title = "Заказ готов",
+                body = "Ваш заказ готов, можете забирать!",
+            )
+        }
+    }
+
+    private fun getFcmToken(orderId: Long): String? {
+        return CoffeeOrdersTable
+            .join(UserTable, JoinType.LEFT, CoffeeOrdersTable.userId, UserTable.id)
+            .select(UserTable.fcmToken)
+            .where { CoffeeOrdersTable.id eq orderId }
+            .map { it[UserTable.fcmToken] }
+            .firstOrNull()
     }
 
     private fun getAdditionalInfo(orderId: Long, shopId: Long): Pair<Boolean, Long?>? {

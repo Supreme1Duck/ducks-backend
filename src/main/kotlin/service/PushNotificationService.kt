@@ -12,21 +12,58 @@ class PushNotificationService {
 
     private val logger = LoggerFactory.getLogger(PushNotificationService::class.java)
 
-    init {
+    // Приложение клиента (проект по умолчанию)
+    private val clientMessaging: FirebaseMessaging = initMessaging(
+        appName = "[DEFAULT]",
+        resource = "/firebase-adminsdk.json",
+    ) ?: error("firebase-adminsdk.json not found in resources")
+
+    // Приложение продавца (отдельный Firebase проект)
+    private val sellerMessaging: FirebaseMessaging? = initMessaging(
+        appName = "seller",
+        resource = "/firebase-adminsdk-seller.json",
+    ).also {
+        if (it == null) {
+            logger.warn("firebase-adminsdk-seller.json not found in resources — пуши продавцам отключены")
+        }
+    }
+
+    private fun initMessaging(appName: String, resource: String): FirebaseMessaging? {
         val serviceAccount = PushNotificationService::class.java
-            .getResourceAsStream("/firebase-adminsdk.json")
-            ?: error("firebase-adminsdk.json not found in resources")
+            .getResourceAsStream(resource)
+            ?: return null
 
         val options = FirebaseOptions.builder()
             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
             .build()
 
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseApp.initializeApp(options)
-        }
+        val app = FirebaseApp.getApps()
+            .find { it.name == appName }
+            ?: if (appName == "[DEFAULT]") {
+                FirebaseApp.initializeApp(options)
+            } else {
+                FirebaseApp.initializeApp(options, appName)
+            }
+
+        return FirebaseMessaging.getInstance(app)
     }
 
+    /** Пуш клиенту. */
     fun send(fcmToken: String, title: String, body: String) {
+        send(clientMessaging, fcmToken, title, body)
+    }
+
+    /** Пуш продавцу (отдельный Firebase проект). */
+    fun sendToSeller(fcmToken: String, title: String, body: String) {
+        val messaging = sellerMessaging
+        if (messaging == null) {
+            logger.error("Попытка отправить пуш продавцу, но seller Firebase проект не сконфигурирован")
+            return
+        }
+        send(messaging, fcmToken, title, body)
+    }
+
+    private fun send(messaging: FirebaseMessaging, fcmToken: String, title: String, body: String) {
         try {
             val message = Message.builder()
                 .setToken(fcmToken)
@@ -38,7 +75,7 @@ class PushNotificationService {
                 )
                 .build()
 
-            FirebaseMessaging.getInstance().send(message)
+            messaging.send(message)
         } catch (e: Exception) {
             logger.error("Failed to send push notification to token $fcmToken", e)
         }

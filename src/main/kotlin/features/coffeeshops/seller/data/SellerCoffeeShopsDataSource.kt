@@ -71,6 +71,12 @@ class SellerCoffeeShopsDataSource {
         }
     }
 
+    fun updateFcmToken(shopId: Long, token: String) {
+        CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
+            it[fcmToken] = token
+        }
+    }
+
     fun fetchHiddenShopIds(): List<Long> {
         return CoffeeShopTable
             .select(CoffeeShopTable.id)

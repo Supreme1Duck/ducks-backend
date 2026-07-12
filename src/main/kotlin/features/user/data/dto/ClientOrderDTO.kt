@@ -14,6 +14,7 @@ enum class OrderStatus(val value: Int) {
 @Serializable
 data class ClientOrderDTO(
     val id: Long,
+    val shopId: Long,
     val shopName: String,
     val shopAddress: String,
     val finishedAt: Long,

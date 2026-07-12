@@ -44,6 +44,7 @@ class ClientsOrdersRepository(
                 .map {
                     ActiveOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
+                        shopId = it[CoffeeOrdersTable.coffeeShop].value,
                         shopName = it[CoffeeShopTable.name],
                         shopAddress = it[CoffeeShopTable.address],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
@@ -97,6 +98,7 @@ class ClientsOrdersRepository(
                 .map {
                     ClientOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
+                        shopId = it[CoffeeOrdersTable.coffeeShop].value,
                         shopName = it[CoffeeShopTable.name],
                         shopAddress = it[CoffeeShopTable.address],
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
@@ -153,6 +155,7 @@ class ClientsOrdersRepository(
                 .map {
                     ClientOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
+                        shopId = it[CoffeeOrdersTable.coffeeShop].value,
                         shopName = it[CoffeeShopTable.name],
                         shopAddress = it[CoffeeShopTable.address],
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,

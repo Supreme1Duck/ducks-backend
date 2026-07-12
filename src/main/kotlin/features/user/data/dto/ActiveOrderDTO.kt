@@ -7,6 +7,7 @@ import java.math.BigDecimal
 @Serializable
 data class ActiveOrderDTO(
     val id: Long,
+    val shopId: Long,
     val shopName: String,
     val shopAddress: String,
     val isAccepted: Boolean,

@@ -68,6 +68,12 @@ class SellerCoffeeShopRepository(
         }
     }
 
+    suspend fun updateFcmToken(shopId: Long, token: String) {
+        return newSuspendedTransaction {
+            sellerCoffeeShopDataSource.updateFcmToken(shopId, token)
+        }
+    }
+
     suspend fun addTechnicalPause(
         shopId: Long,
         startsAt: Long,
