@@ -48,6 +48,7 @@ class ClientsOrdersRepository(
                         shopName = it[CoffeeShopTable.name],
                         shopAddress = it[CoffeeShopTable.address],
                         isAccepted = it[CoffeeOrdersTable.acceptedTime] != null,
+                        isReady = it[CoffeeOrdersTable.readyTime] != null,
                         estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         createdTime = it[CoffeeOrdersTable.createdTime],
                         // Будут заполнены дальше.
@@ -107,7 +108,9 @@ class ClientsOrdersRepository(
                         status = when {
                             it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
                             it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP.value
                             it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
+                            it[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY.value
                             else -> OrderStatus.IN_PROGRESS.value
                         },
                         price = it[CoffeeOrdersTable.totalPrice],
@@ -164,7 +167,9 @@ class ClientsOrdersRepository(
                         status = when {
                             it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
                             it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
+                            it[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP.value
                             it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
+                            it[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY.value
                             else -> OrderStatus.IN_PROGRESS.value
                         },
                         price = it[CoffeeOrdersTable.totalPrice],

@@ -98,22 +98,67 @@ class SellerOrdersRepository(
         }
     }
 
-    suspend fun finishOrder(orderId: Long, shopId: Long) {
+    // Заказ приготовлен и готов к выдаче (принят -> готов).
+    suspend fun markOrderReady(orderId: Long, shopId: Long) {
         val fcmToken = newSuspendedTransaction {
             val currentTime = System.currentTimeMillis()
 
-            val isOrderCanBeFinished = CoffeeOrdersTable
+            val order = CoffeeOrdersTable
                 .selectAll()
                 .where {
                     (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.coffeeShop eq shopId)
                 }
-                .map {
-                    it[CoffeeOrdersTable.finishedTime] == null
-                }
-                .firstOrNull() ?: throw DucksBadRequestError("Попытка завершить несуществующий заказ!")
+                .firstOrNull() ?: throw DucksBadRequestError("Попытка пометить готовым несуществующий заказ!")
 
-            if (!isOrderCanBeFinished) {
-                throw DucksBadRequestError("Попытка завершить уже завершенный заказ")
+            if (order[CoffeeOrdersTable.acceptedTime] == null) {
+                throw DucksBadRequestError("Нельзя пометить готовым непринятый заказ!")
+            }
+            if (order[CoffeeOrdersTable.finishedTime] != null) {
+                throw DucksBadRequestError("Попытка пометить готовым уже завершённый заказ!")
+            }
+            if (order[CoffeeOrdersTable.readyTime] != null) {
+                throw DucksBadRequestError("Заказ уже готов!")
+            }
+
+            CoffeeOrdersTable.update(
+                where = {
+                    CoffeeOrdersTable.id eq orderId
+                }
+            ) {
+                it[readyTime] = currentTime
+            }
+
+            getFcmToken(orderId)
+        }
+
+        calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+
+        fcmToken?.let {
+            pushNotificationService.send(
+                fcmToken = it,
+                title = "Заказ готов",
+                body = "Ваш заказ готов, можете забирать!",
+            )
+        }
+    }
+
+    // Заказ выдан клиенту (готов -> выдан).
+    suspend fun giveOutOrder(orderId: Long, shopId: Long) {
+        val fcmToken = newSuspendedTransaction {
+            val currentTime = System.currentTimeMillis()
+
+            val order = CoffeeOrdersTable
+                .selectAll()
+                .where {
+                    (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.coffeeShop eq shopId)
+                }
+                .firstOrNull() ?: throw DucksBadRequestError("Попытка выдать несуществующий заказ!")
+
+            if (order[CoffeeOrdersTable.finishedTime] != null) {
+                throw DucksBadRequestError("Попытка выдать уже завершённый заказ!")
+            }
+            if (order[CoffeeOrdersTable.readyTime] == null) {
+                throw DucksBadRequestError("Нельзя выдать неготовый заказ!")
             }
 
             CoffeeOrdersTable.update(
@@ -132,8 +177,50 @@ class SellerOrdersRepository(
         fcmToken?.let {
             pushNotificationService.send(
                 fcmToken = it,
-                title = "Заказ готов",
-                body = "Ваш заказ готов, можете забирать!",
+                title = "Заказ выдан",
+                body = "Спасибо за заказ! Приятного аппетита.",
+            )
+        }
+    }
+
+    // Заказ был готов, но клиент его не забрал (готов -> не забран).
+    suspend fun markOrderNotPickedUp(orderId: Long, shopId: Long) {
+        val fcmToken = newSuspendedTransaction {
+            val currentTime = System.currentTimeMillis()
+
+            val order = CoffeeOrdersTable
+                .selectAll()
+                .where {
+                    (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.coffeeShop eq shopId)
+                }
+                .firstOrNull() ?: throw DucksBadRequestError("Попытка завершить несуществующий заказ!")
+
+            if (order[CoffeeOrdersTable.finishedTime] != null) {
+                throw DucksBadRequestError("Попытка завершить уже завершённый заказ!")
+            }
+            if (order[CoffeeOrdersTable.readyTime] == null) {
+                throw DucksBadRequestError("Нельзя пометить незабранным неготовый заказ!")
+            }
+
+            CoffeeOrdersTable.update(
+                where = {
+                    CoffeeOrdersTable.id eq orderId
+                }
+            ) {
+                it[finishedTime] = currentTime
+                it[isNotPickedUp] = true
+            }
+
+            getFcmToken(orderId)
+        }
+
+        calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+
+        fcmToken?.let {
+            pushNotificationService.send(
+                fcmToken = it,
+                title = "Заказ не забран",
+                body = "Вы не забрали свой заказ.",
             )
         }
     }

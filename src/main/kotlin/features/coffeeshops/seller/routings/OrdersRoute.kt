@@ -52,12 +52,43 @@ fun Route.sellerOrdersRoute() {
         }
     }
 
-    post("/order/finish") {
+    // Заказ приготовлен и готов к выдаче (принят -> готов).
+    post("/order/ready") {
         ducksTryCatch {
             val shopId = getCoffeeShopSellerPrincipal().shopId
             val orderId = call.receive<Long>()
 
-            orderRepository.finishOrder(
+            orderRepository.markOrderReady(
+                orderId = orderId,
+                shopId = shopId,
+            )
+
+            call.respond(HttpStatusCode.Created)
+        }
+    }
+
+    // Выдать заказ клиенту / завершить (готов -> выдан).
+    post("/order/give-out") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val orderId = call.receive<Long>()
+
+            orderRepository.giveOutOrder(
+                orderId = orderId,
+                shopId = shopId,
+            )
+
+            call.respond(HttpStatusCode.Created)
+        }
+    }
+
+    // Клиент не забрал заказ (готов -> не забран).
+    post("/order/not-picked-up") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val orderId = call.receive<Long>()
+
+            orderRepository.markOrderNotPickedUp(
                 orderId = orderId,
                 shopId = shopId,
             )

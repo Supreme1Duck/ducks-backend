@@ -19,19 +19,26 @@ class SellerPinCodeDataSource {
         }
     }
 
+    private sealed interface VerifyResult {
+        data object Success : VerifyResult
+        data class Locked(val secondsLeft: Long) : VerifyResult
+        data object JustLocked : VerifyResult
+        data object WrongPin : VerifyResult
+    }
+
     suspend fun verifyPin(shopId: Long, pin: String) {
-        newSuspendedTransaction {
+        val result = newSuspendedTransaction {
             val row = CoffeeShopCredentialsTable
                 .selectAll()
                 .where { CoffeeShopCredentialsTable.shopId eq shopId }
-                .firstOrNull() ?: throw DucksBadRequestError("Кофейня не найдена")
+                .firstOrNull() ?: return@newSuspendedTransaction null
 
             val now = System.currentTimeMillis()
 
             val lockedUntil = row[CoffeeShopCredentialsTable.pinLockedUntil]
             if (lockedUntil != null && now < lockedUntil) {
                 val secondsLeft = (lockedUntil - now) / 1000
-                throw DucksBadRequestError("Слишком много попыток. Попробуйте через $secondsLeft секунд")
+                return@newSuspendedTransaction VerifyResult.Locked(secondsLeft)
             }
 
             val storedPin = row[CoffeeShopCredentialsTable.pinCode]
@@ -47,20 +54,20 @@ class SellerPinCodeDataSource {
                     1
                 }
 
-                if (attemptsInWindow >= 3) {
+                return@newSuspendedTransaction if (attemptsInWindow >= 3) {
                     CoffeeShopCredentialsTable.update({ CoffeeShopCredentialsTable.shopId eq shopId }) {
                         it[pinFailedAttempts] = 0
                         it[pinLastFailedAt] = null
                         it[pinLockedUntil] = now + 10 * 60 * 1000L
                     }
-                    throw DucksBadRequestError("Слишком много попыток. Попробуйте через 10 минут")
+                    VerifyResult.JustLocked
                 } else {
                     CoffeeShopCredentialsTable.update({ CoffeeShopCredentialsTable.shopId eq shopId }) {
                         it[pinFailedAttempts] = attemptsInWindow
                         it[pinLastFailedAt] = now
                         it[pinLockedUntil] = null
                     }
-                    throw DucksBadRequestError("Неверный пин-код")
+                    VerifyResult.WrongPin
                 }
             }
 
@@ -69,6 +76,18 @@ class SellerPinCodeDataSource {
                 it[pinLastFailedAt] = null
                 it[pinLockedUntil] = null
             }
+            VerifyResult.Success
+        }
+
+        when (result) {
+            null -> throw DucksBadRequestError("Кофейня не найдена")
+            is VerifyResult.Locked ->
+                throw DucksBadRequestError("Слишком много попыток. Попробуйте через ${result.secondsLeft} секунд")
+            VerifyResult.JustLocked ->
+                throw DucksBadRequestError("Слишком много попыток. Попробуйте через 10 минут")
+            VerifyResult.WrongPin ->
+                throw DucksBadRequestError("Неверный пин-код")
+            VerifyResult.Success -> Unit
         }
     }
 }

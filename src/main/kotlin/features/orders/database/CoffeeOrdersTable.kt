@@ -11,12 +11,16 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
 
     val createdTime = long("created_timestamp")
     val acceptedTime = long("accepted_timestamp").nullable()
+    // Момент, когда заказ приготовлен и готов к выдаче, но ещё не выдан клиенту.
+    val readyTime = long("ready_timestamp").nullable()
     val finishedTime = long("finished_time").nullable()
     val isCancelledBySeller = bool("isCancelledBySeller").default(false)
     val cancelledMessage = text("cancelled_message").nullable()
 
     val isExpired = bool("isExpired").default(false)
     val isCancelledByClient = bool("isCancelledByClient").default(false)
+    // Заказ был готов, но клиент так и не забрал его.
+    val isNotPickedUp = bool("isNotPickedUp").default(false)
 
     val comment = text("comment").nullable()
 

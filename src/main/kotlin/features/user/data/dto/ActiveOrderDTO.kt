@@ -11,6 +11,7 @@ data class ActiveOrderDTO(
     val shopName: String,
     val shopAddress: String,
     val isAccepted: Boolean,
+    val isReady: Boolean,
     val estimatedFinishTime: Long,
     val createdTime: Long,
 

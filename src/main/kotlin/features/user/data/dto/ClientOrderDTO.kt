@@ -9,6 +9,10 @@ enum class OrderStatus(val value: Int) {
     COMPLETED(1),
     CANCELLED(2),
     EXPIRED(3),
+    // Заказ готов к выдаче, но ещё не выдан.
+    READY(4),
+    // Заказ был готов, но клиент его не забрал.
+    NOT_PICKED_UP(5),
 }
 
 @Serializable

@@ -11,6 +11,7 @@ data class OrderDTO(
     val userPhoneNumber: String,
     val products: List<OrderProductDTO>,
     val isActive: Boolean,
+    val isReady: Boolean,
     val comment: String?,
     val estimatedFinishTime: Long,
     @Serializable(with = BigDecimalSerializer::class)

@@ -1,5 +1,6 @@
 package com.ducks.features.coffeeshops.seller.routings.request.products
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import util.BigDecimalSerializer
 import java.math.BigDecimal
@@ -16,6 +17,7 @@ data class CreateCoffeeProductRequest(
 
     val minutesToCook: Int?,
 
+    @SerialName("inStock")
     val isInStock: Boolean = true,
 
     val constructors: List<CoffeeCreateConstructorRequest>? = null,
