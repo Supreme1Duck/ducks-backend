@@ -2,6 +2,8 @@ package com.ducks.features.coffeeshops.client.routings
 
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
+import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
+import com.ducks.features.coffeeshops.client.routings.request.CheckProductsExistenceRequest
 import com.ducks.features.coffeeshops.client.routings.request.EstimateCookingTimeRequest
 import com.ducks.features.coffeeshops.client.routings.request.OrderTimeRequest
 import com.ducks.util.ducksTryCatch
@@ -52,6 +54,17 @@ fun Route.clientRoute() {
             val request = call.receive<EstimateCookingTimeRequest>()
             val estimate = coffeeProductsRepository.estimateCookingTime(request)
             call.respond(HttpStatusCode.OK, estimate)
+        }
+    }
+
+    // Проверка существования пар (shopId, productId): в ответе — только несуществующие пары.
+    post("/products/check-existence") {
+        ducksTryCatch {
+            val request = call.receive<CheckProductsExistenceRequest>()
+
+            val missing = coffeeProductsRepository.findMissingPairs(request.pairs)
+
+            call.respond(HttpStatusCode.OK, CheckProductsExistenceResponse(missing = missing))
         }
     }
 

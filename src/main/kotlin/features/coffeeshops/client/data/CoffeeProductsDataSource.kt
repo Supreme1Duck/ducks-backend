@@ -2,6 +2,7 @@ package com.ducks.features.coffeeshops.client.data
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.ProductsByCategoryDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.ShopProductPair
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToProductPreviewDTO
@@ -45,6 +46,25 @@ class CoffeeProductsDataSource {
             (it[CoffeeProductTable.minutesToCook] ?: 0) * quantity
         }
         return totalMinutes + 1
+    }
+
+    /**
+     * Возвращает те пары (shopId, productId), которых нет в базе:
+     * продукт не существует или не принадлежит указанной кофейне.
+     */
+    fun findMissingPairs(pairs: List<ShopProductPair>): List<ShopProductPair> {
+        val distinctPairs = pairs.distinct()
+        if (distinctPairs.isEmpty()) return emptyList()
+
+        val productIds = distinctPairs.map { it.productId }.distinct()
+
+        val existingPairs = CoffeeProductTable
+            .select(CoffeeProductTable.id, CoffeeProductTable.shopId)
+            .where { CoffeeProductTable.id inList productIds }
+            .map { ShopProductPair(shopId = it[CoffeeProductTable.shopId].value, productId = it[CoffeeProductTable.id].value) }
+            .toSet()
+
+        return distinctPairs.filter { it !in existingPairs }
     }
 
     fun getClosestTimeToTakeOrder(shopId: Long): Long? {
