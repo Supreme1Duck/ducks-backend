@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -133,7 +132,7 @@ class FetchAvailableOrdersTimeListRepository {
             estimatedTime to hasEnoughTime
         }
 
-        val roundedClosestTimeToTakeOrders = roundWithLowSeconds(closestTimeToTakeOrders)
+        val roundedClosestTimeToTakeOrders = ceilToMinute(closestTimeToTakeOrders)
 
         // Кофешоп закрыт на выходной
         return if (coffeeShopWorkTime == null || coffeeShopWorkTime.isClosed) {
@@ -274,14 +273,14 @@ class FetchAvailableOrdersTimeListRepository {
         }
     }
 
-    private fun roundWithLowSeconds(closestTimeToTakeOrders: Long): Long {
-        var localTime = LocalDateTime.ofEpochSecond(closestTimeToTakeOrders.div(1000), 0, ZoneOffset.ofHours(3))
-        val secondsDifference = 60 - localTime.second
-        if (secondsDifference < 5) {
-            localTime = localTime.plusSeconds(secondsDifference.toLong())
-        }
-
-        return localTime.toEpochSecond(ZoneOffset.ofHours(3)).times(1000)
+    /**
+     * Округляет время вверх до ближайшей целой минуты (16:27:20 -> 16:28:00).
+     * Ровная минута остаётся без изменений. Границы минут одинаковы в любом
+     * часовом поясе, поэтому считаем чистой арифметикой без учёта смещения.
+     */
+    private fun ceilToMinute(timeMs: Long): Long {
+        val minuteMs = 60_000L
+        return ((timeMs + minuteMs - 1) / minuteMs) * minuteMs
     }
 
     internal data class Schedule(
