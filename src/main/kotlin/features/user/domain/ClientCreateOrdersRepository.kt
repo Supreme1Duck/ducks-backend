@@ -207,6 +207,8 @@ class ClientCreateOrdersRepository(
         requestedConstructorIds: List<Long>,
         productId: Long,
     ): List<OrderedProductConstructorDBModel> {
+        if (requestedConstructorIds.isEmpty()) return emptyList()
+
         val constructors = CoffeeProductsWithConstructorsTable
             .join(
                 otherTable = CoffeeConstructorsTable,

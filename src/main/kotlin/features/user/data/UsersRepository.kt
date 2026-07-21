@@ -18,18 +18,33 @@ class UsersRepository {
     }
 
     suspend fun saveUserAndGetId(request: LoginRequest): Long {
+        val firstName = request.firstName?.takeIf { it.isNotBlank() }
+        val lastName = request.lastName?.takeIf { it.isNotBlank() }
+
         return newSuspendedTransaction {
-            try {
-                UserTable.insertAndGetId {
-                    it[name] = request.firstName.toString()
-                    it[secondName] = request.lastName.toString()
+            val existingUserId = UserTable
+                .select(UserTable.id)
+                .where {
+                    UserTable.phoneNumber eq request.phoneNumber
+                }
+                .map { it[UserTable.id].value }
+                .firstOrNull()
+                ?: return@newSuspendedTransaction UserTable.insertAndGetId {
+                    it[name] = firstName
+                    it[secondName] = lastName
                     it[phoneNumber] = request.phoneNumber
                 }.value
-            } catch (e: Exception) {
-                if (e.message?.contains("unique constraint") == true) {
-                    getUserIdByPhone(request.phoneNumber)
-                } else throw e
+
+            // Имя приходит не в каждой авторизации, поэтому перезаписываем только то,
+            // что реально передали, иначе стёрли бы уже сохранённое.
+            if (firstName != null || lastName != null) {
+                UserTable.update({ UserTable.id eq existingUserId }) {
+                    firstName?.let { newName -> it[name] = newName }
+                    lastName?.let { newSecondName -> it[secondName] = newSecondName }
+                }
             }
+
+            existingUserId
         }
     }
 
@@ -51,18 +66,6 @@ class UsersRepository {
             UserTable.update({ UserTable.id eq userId }) {
                 it[fcmToken] = token
             }
-        }
-    }
-
-    private suspend fun getUserIdByPhone(phoneNumber: String): Long {
-        return newSuspendedTransaction {
-            UserTable
-                .select(UserTable.id)
-                .where {
-                    UserTable.phoneNumber eq phoneNumber
-                }
-                .map { it[UserTable.id].value }
-                .first()
         }
     }
 }

@@ -12,10 +12,10 @@ import org.jetbrains.exposed.v1.json.jsonb
  * Эта таблица используется при связи Продукт-Конструкторы.
  * Для связи Кофешоп-Конструкторы использовать [CoffeeConstructorCategoryTable]
  */
-object CoffeeModifiedConstructorCategoryTable: LongIdTable("ducks_coffee_modified_constructor_categories_table") {
+object CoffeeModifiedConstructorCategoryTable : LongIdTable("ducks_coffee_modified_constructor_categories_table") {
 
     val categoryId = reference(
-        "categoryId",
+        name = "categoryId",
         CoffeeConstructorCategoryTable,
         onDelete = ReferenceOption.CASCADE,
     )

@@ -6,6 +6,7 @@ import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
+import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
@@ -62,6 +63,12 @@ class SellerCoffeeProductDataSource {
         productRequest: CreateCoffeeProductRequest
     ): Long {
         return newSuspendedTransaction {
+            checkNoDuplicatedConstructors(
+                productRequest.constructors.orEmpty().flatMap { category ->
+                    category.constructors.map { it.id }
+                }
+            )
+
             val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
                 it.price
             }.takeIf { it != BigDecimal.ZERO }
@@ -138,6 +145,12 @@ class SellerCoffeeProductDataSource {
         productRequest: UpdateCoffeeProductRequest,
     ) {
         newSuspendedTransaction {
+            checkNoDuplicatedConstructors(
+                productRequest.constructors.orEmpty().flatMap { category ->
+                    category.constructors.map { it.id }
+                }
+            )
+
             val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
                 it.price
             }.takeIf { it != BigDecimal.ZERO }
@@ -215,6 +228,36 @@ class SellerCoffeeProductDataSource {
                 }
             }
         }
+    }
+
+    /**
+     * Один конструктор нельзя положить в две категории одного продукта — это те же самые
+     * добавки, продублированные в меню. На уровне бд это запрещено уникальным индексом
+     * (product, constructor), здесь отдаём понятную ошибку до записи.
+     */
+    private fun checkNoDuplicatedConstructors(constructorIds: List<Long>) {
+        val duplicatedIds = constructorIds
+            .groupingBy { it }
+            .eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+            .toList()
+
+        if (duplicatedIds.isEmpty()) return
+
+        val duplicatedNames = CoffeeConstructorsTable
+            .select(CoffeeConstructorsTable.name)
+            .where {
+                CoffeeConstructorsTable.id inList duplicatedIds
+            }
+            .map {
+                it[CoffeeConstructorsTable.name]
+            }
+
+        throw DucksBadRequestError(
+            "Конструктор можно добавить к продукту только один раз, " +
+                    "уберите повторы: ${duplicatedNames.joinToString()}"
+        )
     }
 
     suspend fun deleteProduct(shopId: Long, productId: Long) {
