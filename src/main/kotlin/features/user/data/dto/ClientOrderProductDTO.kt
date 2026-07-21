@@ -12,6 +12,10 @@ data class ClientOrderProductDTO(
     val size: Size,
     val constructors: List<Constructor>?,
     val quantity: Int,
+    // Цена за одну штуку: размер + конструкторы.
+    @Serializable(with = BigDecimalSerializer::class)
+    val unitPrice: BigDecimal,
+    // Цена всей позиции: unitPrice * quantity.
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
 ) {

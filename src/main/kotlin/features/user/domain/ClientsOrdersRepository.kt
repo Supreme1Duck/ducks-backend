@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
+import com.ducks.features.orders.database.orderedProductUnitPrice
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.features.user.data.dto.ActiveOrderProductDTO
@@ -141,6 +142,7 @@ class ClientsOrdersRepository(
                             size = it[CoffeeOrderedProductsTable.selectedSize].toClientOrderSize(),
                             constructors = it[CoffeeOrderedProductsTable.constructors]?.toClientOrderConstructors(),
                             quantity = it[CoffeeOrderedProductsTable.quantity],
+                            unitPrice = it.orderedProductUnitPrice(),
                             price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                         )
                     } ?: emptyList()
@@ -197,6 +199,7 @@ class ClientsOrdersRepository(
                         size = it[CoffeeOrderedProductsTable.selectedSize].toClientOrderSize(),
                         constructors = it[CoffeeOrderedProductsTable.constructors]?.toClientOrderConstructors(),
                         quantity = it[CoffeeOrderedProductsTable.quantity],
+                        unitPrice = it.orderedProductUnitPrice(),
                         price = it[CoffeeOrderedProductsTable.price] ?: java.math.BigDecimal.ZERO,
                     )
                 }
