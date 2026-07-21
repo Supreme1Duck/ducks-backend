@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_constructor_categories_table DROP COLUMN max_selection

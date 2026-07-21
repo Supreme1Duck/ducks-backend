@@ -10,42 +10,59 @@ import java.io.File
 import java.security.MessageDigest
 
 object DatabaseFactory {
+
+    private const val DB_URL = "jdbc:postgresql://localhost:5432/ducksdatabase"
+    private const val DB_USER = "andrewutko"
+
+    private const val MIGRATION_DIR = "src/main/resources/db/migration"
+
+    /**
+     * Генерация скриптов сравнивает Kotlin-таблицы с реальной схемой и пишет новые .sql
+     * в исходники, поэтому запускать её можно только на машине разработчика.
+     *
+     * На сервере исходников нет: папка создавалась заново рядом с jar, нумерация файлов
+     * начиналась с единицы и расходилась с [flyway_schema_history], из-за чего Flyway
+     * молча пропускал все свежие миграции.
+     */
+    private val shouldGenerateMigrations: Boolean
+        get() = System.getenv("DUCKS_GENERATE_MIGRATIONS")?.toBooleanStrictOrNull() == true
+
     fun init(password: String) {
         Database.connect(
-            url = "jdbc:postgresql://localhost:5432/ducksdatabase",
+            url = DB_URL,
             driver = "org.postgresql.Driver",
-            user = "andrewutko",
+            user = DB_USER,
             password = password
         )
         initMigrations(password = password)
     }
 
     private fun initMigrations(password: String) {
-        transaction {
-            val allTables = findAllTables()
-            println("All tables -> ${allTables.map { it.tableName }}")
+        if (shouldGenerateMigrations) {
+            transaction {
+                val allTables = findAllTables()
+                println("All tables -> ${allTables.map { it.tableName }}")
 
-            generateMigrationScripts(tables = allTables)
-            migrate(password)
+                generateMigrationScripts(tables = allTables)
+            }
         }
+
+        migrate(password)
     }
 
     private fun migrate(password: String) {
         val flyway = Flyway.configure()
-            .dataSource("jdbc:postgresql://localhost:5432/ducksdatabase", "andrewutko", password)
-            .locations("filesystem:src/main/resources/db/migration")
-            .validateOnMigrate(false)
+            .dataSource(DB_URL, DB_USER, password)
+            // Только classpath: так и dev, и прод применяют один и тот же набор файлов из jar.
+            .locations("classpath:db/migration")
             .load()
 
         flyway.migrate()
     }
 
-    /**
-     * Миграции создаются в рантайме, поэтому и читать их нужно не в jar а в filesystem.
-     */
     private fun generateMigrationScripts(tables: List<Table>) {
         val statements = MigrationUtils.statementsRequiredForDatabaseMigration(*tables.toTypedArray())
-        val migrationDir = "src/main/resources/db/migration"
+        val migrationDir = MIGRATION_DIR
 
         File(migrationDir).mkdirs()
 

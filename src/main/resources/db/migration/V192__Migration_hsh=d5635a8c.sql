@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_table ADD fcm_token TEXT NULL

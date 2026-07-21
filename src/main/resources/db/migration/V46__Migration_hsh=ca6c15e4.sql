@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_shop_credentials_table (id BIGSERIAL PRIMARY KEY, shop_id BIGINT NOT NULL, login TEXT NOT NULL, "password" TEXT NOT NULL, CONSTRAINT fk_ducks_shop_credentials_table_shop_id__id FOREIGN KEY (shop_id) REFERENCES ducks_shop_table(id) ON DELETE CASCADE ON UPDATE RESTRICT)

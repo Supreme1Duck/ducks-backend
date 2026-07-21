@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS shop_product_size_table (id BIGSERIAL PRIMARY KEY, "name" TEXT NOT NULL, parent BIGINT NULL)

@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_modified_constructor_categories_table ADD min_selection INT NULL

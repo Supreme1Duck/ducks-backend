@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_table DROP COLUMN closest_time_to_take_orders_in_minutes

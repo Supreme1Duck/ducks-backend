@@ -1,0 +1,1 @@
+ALTER TABLE ducks_admin_table ADD CONSTRAINT ducks_admin_table_login_unique UNIQUE (login)

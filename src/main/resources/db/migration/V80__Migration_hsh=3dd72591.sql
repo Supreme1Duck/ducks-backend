@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_product_table ALTER COLUMN "name" TYPE CITEXT

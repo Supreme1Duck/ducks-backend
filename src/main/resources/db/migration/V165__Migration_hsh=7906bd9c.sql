@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_table ALTER COLUMN "freeTables" TYPE INT, ALTER COLUMN "freeTables" SET DEFAULT 10

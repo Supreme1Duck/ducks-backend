@@ -1,0 +1,1 @@
+ALTER TABLE ducks_user_table ADD second_name TEXT NULL

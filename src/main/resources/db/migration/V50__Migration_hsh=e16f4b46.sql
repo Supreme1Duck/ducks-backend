@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_credentials_table ADD CONSTRAINT fk_ducks_shop_credentials_table_created_by__id FOREIGN KEY (created_by) REFERENCES ducks_admin_table(id) ON DELETE SET NULL ON UPDATE RESTRICT

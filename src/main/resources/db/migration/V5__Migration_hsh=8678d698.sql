@@ -1,0 +1,1 @@
+ALTER TABLE shop_product_category_table ADD CONSTRAINT fk_shop_product_category_table_supercategoryid__id FOREIGN KEY ("superCategoryId") REFERENCES shop_product_category_table(id) ON DELETE RESTRICT ON UPDATE RESTRICT

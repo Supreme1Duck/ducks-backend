@@ -1,0 +1,1 @@
+ALTER TABLE ducks_user_table ALTER COLUMN "name" TYPE TEXT, ALTER COLUMN "name" DROP NOT NULL

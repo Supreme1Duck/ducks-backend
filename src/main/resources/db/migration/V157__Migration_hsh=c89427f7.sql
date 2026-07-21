@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_ordered_products_table ADD quantity INT DEFAULT 1 NOT NULL

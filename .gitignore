@@ -8,8 +8,14 @@ build/
 src/main/resources/firebase-adminsdk.json
 src/main/resources/firebase-adminsdk-seller.json
 
-# Файлы миграции
-/src/main/resources/db/migration
+SERVER_SETUP.md
+
+# Картинки, которые заливают через приложение
+/coffee-shops/
+/ducks-analytics/
+
+.DS_Store
+.kotlin/
 
 ### STS ###
 .apt_generated

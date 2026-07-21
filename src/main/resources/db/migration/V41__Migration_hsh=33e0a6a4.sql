@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_table ALTER COLUMN address TYPE CITEXT, ALTER COLUMN address SET NOT NULL

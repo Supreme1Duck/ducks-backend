@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_table ALTER COLUMN "name" TYPE CITEXT, ALTER COLUMN "name" SET NOT NULL

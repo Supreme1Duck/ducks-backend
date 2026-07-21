@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_product_table ADD color INT NULL

@@ -1,0 +1,1 @@
+ALTER TABLE ducks_user_table ADD CONSTRAINT ducks_user_table_phone_number_unique UNIQUE (phone_number)

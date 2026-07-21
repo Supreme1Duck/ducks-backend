@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_orders_table ADD tips DECIMAL(15, 2) NULL

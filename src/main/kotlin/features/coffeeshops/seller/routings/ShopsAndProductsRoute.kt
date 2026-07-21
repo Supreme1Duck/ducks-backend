@@ -34,6 +34,15 @@ fun Route.shopsAndProductsRoute() {
         }
     }
 
+    // Только актуальное ближайшее время принятия заказа, без остальных данных кофешопа.
+    get("/shop/closest-order-time") {
+        ducksTryCatch {
+            val principalShopId = getCoffeeShopSellerPrincipal().shopId
+
+            call.respond(HttpStatusCode.OK, coffeeShopsRepository.getClosestTimeToTakeOrder(principalShopId))
+        }
+    }
+
     get("/shop/products") {
         ducksTryCatch {
             val principalShopId = getCoffeeShopSellerPrincipal().shopId

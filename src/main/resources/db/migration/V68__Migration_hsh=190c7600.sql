@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_products_with_constructors_table ADD CONSTRAINT fk_ducks_coffee_products_with_constructors_table_product__id FOREIGN KEY (product) REFERENCES ducks_coffee_shop_product_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

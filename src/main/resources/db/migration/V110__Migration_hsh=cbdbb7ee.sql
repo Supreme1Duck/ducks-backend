@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_ordered_products_table DROP COLUMN price

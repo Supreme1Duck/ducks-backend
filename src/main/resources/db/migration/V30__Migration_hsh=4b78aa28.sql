@@ -1,0 +1,1 @@
+ALTER TABLE shop_products_with_sizes ADD CONSTRAINT fk_shop_products_with_sizes_size__id FOREIGN KEY ("size") REFERENCES shop_product_size_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

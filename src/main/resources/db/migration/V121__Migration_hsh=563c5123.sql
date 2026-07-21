@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_table ADD closest_time_to_take_orders BIGINT NULL

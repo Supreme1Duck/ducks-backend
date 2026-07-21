@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_coffee_products_with_constructors_table (id BIGSERIAL PRIMARY KEY, constructor BIGINT NOT NULL, category BIGINT NOT NULL, product BIGINT NOT NULL)

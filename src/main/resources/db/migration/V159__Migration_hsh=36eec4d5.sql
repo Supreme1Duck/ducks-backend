@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_ordered_products_table ADD price DECIMAL(15, 2) NULL

@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_product_table ALTER COLUMN brandname TYPE TEXT, ALTER COLUMN brandname DROP NOT NULL

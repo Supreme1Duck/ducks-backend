@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_orders_table DROP COLUMN cancelled_by_seller_time

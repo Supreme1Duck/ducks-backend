@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_orders_table ADD CONSTRAINT fk_ducks_coffee_orders_table_user_id__id FOREIGN KEY (user_id) REFERENCES ducks_user_table(id) ON DELETE RESTRICT ON UPDATE RESTRICT

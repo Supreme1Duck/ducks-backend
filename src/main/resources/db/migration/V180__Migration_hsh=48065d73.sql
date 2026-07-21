@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_credentials_table ALTER COLUMN pin_failed_attempts TYPE INT, ALTER COLUMN pin_failed_attempts SET NOT NULL

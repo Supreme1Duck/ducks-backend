@@ -1,0 +1,1 @@
+ALTER TABLE shop_products_with_sizes DROP CONSTRAINT fk_shop_products_with_sizes_product__id

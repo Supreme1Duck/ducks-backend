@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_coffee_shop_closest_delivery_time_table (id BIGSERIAL PRIMARY KEY, shop_id BIGINT NOT NULL, closest_time_in_minutes INT DEFAULT 5 NOT NULL, CONSTRAINT fk_ducks_coffee_shop_closest_delivery_time_table_shop_id__id FOREIGN KEY (shop_id) REFERENCES ducks_coffee_shop_table(id) ON DELETE RESTRICT ON UPDATE RESTRICT)

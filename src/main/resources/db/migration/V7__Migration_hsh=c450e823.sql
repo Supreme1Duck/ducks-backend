@@ -1,0 +1,1 @@
+ALTER TABLE ducks_shop_product_table ADD CONSTRAINT fk_ducks_shop_product_table_shop__id FOREIGN KEY (shop) REFERENCES ducks_shop_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

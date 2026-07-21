@@ -1,0 +1,1 @@
+ALTER TABLE ducks_user_table ADD fcm_token TEXT NULL

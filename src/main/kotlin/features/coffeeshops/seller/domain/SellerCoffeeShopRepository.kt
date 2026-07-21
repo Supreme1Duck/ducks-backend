@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTechnicalPausesTable
 import com.ducks.features.coffeeshops.database.mappers.mapToSellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
+import com.ducks.features.coffeeshops.seller.data.model.SellerClosestOrderTimeDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.shop.*
 import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
@@ -46,6 +47,28 @@ class SellerCoffeeShopRepository(
 
                     it.mapToSellerCoffeeShopDetailsDTO(activeDaySchedule, schedule)
                 }.first()
+        }
+    }
+
+    /**
+     * Возвращает только актуальное ближайшее время принятия заказа.
+     * Считается на лету, а не берётся из закешированной колонки кофешопа,
+     * поэтому не зависит от периода пересчёта [CalculateCoffeeShopsOrdersTimeService].
+     */
+    suspend fun getClosestTimeToTakeOrder(shopId: Long): SellerClosestOrderTimeDTO {
+        return newSuspendedTransaction {
+            val busyTimeSlots = fetchAvailableOrdersTimeListRepository.getAllBusyTimeSlots(shopId)
+            val workTime = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shopId)
+
+            val closestTime = fetchAvailableOrdersTimeListRepository.calculateClosestTimeToTakeOrder(
+                busyTimeSlotsDataList = busyTimeSlots,
+                coffeeShopWorkTime = workTime,
+            )
+
+            SellerClosestOrderTimeDTO(
+                closestTimeToTakeOrder = closestTime.closestTime,
+                canTakeOrdersReason = closestTime.reason.value,
+            )
         }
     }
 

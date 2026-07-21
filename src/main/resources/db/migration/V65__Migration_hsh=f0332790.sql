@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_product_table ADD CONSTRAINT fk_ducks_coffee_shop_product_table_shop_id__id FOREIGN KEY (shop_id) REFERENCES ducks_coffee_shop_table(id) ON DELETE RESTRICT ON UPDATE RESTRICT

@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_product_table ALTER COLUMN carbohydrates TYPE DECIMAL(6, 2) USING NULLIF(trim(carbohydrates), '')::DECIMAL(6, 2)

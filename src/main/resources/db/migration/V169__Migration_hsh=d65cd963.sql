@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_orders_table ADD is_to_time BOOLEAN DEFAULT FALSE NOT NULL

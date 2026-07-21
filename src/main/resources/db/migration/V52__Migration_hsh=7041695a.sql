@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_coffee_product_category_table (id BIGSERIAL PRIMARY KEY, "name" TEXT NOT NULL)

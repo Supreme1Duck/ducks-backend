@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_credentials_table ADD CONSTRAINT ducks_coffee_shop_credentials_table_shop_id_unique UNIQUE (shop_id)

@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_admin_table (id BIGSERIAL PRIMARY KEY, "name" TEXT NOT NULL, second_name TEXT NOT NULL)

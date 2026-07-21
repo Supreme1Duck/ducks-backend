@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_ordered_products_table ALTER COLUMN quantity TYPE INT, ALTER COLUMN quantity DROP DEFAULT

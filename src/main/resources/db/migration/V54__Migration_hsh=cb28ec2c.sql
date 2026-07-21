@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ducks_coffee_constructor_categories_table (id BIGSERIAL PRIMARY KEY, "name" TEXT NOT NULL, default_constructor_id BIGINT NULL, max_selection INT NULL, shop_id BIGINT NOT NULL, CONSTRAINT fk_ducks_coffee_constructor_categories_table_shop_id__id FOREIGN KEY (shop_id) REFERENCES ducks_coffee_shop_table(id) ON DELETE CASCADE ON UPDATE RESTRICT)

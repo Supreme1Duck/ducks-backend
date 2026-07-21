@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_schedule_table ALTER COLUMN "startTime" TYPE TEXT, ALTER COLUMN "startTime" DROP NOT NULL

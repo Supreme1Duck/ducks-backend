@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_orders_table ADD time_to_cook_in_minutes INT NOT NULL

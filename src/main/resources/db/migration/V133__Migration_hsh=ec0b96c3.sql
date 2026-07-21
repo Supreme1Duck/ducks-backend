@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_table ADD can_take_orders_reason INT NULL

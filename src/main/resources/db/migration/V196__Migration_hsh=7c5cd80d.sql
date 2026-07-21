@@ -1,0 +1,1 @@
+ALTER TABLE ducks_coffee_shop_product_table ALTER COLUMN calories TYPE DECIMAL(7, 2) USING NULLIF(trim(calories), '')::DECIMAL(7, 2)
