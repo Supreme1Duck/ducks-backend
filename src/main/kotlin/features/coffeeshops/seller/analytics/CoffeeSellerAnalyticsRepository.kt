@@ -2,6 +2,7 @@ package com.ducks.features.coffeeshops.seller.analytics
 
 import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
+import com.ducks.util.APP_ZONE_OFFSET
 import features.coffeeshops.seller.analytics.CoffeeShopAnalytics
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -11,19 +12,21 @@ import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 class CoffeeSellerAnalyticsRepository {
 
     suspend fun getAnalytics(coffeeShopId: Long): CoffeeShopAnalytics = newSuspendedTransaction {
         val now = System.currentTimeMillis()
 
-        val todayStart = LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+        // Дни и месяцы считаются в UTC+3 — так же, как в списке заказов за день.
+        val today = LocalDate.now(APP_ZONE_OFFSET)
+
+        val todayStart = today.atStartOfDay().toInstant(APP_ZONE_OFFSET).toEpochMilli()
         val yesterdayStart = todayStart - 86_400_000L
 
-        val monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+        val monthStart = today.withDayOfMonth(1).atStartOfDay().toInstant(APP_ZONE_OFFSET).toEpochMilli()
         val lastMonthStart =
-            LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+            today.minusMonths(1).withDayOfMonth(1).atStartOfDay().toInstant(APP_ZONE_OFFSET).toEpochMilli()
         val lastMonthEnd = monthStart
 
         fun completedOrders() = CoffeeOrdersTable
@@ -167,13 +170,13 @@ class CoffeeSellerAnalyticsRepository {
 
     private suspend fun getDailyRevenueForCurrentMonth(coffeeShopId: Long): List<CoffeeShopAnalytics.DayRevenue> =
         newSuspendedTransaction {
-            val today = LocalDate.now()
+            val today = LocalDate.now(APP_ZONE_OFFSET)
             val currentDay = today.dayOfMonth
 
             (1..currentDay).map { day ->
                 val dayStart = today.withDayOfMonth(day)
                     .atStartOfDay()
-                    .toInstant(ZoneOffset.UTC)
+                    .toInstant(APP_ZONE_OFFSET)
                     .toEpochMilli()
                 val dayEnd = dayStart + 86_400_000L
 

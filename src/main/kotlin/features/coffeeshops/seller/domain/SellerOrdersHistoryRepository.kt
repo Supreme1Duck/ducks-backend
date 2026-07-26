@@ -7,6 +7,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.database.toOrderProductDTO
 import com.ducks.features.orders.database.toOrderStatus
 import com.ducks.features.user.database.UserTable
+import com.ducks.util.APP_ZONE_OFFSET
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -16,16 +17,15 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 // Просмотр заказов кофейни продавцом: список за день и детали одного заказа.
 class SellerOrdersHistoryRepository {
 
-    // Границы дня считаются в UTC — так же, как в аналитике продавца.
+    // Границы дня считаются в UTC+3 (часовой пояс приложения).
     suspend fun getOrdersByDay(shopId: Long, day: LocalDate): List<SellerDayOrderDTO> {
         return newSuspendedTransaction {
-            val dayStart = day.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
-            val dayEnd = day.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+            val dayStart = day.atStartOfDay().toInstant(APP_ZONE_OFFSET).toEpochMilli()
+            val dayEnd = day.plusDays(1).atStartOfDay().toInstant(APP_ZONE_OFFSET).toEpochMilli()
 
             val orders = CoffeeOrdersTable
                 .join(

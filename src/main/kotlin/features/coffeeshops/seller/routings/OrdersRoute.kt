@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.seller.domain.SellerOrdersHistoryRepositor
 import com.ducks.features.coffeeshops.seller.domain.SellerOrdersRepository
 import com.ducks.features.coffeeshops.seller.getCoffeeShopSellerPrincipal
 import com.ducks.features.coffeeshops.seller.routings.request.orders.CancelBySellerRequest
+import com.ducks.util.APP_ZONE_OFFSET
 import com.ducks.util.ducksTryCatch
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -14,7 +15,6 @@ import org.koin.core.parameter.parametersOf
 import org.koin.ktor.ext.inject
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 fun Route.sellerOrdersRoute() {
     val orderRepository by application.inject<SellerOrdersRepository> { parametersOf(application) }
@@ -143,10 +143,10 @@ fun Route.sellerOrdersRoute() {
     }
 }
 
-// Дата дня: yyyy-MM-dd либо timestamp в миллисекундах (день считается в UTC).
+// Дата дня: yyyy-MM-dd либо timestamp в миллисекундах (день считается в UTC+3).
 private fun String.toLocalDateOrNull(): LocalDate? {
     toLongOrNull()?.let {
-        return Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+        return Instant.ofEpochMilli(it).atZone(APP_ZONE_OFFSET).toLocalDate()
     }
 
     return runCatching { LocalDate.parse(this) }.getOrNull()
