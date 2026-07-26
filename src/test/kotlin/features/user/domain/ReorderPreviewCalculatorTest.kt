@@ -41,7 +41,7 @@ class ReorderPreviewCalculatorTest {
         price: String,
         name: String = "product-$productId",
         imageUrl: String? = "img-$productId",
-    ) = ReorderPreviewCalculator.OrderedLine(
+    ) = ReorderPreviewCalculator.OrderedProduct(
         productId = productId,
         name = name,
         imageUrl = imageUrl,

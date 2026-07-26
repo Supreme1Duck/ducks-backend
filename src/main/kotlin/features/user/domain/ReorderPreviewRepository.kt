@@ -25,7 +25,7 @@ class ReorderPreviewRepository(
 
             if (!orderExists) return@newSuspendedTransaction null
 
-            val lines = CoffeeOrderedProductsTable
+            val orderedProducts = CoffeeOrderedProductsTable
                 .select(
                     CoffeeOrderedProductsTable.productId,
                     CoffeeOrderedProductsTable.productName,
@@ -37,7 +37,7 @@ class ReorderPreviewRepository(
                 )
                 .where { CoffeeOrderedProductsTable.orderId eq orderId }
                 .map {
-                    ReorderPreviewCalculator.OrderedLine(
+                    ReorderPreviewCalculator.OrderedProduct(
                         productId = it[CoffeeOrderedProductsTable.productId],
                         name = it[CoffeeOrderedProductsTable.productName],
                         imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
@@ -48,7 +48,7 @@ class ReorderPreviewRepository(
                     )
                 }
 
-            val currentProducts = lines
+            val currentProducts = orderedProducts
                 .groupBy { it.productId }
                 .mapValues { (productId, productLines) ->
                     val orderedConstructorIds = productLines
@@ -57,7 +57,7 @@ class ReorderPreviewRepository(
                     fetchCurrentProduct(productId, orderedConstructorIds)
                 }
 
-            calculator.calculate(lines, currentProducts)
+            calculator.calculate(orderedProducts, currentProducts)
         }
     }
 

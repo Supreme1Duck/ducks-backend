@@ -6,12 +6,12 @@ import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.database.orderedProductUnitPrice
+import com.ducks.features.orders.database.toOrderStatus
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.features.user.data.dto.ActiveOrderProductDTO
 import com.ducks.features.user.data.dto.ClientOrderDTO
 import com.ducks.features.user.data.dto.ClientOrderProductDTO
-import com.ducks.features.user.data.dto.OrderStatus
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -78,6 +78,7 @@ class ClientsOrdersRepository(
                             name = it[CoffeeOrderedProductsTable.productName],
                             imageUrl = it[CoffeeOrderedProductsTable.imageUrl],
                             quantity = it[CoffeeOrderedProductsTable.quantity],
+                            unitPrice = it.orderedProductUnitPrice(),
                             price = it[CoffeeOrderedProductsTable.price] ?: 0.toBigDecimal(),
                             constructors = it[CoffeeOrderedProductsTable.constructors]?.toActiveOrderConstructors(),
                             size = it[CoffeeOrderedProductsTable.selectedSize].toActiveOrderSize(),
@@ -106,14 +107,7 @@ class ClientsOrdersRepository(
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
-                        status = when {
-                            it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
-                            it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
-                            it[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP.value
-                            it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
-                            it[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY.value
-                            else -> OrderStatus.IN_PROGRESS.value
-                        },
+                        status = it.toOrderStatus().value,
                         price = it[CoffeeOrdersTable.totalPrice],
                     )
                 }
@@ -166,14 +160,7 @@ class ClientsOrdersRepository(
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
-                        status = when {
-                            it[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED.value
-                            it[CoffeeOrdersTable.isCancelledByClient] || it[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED.value
-                            it[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP.value
-                            it[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED.value
-                            it[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY.value
-                            else -> OrderStatus.IN_PROGRESS.value
-                        },
+                        status = it.toOrderStatus().value,
                         price = it[CoffeeOrdersTable.totalPrice],
                     )
                 }

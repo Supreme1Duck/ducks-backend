@@ -3,6 +3,7 @@ package com.ducks.features.orders.database
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.orders.data.dto.OrderDTO
 import com.ducks.features.orders.data.dto.OrderProductDTO
+import com.ducks.features.orders.data.dto.OrderStatus
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.user.database.UserTable
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -21,6 +22,20 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
         estimatedFinishTime = this[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
         price = this[CoffeeOrdersTable.totalPrice],
     )
+}
+
+// Статус заказа по флагам и таймстампам. Один и тот же для клиента и для продавца.
+// Требует, чтобы в строке были все колонки CoffeeOrdersTable.
+fun ResultRow.toOrderStatus(): OrderStatus {
+    return when {
+        this[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED
+        this[CoffeeOrdersTable.isCancelledByClient] || this[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED
+        this[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP
+        this[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED
+        this[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY
+        this[CoffeeOrdersTable.acceptedTime] == null -> OrderStatus.PENDING
+        else -> OrderStatus.IN_PROGRESS
+    }
 }
 
 fun ResultRow.toOrderProductDTO(): OrderProductDTO {

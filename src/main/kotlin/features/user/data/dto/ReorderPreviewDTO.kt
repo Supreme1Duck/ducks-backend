@@ -64,6 +64,10 @@ data class ReorderCartProductDTO(
     val size: ReorderSizeDTO,
     val constructors: List<ReorderConstructorDTO>?,
     val quantity: Int,
+    // Актуальная цена за одну штуку: размер + добавки.
+    @Serializable(with = BigDecimalSerializer::class)
+    val unitPrice: BigDecimal,
+    // Актуальная цена всей позиции: unitPrice * quantity.
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
 )

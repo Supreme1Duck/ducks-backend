@@ -38,6 +38,7 @@ fun coffeeShopsModule(baseUrl: String) = module {
 
     single { ObserveOrdersRepository() }
     single { SellerOrdersRepository(get()) }
+    single { SellerOrdersHistoryRepository() }
     single { CoffeeSellerAnalyticsRepository() }
     single { SellerPinCodeDataSource() }
     single { ActualizeCoffeeShopsVisibilityService(get()) }

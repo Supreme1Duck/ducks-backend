@@ -17,7 +17,7 @@ import java.math.BigDecimal
 class ReorderPreviewCalculator {
 
     /** Ранее заказанная позиция (снапшот на момент заказа). */
-    data class OrderedLine(
+    data class OrderedProduct(
         val productId: Long,
         val name: String,
         val imageUrl: String?,
@@ -46,7 +46,7 @@ class ReorderPreviewCalculator {
     )
 
     fun calculate(
-        lines: List<OrderedLine>,
+        lines: List<OrderedProduct>,
         currentProducts: Map<Long, CurrentProduct?>,
     ): ReorderPreviewDTO {
         val changes = mutableListOf<ReorderChangeDTO>()
@@ -161,7 +161,8 @@ class ReorderPreviewCalculator {
 
             // --- Позиция в новой корзине ---
             val constructorsPrice = cartConstructors.sumOf { it.price ?: BigDecimal.ZERO }
-            val linePrice = (chosenSize.price + constructorsPrice).times(line.quantity.toBigDecimal())
+            val unitPrice = chosenSize.price + constructorsPrice
+            val linePrice = unitPrice.times(line.quantity.toBigDecimal())
 
             cart += ReorderCartProductDTO(
                 id = line.productId,
@@ -170,6 +171,7 @@ class ReorderPreviewCalculator {
                 size = chosenSize.toReorderSize(),
                 constructors = cartConstructors.ifEmpty { null },
                 quantity = line.quantity,
+                unitPrice = unitPrice,
                 price = linePrice,
             )
         }
