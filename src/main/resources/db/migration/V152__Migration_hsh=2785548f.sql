@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_ordered_products_table ADD minutes_to_cook INT NULL

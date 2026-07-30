@@ -17,8 +17,10 @@ suspend fun RoutingContext.ducksTryCatch(
         println("$e")
         call.respond(HttpStatusCode.BadRequest, e.message.orEmpty())
     } catch (e: Exception) {
+        // Текст исключения остаётся в логах: наружу он утаскивал детали бд —
+        // имена таблиц, констрейнтов и значения ключей из PSQLException.
         println("$e")
-        println(e.printStackTrace())
-        call.respond(HttpStatusCode.InternalServerError, e.message ?: e.localizedMessage)
+        e.printStackTrace()
+        call.respond(HttpStatusCode.InternalServerError, "Что-то пошло не так, попробуйте позже")
     }
 }

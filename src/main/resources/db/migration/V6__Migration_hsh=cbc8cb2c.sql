@@ -1,1 +1,0 @@
-ALTER TABLE shop_product_category_table ADD CONSTRAINT fk_shop_product_category_table_parent_id__id FOREIGN KEY (parent_id) REFERENCES shop_product_category_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

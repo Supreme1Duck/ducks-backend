@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_ordered_products_table ADD selected_size_price DECIMAL(15, 2) NULL

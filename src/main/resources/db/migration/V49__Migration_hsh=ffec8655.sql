@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_credentials_table ADD created_by BIGINT NOT NULL

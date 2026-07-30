@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_product_table DROP COLUMN seconds_to_cook

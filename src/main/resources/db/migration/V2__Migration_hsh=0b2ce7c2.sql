@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS ducks_shop_table (id BIGSERIAL PRIMARY KEY, "name" VARCHAR(50) NOT NULL, description TEXT NULL, address VARCHAR(100) NOT NULL, "photoUrls" JSONB NOT NULL)

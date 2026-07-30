@@ -1,1 +1,0 @@
-ALTER TABLE shop_product_size_table DROP COLUMN parent

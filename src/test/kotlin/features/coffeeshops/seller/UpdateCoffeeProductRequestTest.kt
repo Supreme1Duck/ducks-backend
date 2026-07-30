@@ -99,4 +99,41 @@ class UpdateCoffeeProductRequestTest {
         assertEquals(1, request.carbohydrates)
         assertNull(request.protein)
     }
+
+    // Контракт: у новой (ещё не сохранённой) добавки отрицательный временный id и название,
+    // у существующей — только id, поле "name" не приходит вовсе.
+    @Test
+    fun `constructor name is optional and carries the name of a not yet saved constructor`() {
+        val withNewConstructor = """
+            {
+                "productId": 8,
+                "name": "Каппучино",
+                "sizes": [
+                    { "id": "1", "sizeName": "M", "sizeValue": "200 мл", "price": 12.0 }
+                ],
+                "categoryId": 1,
+                "imageUrl": "https://supreme1duck.github.io/coffee/cappucino.png",
+                "minutesToCook": 2,
+                "inStock": true,
+                "constructors": [
+                    {
+                        "category": { "id": 2, "maxSelection": 1 },
+                        "constructors": [
+                            { "id": -1785092683577, "name": "Миндальное молоко" },
+                            { "id": 4 }
+                        ]
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        val request = json.decodeFromString<UpdateCoffeeProductRequest>(withNewConstructor)
+        val constructors = request.constructors.orEmpty().single().constructors
+
+        assertEquals(-1785092683577L, constructors[0].id)
+        assertEquals("Миндальное молоко", constructors[0].name)
+
+        assertEquals(4L, constructors[1].id)
+        assertNull(constructors[1].name)
+    }
 }

@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table DROP COLUMN is_delay_accepted

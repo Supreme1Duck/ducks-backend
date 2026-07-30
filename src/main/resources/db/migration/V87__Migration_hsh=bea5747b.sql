@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_schedule_table ALTER COLUMN "endTime" TYPE TEXT, ALTER COLUMN "endTime" DROP NOT NULL

@@ -8,7 +8,6 @@ import com.ducks.features.coffeeshops.seller.routings.request.constructor.Create
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.DeleteConstructorRequest
 import com.ducks.features.coffeeshops.seller.routings.request.constructor.SetInStockRequest
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 class SellerConstructorsRepository(
     private val dataSource: SellerCoffeeConstructorsDataSource
@@ -45,7 +44,7 @@ class SellerConstructorsRepository(
         shopId: Long,
         request: CreateConstructorRequest
     ): Long {
-        return suspendTransaction {
+        return newSuspendedTransaction {
             dataSource.insertNewConstructor(shopId = shopId, request = request)
         }
     }

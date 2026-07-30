@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_ordered_products_table ALTER COLUMN selected_size_price TYPE DECIMAL(15, 2), ALTER COLUMN selected_size_price SET NOT NULL

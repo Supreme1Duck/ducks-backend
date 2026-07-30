@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table ADD is_delay_accepted BOOLEAN DEFAULT FALSE NOT NULL

@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_ordered_products_table DROP COLUMN selected_size_price

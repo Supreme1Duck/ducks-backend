@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_table ALTER COLUMN "name" TYPE CITEXT

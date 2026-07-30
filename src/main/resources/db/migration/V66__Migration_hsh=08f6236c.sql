@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_products_with_constructors_table ADD CONSTRAINT fk_ducks_coffee_products_with_constructors_table_constructor__i FOREIGN KEY (constructor) REFERENCES ducks_coffee_constructors_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

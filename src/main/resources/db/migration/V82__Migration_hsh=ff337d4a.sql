@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_credentials_table ADD CONSTRAINT fk_ducks_coffee_shop_credentials_table_shop_id__id FOREIGN KEY (shop_id) REFERENCES ducks_coffee_shop_table(id) ON DELETE CASCADE ON UPDATE RESTRICT

@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table ALTER COLUMN cancelled_by_seller_time TYPE BIGINT, ALTER COLUMN cancelled_by_seller_time DROP NOT NULL

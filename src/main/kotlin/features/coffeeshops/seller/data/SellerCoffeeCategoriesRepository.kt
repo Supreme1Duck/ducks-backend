@@ -1,11 +1,13 @@
 package com.ducks.features.coffeeshops.seller.data
 
+import com.ducks.features.coffeeshops.database.CoffeeCategoryGroupTable
 import com.ducks.features.coffeeshops.database.CoffeeProductCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
-import com.ducks.features.coffeeshops.database.mappers.mapToCategoryDTO
-import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
+import com.ducks.features.coffeeshops.database.mappers.mapToCategoryWithGroupDTO
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryWithCountDTO
+import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryWithGroupDTO
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -13,11 +15,23 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
 
 class SellerCoffeeCategoriesRepository {
 
-    suspend fun getCategories(): List<CoffeeCategoryDTO> {
+    /**
+     * Плоский список категорий, у каждой — её группа. Порядок: сначала по группе,
+     * внутри группы — по id категории, чтобы селлер видел стабильные разделы.
+     */
+    suspend fun getCategories(): List<CoffeeCategoryWithGroupDTO> {
         return newSuspendedTransaction {
             CoffeeProductCategoryTable
+                .join(
+                    otherTable = CoffeeCategoryGroupTable,
+                    joinType = JoinType.INNER,
+                    onColumn = CoffeeProductCategoryTable.groupId,
+                    otherColumn = CoffeeCategoryGroupTable.id,
+                )
                 .selectAll()
-                .map { it.mapToCategoryDTO() }
+                .orderBy(CoffeeCategoryGroupTable.sortOrder, SortOrder.ASC)
+                .orderBy(CoffeeProductCategoryTable.id, SortOrder.ASC)
+                .map { it.mapToCategoryWithGroupDTO() }
         }
     }
 

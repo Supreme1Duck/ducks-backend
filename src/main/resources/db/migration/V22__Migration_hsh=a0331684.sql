@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS shop_products_with_sizes (id BIGSERIAL PRIMARY KEY, product BIGINT NOT NULL, "size" BIGINT NOT NULL)

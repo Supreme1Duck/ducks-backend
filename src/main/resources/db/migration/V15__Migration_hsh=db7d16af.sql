@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_product_colors_table ADD CONSTRAINT ducks_shop_product_colors_table_name_unique UNIQUE ("name")

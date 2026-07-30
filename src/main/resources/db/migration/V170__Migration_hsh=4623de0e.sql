@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_table ADD rating DOUBLE PRECISION DEFAULT 4.8 NOT NULL

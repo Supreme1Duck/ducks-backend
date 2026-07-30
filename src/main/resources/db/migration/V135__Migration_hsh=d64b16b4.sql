@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_product_table ALTER COLUMN seconds_to_cook TYPE INT, ALTER COLUMN seconds_to_cook DROP NOT NULL

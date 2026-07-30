@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table ADD total_price DECIMAL(15, 2) NOT NULL

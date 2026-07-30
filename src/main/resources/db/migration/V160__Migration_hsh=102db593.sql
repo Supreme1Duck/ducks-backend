@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_table ADD tags JSONB NULL

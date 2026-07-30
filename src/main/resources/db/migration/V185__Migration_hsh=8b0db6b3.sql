@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_ordered_products_table ALTER COLUMN selected_size_value TYPE TEXT, ALTER COLUMN selected_size_value SET NOT NULL

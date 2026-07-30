@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_table ADD seconds_to_cook INT DEFAULT 120 NOT NULL

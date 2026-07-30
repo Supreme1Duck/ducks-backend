@@ -50,7 +50,13 @@ data class CoffeeCategoryConstructorRequest(
     val minSelection: Int? = null,
 )
 
+/**
+ * [id] < 0 — добавка ещё не сохранена, приложение прислало временный id (та же конвенция,
+ * что в /constructor/save). Такая добавка заводится при сохранении продукта, и [name]
+ * для неё обязателен — у уже существующих добавок поле не нужно и приходить не будет.
+ */
 @Serializable
 data class CoffeeConstructorRequest(
     val id: Long,
+    val name: String? = null,
 )

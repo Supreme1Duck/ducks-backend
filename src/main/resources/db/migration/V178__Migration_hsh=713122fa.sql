@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_credentials_table ADD COLUMN IF NOT EXISTS pin_locked_until BIGINT NULL

@@ -18,10 +18,6 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    exclude("db/migration/**")
-}
-
 repositories {
     mavenCentral()
 }

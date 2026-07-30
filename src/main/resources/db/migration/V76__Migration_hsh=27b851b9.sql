@@ -1,1 +1,0 @@
-CREATE SEQUENCE IF NOT EXISTS ducks_coffee_shop_closest_delivery_time_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807

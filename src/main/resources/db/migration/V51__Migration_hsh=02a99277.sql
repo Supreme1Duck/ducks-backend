@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_credentials_table ADD CONSTRAINT ducks_shop_credentials_table_login_unique UNIQUE (login)

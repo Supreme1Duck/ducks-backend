@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_table ADD "freeTables" INT DEFAULT 10 NOT NULL

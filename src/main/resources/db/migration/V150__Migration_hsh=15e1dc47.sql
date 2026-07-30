@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_modified_constructor_categories_table DROP COLUMN default_constructor_id

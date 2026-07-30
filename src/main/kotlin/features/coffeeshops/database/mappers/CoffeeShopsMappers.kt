@@ -5,6 +5,8 @@ import com.ducks.features.coffeeshops.client.data.model.dto.WorkTimeDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
+import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryGroupDTO
+import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryWithGroupDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopActivePauseDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.orders.data.model.WorkTimeModel
@@ -113,6 +115,18 @@ fun ResultRow.mapToCategoryDTO(): CoffeeCategoryDTO {
     return CoffeeCategoryDTO(
         id = this[CoffeeProductCategoryTable.id].value,
         name = this[CoffeeProductCategoryTable.name]
+    )
+}
+
+fun ResultRow.mapToCategoryWithGroupDTO(): CoffeeCategoryWithGroupDTO {
+    return CoffeeCategoryWithGroupDTO(
+        id = this[CoffeeProductCategoryTable.id].value,
+        name = this[CoffeeProductCategoryTable.name],
+        group = CoffeeCategoryGroupDTO(
+            id = this[CoffeeCategoryGroupTable.id].value,
+            name = this[CoffeeCategoryGroupTable.name],
+            sortOrder = this[CoffeeCategoryGroupTable.sortOrder],
+        ),
     )
 }
 

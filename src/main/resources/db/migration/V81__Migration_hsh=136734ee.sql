@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_credentials_table DROP CONSTRAINT fk_ducks_coffee_shop_credentials_table_shop_id__id

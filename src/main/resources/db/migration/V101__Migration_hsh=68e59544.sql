@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table ADD cancelled_message TEXT NULL

@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_table ADD "temporaryClosedReason" TEXT NULL

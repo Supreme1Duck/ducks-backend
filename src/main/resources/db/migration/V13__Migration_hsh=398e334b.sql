@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS ducks_shop_product_colors_table (id SERIAL PRIMARY KEY, "name" TEXT NOT NULL)

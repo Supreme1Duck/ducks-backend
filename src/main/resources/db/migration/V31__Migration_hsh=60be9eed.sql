@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_product_table ALTER COLUMN season_id TYPE INT, ALTER COLUMN season_id DROP NOT NULL, ALTER COLUMN season_id DROP DEFAULT

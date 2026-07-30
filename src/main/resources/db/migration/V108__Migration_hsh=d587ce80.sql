@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_table DROP COLUMN closest_time_to_cook_in_minutes

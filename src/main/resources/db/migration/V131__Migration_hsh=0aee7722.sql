@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_product_table ADD in_stock BOOLEAN DEFAULT TRUE NOT NULL

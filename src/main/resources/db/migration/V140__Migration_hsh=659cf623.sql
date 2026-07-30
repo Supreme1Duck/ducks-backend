@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_products_with_constructors_table DROP CONSTRAINT fk_ducks_coffee_products_with_constructors_table_category__id

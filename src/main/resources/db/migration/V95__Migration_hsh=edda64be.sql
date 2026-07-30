@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_orders_table ADD user_id BIGINT NOT NULL

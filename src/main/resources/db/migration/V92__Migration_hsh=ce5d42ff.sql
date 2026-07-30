@@ -1,1 +1,0 @@
-ALTER TABLE ducks_user_table ADD phone_number TEXT NOT NULL

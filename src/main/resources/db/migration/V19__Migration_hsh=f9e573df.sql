@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_product_table ADD season_id INT DEFAULT 1 NOT NULL

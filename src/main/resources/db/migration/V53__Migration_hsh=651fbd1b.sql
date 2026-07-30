@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS ducks_coffee_shop_table (id BIGSERIAL PRIMARY KEY, "name" CITEXT NOT NULL, address CITEXT NOT NULL, description TEXT NULL, "isShown" BOOLEAN DEFAULT FALSE NOT NULL, tags JSONB NULL, "photoUrls" JSONB NULL, "seatsCapacity" INT DEFAULT 10 NOT NULL, "lowestPrice" INT NULL)

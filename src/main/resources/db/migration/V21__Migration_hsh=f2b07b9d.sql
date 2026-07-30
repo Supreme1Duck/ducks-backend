@@ -1,1 +1,0 @@
-ALTER TABLE ducks_shop_product_table ADD CONSTRAINT fk_ducks_shop_product_table_color__id FOREIGN KEY (color) REFERENCES ducks_shop_product_colors_table(id) ON DELETE RESTRICT ON UPDATE RESTRICT

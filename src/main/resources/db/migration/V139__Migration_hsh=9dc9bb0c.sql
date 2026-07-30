@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_products_with_constructors_table ADD "categoryId" BIGINT NOT NULL

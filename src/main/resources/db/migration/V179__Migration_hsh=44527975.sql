@@ -1,1 +1,0 @@
-ALTER TABLE ducks_coffee_shop_credentials_table ALTER COLUMN pin_code TYPE TEXT, ALTER COLUMN pin_code SET NOT NULL

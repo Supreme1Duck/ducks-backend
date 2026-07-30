@@ -1,1 +1,0 @@
-CREATE TABLE IF NOT EXISTS ducks_coffee_modified_constructor_categories_table (id BIGSERIAL PRIMARY KEY, default_constructor_id BIGINT NULL, max_selection INT NULL)
