@@ -7,6 +7,7 @@ import com.ducks.features.orders.data.model.ClosestTimeToTakeOrderModel
 import com.ducks.features.orders.data.model.IsCoffeeShopReadyToOrderReason
 import com.ducks.features.orders.data.model.WorkTimeModel
 import com.ducks.features.orders.database.CoffeeOrdersTable
+import com.ducks.util.ceilToMinute
 import features.orders.data.model.BusyTimeSlotsData
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
@@ -271,16 +272,6 @@ class FetchAvailableOrdersTimeListRepository {
             }
             acc
         }
-    }
-
-    /**
-     * Округляет время вверх до ближайшей целой минуты (16:27:20 -> 16:28:00).
-     * Ровная минута остаётся без изменений. Границы минут одинаковы в любом
-     * часовом поясе, поэтому считаем чистой арифметикой без учёта смещения.
-     */
-    private fun ceilToMinute(timeMs: Long): Long {
-        val minuteMs = 60_000L
-        return ((timeMs + minuteMs - 1) / minuteMs) * minuteMs
     }
 
     internal data class Schedule(

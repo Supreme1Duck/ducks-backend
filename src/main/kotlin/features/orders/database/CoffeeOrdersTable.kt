@@ -29,6 +29,8 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
     val totalPrice = decimal("total_price", precision = 15, scale = 2)
 
     val isToTime = bool("is_to_time").default(false)
+    // true — заказ с собой, false — на месте.
+    val isTakeaway = bool("is_takeaway").default(false)
 
     val timeToCookInMinutes = integer("time_to_cook_in_minutes")
     val estimatedFinishTime = long("estimated_finish_time").nullable()

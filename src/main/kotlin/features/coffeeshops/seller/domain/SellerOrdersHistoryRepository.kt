@@ -50,6 +50,7 @@ class SellerOrdersHistoryRepository {
                         // Будет заполнено дальше.
                         productsCount = 0,
                         comment = it[CoffeeOrdersTable.comment],
+                        isTakeaway = it[CoffeeOrdersTable.isTakeaway],
                         price = it[CoffeeOrdersTable.totalPrice],
                     )
                 }
@@ -108,6 +109,7 @@ class SellerOrdersHistoryRepository {
         comment = this[CoffeeOrdersTable.comment],
         cancelledMessage = this[CoffeeOrdersTable.cancelledMessage],
         isToTime = this[CoffeeOrdersTable.isToTime],
+        isTakeaway = this[CoffeeOrdersTable.isTakeaway],
         timeToCookInMinutes = this[CoffeeOrdersTable.timeToCookInMinutes],
         // Будут заполнены дальше.
         products = emptyList(),

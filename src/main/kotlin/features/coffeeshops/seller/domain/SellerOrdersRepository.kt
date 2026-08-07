@@ -5,6 +5,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
 import com.ducks.service.PushNotificationService
+import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -52,6 +53,8 @@ class SellerOrdersRepository(
                 fcmToken = it,
                 title = "Заказ принят",
                 body = "Ваш заказ принят и скоро будет готов.",
+                type = PushType.ORDER_ACCEPTED,
+                orderId = orderId,
             )
         }
     }
@@ -94,6 +97,8 @@ class SellerOrdersRepository(
                 fcmToken = it,
                 title = "Заказ отменён",
                 body = if (message.isNullOrBlank()) "Ваш заказ был отменён." else "Ваш заказ был отменён: $message",
+                type = PushType.ORDER_CANCELLED_BY_SELLER,
+                orderId = orderId,
             )
         }
     }
@@ -138,6 +143,8 @@ class SellerOrdersRepository(
                 fcmToken = it,
                 title = "Заказ готов",
                 body = "Ваш заказ готов, можете забирать!",
+                type = PushType.ORDER_READY,
+                orderId = orderId,
             )
         }
     }
@@ -179,6 +186,8 @@ class SellerOrdersRepository(
                 fcmToken = it,
                 title = "Заказ выдан",
                 body = "Спасибо за заказ! Приятного аппетита.",
+                type = PushType.ORDER_GIVEN_OUT,
+                orderId = orderId,
             )
         }
     }
@@ -221,6 +230,8 @@ class SellerOrdersRepository(
                 fcmToken = it,
                 title = "Заказ не забран",
                 body = "Вы не забрали свой заказ.",
+                type = PushType.ORDER_NOT_PICKED_UP,
+                orderId = orderId,
             )
         }
     }

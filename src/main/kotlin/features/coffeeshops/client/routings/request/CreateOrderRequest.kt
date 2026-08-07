@@ -16,6 +16,9 @@ class CreateOrderRequest(
 
     // Является ли заказ "ко времени"
     val isToTime: Boolean = false,
+
+    // true — заказ с собой, false — на месте.
+    val isTakeaway: Boolean = false,
     val estimatedTimeToFinish: Long,
 )
 

@@ -52,6 +52,7 @@ class ClientsOrdersRepository(
                         isReady = it[CoffeeOrdersTable.readyTime] != null,
                         estimatedFinishTime = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         createdTime = it[CoffeeOrdersTable.createdTime],
+                        isTakeaway = it[CoffeeOrdersTable.isTakeaway],
                         // Будут заполнены дальше.
                         products = emptyList(),
                         price = it[CoffeeOrdersTable.totalPrice],
@@ -107,6 +108,7 @@ class ClientsOrdersRepository(
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
+                        isTakeaway = it[CoffeeOrdersTable.isTakeaway],
                         status = it.toOrderStatus().value,
                         price = it[CoffeeOrdersTable.totalPrice],
                     )
@@ -160,6 +162,8 @@ class ClientsOrdersRepository(
                         finishedAt = it[CoffeeOrdersTable.estimatedFinishTime] ?: 0L,
                         products = emptyList(),
                         comment = it[CoffeeOrdersTable.comment],
+                        cancelledMessage = it[CoffeeOrdersTable.cancelledMessage],
+                        isTakeaway = it[CoffeeOrdersTable.isTakeaway],
                         status = it.toOrderStatus().value,
                         price = it[CoffeeOrdersTable.totalPrice],
                     )

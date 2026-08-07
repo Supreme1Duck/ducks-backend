@@ -16,6 +16,8 @@ data class SellerDayOrderDTO(
     // Суммарное количество товаров в заказе, с учётом quantity каждой позиции.
     val productsCount: Int,
     val comment: String?,
+    // true — заказ с собой, false — на месте.
+    val isTakeaway: Boolean,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
 )
@@ -34,6 +36,8 @@ data class SellerOrderDetailsDTO(
     val comment: String?,
     val cancelledMessage: String?,
     val isToTime: Boolean,
+    // true — заказ с собой, false — на месте.
+    val isTakeaway: Boolean,
     val timeToCookInMinutes: Int,
     val products: List<OrderProductDTO>,
     // Стоимость позиций без чаевых.

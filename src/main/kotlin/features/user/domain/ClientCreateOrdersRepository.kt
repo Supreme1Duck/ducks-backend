@@ -12,7 +12,9 @@ import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
 import com.ducks.service.PushNotificationService
+import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
+import com.ducks.util.ceilToMinute
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.JoinType
@@ -33,7 +35,7 @@ class ClientCreateOrdersRepository(
         request: CreateOrderRequest,
         clientPhoneNumber: String,
     ) {
-        val sellerFcmToken = newSuspendedTransaction {
+        val (createdOrderId, sellerFcmToken) = newSuspendedTransaction {
             val clientId = getUserIdByPhone(clientPhoneNumber)
 
             // Получаем полный список продуктов с дубликатами если их несколько.
@@ -76,11 +78,15 @@ class ClientCreateOrdersRepository(
                 it[userId] = clientId
                 it[comment] = request.comment
 
-                it[estimatedFinishTime] = request.estimatedTimeToFinish
+                // Список доступных времён отдаётся по целым минутам, но само поле
+                // сверяется только по допуску в 2 минуты — выравниваем, чтобы в базу
+                // не попал заказ с секундами и не ломал проверки пересечений.
+                it[estimatedFinishTime] = ceilToMinute(request.estimatedTimeToFinish)
                 it[timeToCookInMinutes] = minutesToCookAllProducts
 
                 it[tips] = request.tips
                 it[isToTime] = request.isToTime
+                it[isTakeaway] = request.isTakeaway
 
                 // будут посчитаны в конце
                 it[price] = 0.toBigDecimal()
@@ -168,7 +174,7 @@ class ClientCreateOrdersRepository(
                 it[totalPrice] = orderPrice + (request.tips ?: 0.toBigDecimal())
             }
 
-            getShopFcmToken(request.shopId)
+            orderId.value to getShopFcmToken(request.shopId)
         }
 
         calculateCoffeeShopsOrdersTimeService(request.shopId)
@@ -178,6 +184,8 @@ class ClientCreateOrdersRepository(
                 fcmToken = it,
                 title = "Новый заказ",
                 body = "У вас новый заказ, посмотрите детали.",
+                type = PushType.NEW_ORDER,
+                orderId = createdOrderId,
             )
         }
     }

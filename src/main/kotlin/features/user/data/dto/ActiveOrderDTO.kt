@@ -14,6 +14,8 @@ data class ActiveOrderDTO(
     val isReady: Boolean,
     val estimatedFinishTime: Long,
     val createdTime: Long,
+    // true — заказ с собой, false — на месте.
+    val isTakeaway: Boolean,
 
     val products: List<ActiveOrderProductDTO>,
     @Serializable(with = BigDecimalSerializer::class)

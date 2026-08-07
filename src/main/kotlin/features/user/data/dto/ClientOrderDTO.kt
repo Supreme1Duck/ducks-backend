@@ -13,6 +13,9 @@ data class ClientOrderDTO(
     val finishedAt: Long,
     val products: List<ClientOrderProductDTO>,
     val comment: String?,
+    val cancelledMessage: String? = null,
+    // true — заказ с собой, false — на месте.
+    val isTakeaway: Boolean,
     val status: Int,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,

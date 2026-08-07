@@ -11,6 +11,8 @@ import com.ducks.features.coffeeshops.seller.routings.request.shop.*
 import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.util.DucksBadRequestError
+import com.ducks.util.ceilToMinute
+import com.ducks.util.floorToMinute
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
@@ -103,7 +105,16 @@ class SellerCoffeeShopRepository(
         endsAt: Long,
     ) {
         return newSuspendedTransaction {
-            if (endsAt < System.currentTimeMillis() || endsAt <= startsAt) {
+            // Клиент присылает время с секундами, а сетка заказов — целые минуты.
+            // Сжимаем паузу до этой сетки (начало вперёд, конец назад), иначе лишние
+            // секунды читаются как пересечение с соседним заказом. Пауза может стать
+            // короче запрошенной меньше чем на минуту.
+            val pauseStartsAt = ceilToMinute(startsAt)
+            val pauseEndsAt = floorToMinute(endsAt)
+
+            // Паузу короче минуты сетка выразить не может: она схлопывается в пустой
+            // интервал и отваливается здесь же.
+            if (pauseEndsAt < System.currentTimeMillis() || pauseEndsAt <= pauseStartsAt) {
                 throw DucksBadRequestError("Неверное время окончания паузы!")
             }
 
@@ -116,13 +127,13 @@ class SellerCoffeeShopRepository(
                 throw DucksBadRequestError("Мы пока не поддерживаем несколько активных пауз!")
             }
 
-            if (!isActivePauseValid(shopId, startsAt, endsAt)) {
+            if (!isActivePauseValid(shopId, pauseStartsAt, pauseEndsAt)) {
                 throw DucksBadRequestError("Время паузы пересекается с одним из ваших заказов!")
             }
 
             CoffeeShopTechnicalPausesTable.insert {
-                it[CoffeeShopTechnicalPausesTable.startsAt] = startsAt
-                it[CoffeeShopTechnicalPausesTable.endsAt] = endsAt
+                it[CoffeeShopTechnicalPausesTable.startsAt] = pauseStartsAt
+                it[CoffeeShopTechnicalPausesTable.endsAt] = pauseEndsAt
                 it[coffeeShop] = shopId
             }
 
@@ -130,7 +141,12 @@ class SellerCoffeeShopRepository(
         }
     }
 
-    // Проверяет пересекается ли время активных и pending заказов с новой паузой.
+    /**
+     * Проверяет пересекается ли время активных и pending заказов с новой паузой.
+     * Слоты полуинтервальные — как в calculateAvailableOrderTimeList, — поэтому
+     * касание границами пересечением не считается: пауза может встать вплотную
+     * к заказу, что селлер и имеет в виду.
+     */
     private fun isActivePauseValid(
         shopId: Long,
         pauseStartsAt: Long,
@@ -138,13 +154,9 @@ class SellerCoffeeShopRepository(
     ): Boolean {
         val busyTimeSlots = fetchAvailableOrdersTimeListRepository.getAllBusyTimeSlots(shopId)
 
-        busyTimeSlots.forEach { slot ->
-            if (pauseStartsAt <= slot.endTime && slot.startTime <= pauseEndsAt) {
-                return false
-            }
+        return busyTimeSlots.none { slot ->
+            pauseStartsAt < slot.endTime && slot.startTime < pauseEndsAt
         }
-
-        return true
     }
 
     suspend fun deletePause(

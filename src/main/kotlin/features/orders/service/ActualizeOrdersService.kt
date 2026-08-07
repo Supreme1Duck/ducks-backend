@@ -4,6 +4,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.user.database.UserTable
 import com.ducks.service.MinuteChangeNotifierService
 import com.ducks.service.PushNotificationService
+import com.ducks.service.PushType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -51,12 +52,14 @@ class ActualizeOrdersService(
                             it[isCancelledBySeller] = true
                         }
 
-                        expiredOrders.forEach { (_, fcmToken) ->
+                        expiredOrders.forEach { (orderId, fcmToken) ->
                             if (fcmToken != null) {
                                 pushNotificationService.send(
                                     fcmToken = fcmToken,
                                     title = "Заказ отменён",
                                     body = "Ваш заказ не был принят вовремя и был автоматически отменён.",
+                                    type = PushType.ORDER_EXPIRED,
+                                    orderId = orderId,
                                 )
                             }
                         }
