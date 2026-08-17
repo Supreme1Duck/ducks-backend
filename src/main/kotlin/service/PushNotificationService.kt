@@ -265,6 +265,8 @@ enum class PushType(val value: String) {
     ORDER_GIVEN_OUT("order_given_out"),
     ORDER_NOT_PICKED_UP("order_not_picked_up"),
     ORDER_CANCELLED_BY_SELLER("order_cancelled_by_seller"),
+    // Клиент сам отменил заказ, который продавец ещё не принял. Уходит продавцу.
+    ORDER_CANCELLED_BY_CLIENT("order_cancelled_by_client"),
     ORDER_EXPIRED("order_expired"),
     NEW_ORDER("new_order"),
 }

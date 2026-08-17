@@ -12,6 +12,8 @@ import com.ducks.features.user.data.dto.ActiveOrderDTO
 import com.ducks.features.user.data.dto.ActiveOrderProductDTO
 import com.ducks.features.user.data.dto.ClientOrderDTO
 import com.ducks.features.user.data.dto.ClientOrderProductDTO
+import com.ducks.service.PushNotificationService
+import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
 import kotlinx.datetime.Clock
@@ -27,6 +29,7 @@ class ClientsOrdersRepository(
     application: Application,
 ) {
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
+    private val pushNotificationService by application.inject<PushNotificationService>()
 
     suspend fun getActiveOrder(userId: Long): ActiveOrderDTO? {
         return newSuspendedTransaction {
@@ -199,46 +202,72 @@ class ClientsOrdersRepository(
         }
     }
 
+    // Отменить можно только заказ, который продавец ещё не принял.
     suspend fun cancelOrder(orderId: Long, clientId: Long) {
-        newSuspendedTransaction {
-            val isOrderAccepted = CoffeeOrdersTable
+        val (coffeeShopId, sellerFcmToken) = newSuspendedTransaction {
+            val order = CoffeeOrdersTable
                 .selectAll()
                 .where {
                     (CoffeeOrdersTable.id eq orderId) and
                             (CoffeeOrdersTable.userId eq clientId)
                 }
-                .map {
-                    it[CoffeeOrdersTable.acceptedTime] != null
-                }
                 .firstOrNull()
+                ?: throw DucksBadRequestError("Попытка отменить невалидный заказ")
 
-            if (isOrderAccepted == null) {
-                throw DucksBadRequestError("Попытка отменить невалидный заказ")
-            } else if (isOrderAccepted) {
+            if (order[CoffeeOrdersTable.acceptedTime] != null) {
                 throw DucksBadRequestError("Заказ уже принят!")
-            } else {
-                val currentTime = Clock.System.now().toEpochMilliseconds()
-
-                CoffeeOrdersTable
-                    .update(
-                        where = {
-                            (CoffeeOrdersTable.id eq orderId) and
-                                    (CoffeeOrdersTable.userId eq clientId)
-                        }
-                    ) {
-                        it[isCancelledByClient] = true
-                        it[finishedTime] = currentTime
-                    }
+            }
+            if (order[CoffeeOrdersTable.finishedTime] != null) {
+                throw DucksBadRequestError("Заказ уже завершён!")
             }
 
-            val coffeeShopId = CoffeeOrdersTable
-                .select(CoffeeOrdersTable.coffeeShop)
-                .where { CoffeeOrdersTable.id eq orderId }
-                .map { it[CoffeeOrdersTable.coffeeShop].value }
-                .first()
+            val currentTime = Clock.System.now().toEpochMilliseconds()
 
-            calculateCoffeeShopsOrdersTimeService.invoke(coffeeShopId)
+            // Условия дублируются в самом update: между чтением строки и записью заказ
+            // могли принять или отменить (продавец, автоотмена по истечении времени).
+            val updatedRows = CoffeeOrdersTable
+                .update(
+                    where = {
+                        (CoffeeOrdersTable.id eq orderId) and
+                                (CoffeeOrdersTable.userId eq clientId) and
+                                (CoffeeOrdersTable.acceptedTime eq null) and
+                                (CoffeeOrdersTable.finishedTime eq null)
+                    }
+                ) {
+                    it[isCancelledByClient] = true
+                    it[finishedTime] = currentTime
+                }
+
+            if (updatedRows == 0) {
+                throw DucksBadRequestError("Статус заказа успел измениться, отменить его уже нельзя")
+            }
+
+            val coffeeShopId = order[CoffeeOrdersTable.coffeeShop].value
+
+            coffeeShopId to getShopFcmToken(coffeeShopId)
         }
+
+        // Вне транзакции: сервис считает время в своей корутине и должен видеть
+        // уже закоммиченную отмену.
+        calculateCoffeeShopsOrdersTimeService.invoke(coffeeShopId)
+
+        sellerFcmToken?.let {
+            pushNotificationService.sendToSeller(
+                fcmToken = it,
+                title = "Заказ отменён",
+                body = "Заказ #$orderId был отменён, поскольку не был принят.",
+                type = PushType.ORDER_CANCELLED_BY_CLIENT,
+                orderId = orderId,
+            )
+        }
+    }
+
+    private fun getShopFcmToken(shopId: Long): String? {
+        return CoffeeShopTable
+            .select(CoffeeShopTable.fcmToken)
+            .where { CoffeeShopTable.id eq shopId }
+            .map { it[CoffeeShopTable.fcmToken] }
+            .firstOrNull()
     }
 
     private fun CoffeeProductSizeDTO.toClientOrderSize() = ClientOrderProductDTO.Size(

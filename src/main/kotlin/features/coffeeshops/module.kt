@@ -15,14 +15,14 @@ import com.ducks.features.coffeeshops.seller.domain.*
 import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityService
 import org.koin.dsl.module
 
-fun coffeeShopsModule(baseUrl: String) = module {
+fun coffeeShopsModule(baseUrl: String, photoroomApiKey: String) = module {
 
     single { CoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeProductsRepository(get()) }
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }
-    single { CoffeeShopImageRepository(get(), baseUrl) }
+    single { CoffeeShopImageRepository(get(), baseUrl, photoroomApiKey) }
 
     single { SellerCoffeeProductDataSource() }
     single { SellerCoffeeShopsDataSource() }

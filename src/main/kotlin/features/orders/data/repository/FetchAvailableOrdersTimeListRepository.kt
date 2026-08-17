@@ -36,7 +36,11 @@ class FetchAvailableOrdersTimeListRepository {
             val workTime = findShopsCurrentWorkTime(shopId)
 
             val closestTimeToTakeOrder =
-                calculateClosestTimeToTakeOrder(busyTimeSlots, coffeeShopWorkTime = workTime).closestTime
+                calculateClosestTimeToTakeOrder(
+                    busyTimeSlotsDataList = busyTimeSlots,
+                    coffeeShopWorkTime = workTime,
+                    currentTime = currentTime,
+                ).closestTime
                     ?: return@newSuspendedTransaction null
 
             val availableOrderTimeList =
@@ -94,43 +98,35 @@ class FetchAvailableOrdersTimeListRepository {
     fun calculateClosestTimeToTakeOrder(
         busyTimeSlotsDataList: List<BusyTimeSlotsData>,
         coffeeShopWorkTime: WorkTimeModel?,
+        currentTime: Long = Clock.System.now().toEpochMilliseconds(),
     ): ClosestTimeToTakeOrderModel {
-        val currentTime = Clock.System.now().toEpochMilliseconds()
-
+        // Окно короче 5 минут не считаем окном вообще, окна короче 10 минут хватает только на быстрый заказ
+        val fiveMinsInMs = 5 * 60_000
         val tenMinsInMs = 10 * 60_000
-        val fifteenMinsInMs = 15 * 60_000
 
         val startTimeOfFirstTimeSlot = busyTimeSlotsDataList.firstOrNull()?.startTime
 
-        // Если между заказами меньше 15 минут - выставляем флаг hasEnoughTimeBetweenOrders
+        // Если между заказами меньше 10 минут - выставляем флаг hasEnoughTimeBetweenOrders
         val (closestTimeToTakeOrders, hasEnoughTimeBetweenOrders) = if (busyTimeSlotsDataList.isEmpty()) {
             currentTime to true
-        } else if (currentTime + tenMinsInMs < startTimeOfFirstTimeSlot!!) {
-            // между заказами больше 15 минут
-            val hasEnoughTime = currentTime + fifteenMinsInMs < startTimeOfFirstTimeSlot
+        } else if (currentTime + fiveMinsInMs < startTimeOfFirstTimeSlot!!) {
+            // до первого заказа больше 5 минут
+            val hasEnoughTime = currentTime + tenMinsInMs < startTimeOfFirstTimeSlot
 
             currentTime to hasEnoughTime
         } else {
-            var estimatedTime = 0L
-            var hasEnoughTime = true
-
-            busyTimeSlotsDataList.forEachIndexed { index, slot ->
-                if (index == busyTimeSlotsDataList.lastIndex) {
-                    estimatedTime = slot.endTime
-                    return@forEachIndexed
-                }
-
-                val nextSlot = busyTimeSlotsDataList[index + 1]
-                // Рефакторил, может быть ошибка в этой проверке
-                if (slot.endTime + tenMinsInMs < nextSlot.startTime) {
-                    hasEnoughTime = slot.endTime + fifteenMinsInMs < nextSlot.startTime
-
-                    estimatedTime = slot.endTime
-                    return@forEachIndexed
-                }
+            // Берём конец первого слота, после которого есть окно больше 5 минут до следующего.
+            // Если такого окна нет — берём конец последнего слота.
+            val gapIndex = busyTimeSlotsDataList.indices.first { index ->
+                index == busyTimeSlotsDataList.lastIndex ||
+                        busyTimeSlotsDataList[index].endTime + fiveMinsInMs < busyTimeSlotsDataList[index + 1].startTime
             }
 
-            estimatedTime to hasEnoughTime
+            val slot = busyTimeSlotsDataList[gapIndex]
+            val nextSlot = busyTimeSlotsDataList.getOrNull(gapIndex + 1)
+            val hasEnoughTime = nextSlot == null || slot.endTime + tenMinsInMs < nextSlot.startTime
+
+            slot.endTime to hasEnoughTime
         }
 
         val roundedClosestTimeToTakeOrders = ceilToMinute(closestTimeToTakeOrders)

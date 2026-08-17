@@ -8,6 +8,8 @@ ktor:
       password: "$DB_PASS"
 app:
   baseUrl: "$BASE_URL"
+photoroom:
+  apiKey: "$PHOTOROOM_API_KEY"
 jwt:
   domain: "https://jwt-provider-domain/"
   audience: "ducks-audience"

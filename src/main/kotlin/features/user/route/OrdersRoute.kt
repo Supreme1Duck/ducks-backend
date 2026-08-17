@@ -98,15 +98,18 @@ fun Route.ordersRoute() {
     }
 
     // Только непринятый заказ
-    post("order/cancel") {
+    post("order/{id}/cancel") {
         ducksTryCatch {
-            val orderId = call.receive<Long>()
+            val orderId = call.parameters["id"]?.toLongOrNull()
+                ?: return@ducksTryCatch call.respond(HttpStatusCode.BadRequest, "Некорректный id заказа")
             val clientId = getClientPrincipal().userId
 
             clientsOrdersRepository.cancelOrder(
                 orderId = orderId,
                 clientId = clientId,
             )
+
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

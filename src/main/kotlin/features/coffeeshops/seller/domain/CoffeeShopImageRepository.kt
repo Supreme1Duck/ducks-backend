@@ -18,6 +18,7 @@ import java.util.*
 class CoffeeShopImageRepository(
     private val ktor: HttpClient,
     private val baseUrl: String,
+    private val photoroomApiKey: String,
 ) {
 
     private val allowedExtensions = listOf("jpg", "jpeg", "png")
@@ -76,9 +77,9 @@ class CoffeeShopImageRepository(
     }
 
     private suspend fun removeBackgroundOnImage(image: ByteArray): ByteArray {
-        val response = ktor.post("https://api.remove.bg/v1.0/removebg") {
+        val response = ktor.post("https://sdk.photoroom.com/v1/segment") {
             headers {
-                append("X-Api-Key", "Han8KHaDNNMUZLmTWRbqyXnj")
+                append("x-api-key", photoroomApiKey)
             }
 
             setBody(MultiPartFormDataContent(
@@ -90,9 +91,15 @@ class CoffeeShopImageRepository(
                             append(HttpHeaders.ContentDisposition, "filename=\"file\"")
                         }
                     )
-                    append("size", "auto")
+                    // У Photoroom нет размера "auto" как у remove.bg: preview/medium/hd/full.
+                    append("size", "full")
                 }
             ))
+        }
+
+        if (!response.status.isSuccess()) {
+            // Иначе тело с ошибкой (JSON) молча сохранилось бы вместо картинки.
+            error("Photoroom вернул ${response.status}: ${response.bodyAsText()}")
         }
 
         return response.bodyAsBytes()
