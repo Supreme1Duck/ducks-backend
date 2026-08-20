@@ -65,7 +65,9 @@ class CoffeeShopImageRepository(
 
         val imageWithoutBackground = removeBackgroundOnImage(imageBytes)
 
-        val imagePath = "${UUID.randomUUID()}.jpg"
+        // Именно png: Photoroom возвращает картинку с вырезанным фоном, и прозрачность
+        // нужна, чтобы товар лёг на любой фон в приложении. В jpg альфа-канала нет.
+        val imagePath = "${UUID.randomUUID()}.png"
         val imageUrl = "$baseUrl/coffee-shops/products/images/$imagePath"
         val file = File(productsFilePath, imagePath)
 
@@ -92,7 +94,16 @@ class CoffeeShopImageRepository(
                         }
                     )
                     // У Photoroom нет размера "auto" как у remove.bg: preview/medium/hd/full.
-                    append("size", "full")
+                    // hd — это 4 МП, для карточки товара с запасом; full (36 МП) раздувал
+                    // и время ответа, и вес файла на диске.
+                    append("size", "hd")
+                    // Дефолт и так png, но формат тут принципиален: он даёт альфа-канал.
+                    append("format", "png")
+                    // Обрезать по границам объекта — карточки товаров получаются
+                    // одинаково скомпонованными независимо от того, как сняли исходник.
+                    append("crop", "true")
+                    // Убрать цветной ореол от фона по краям объекта.
+                    append("despill", "true")
                 }
             ))
         }

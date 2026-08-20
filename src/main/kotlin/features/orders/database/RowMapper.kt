@@ -30,7 +30,8 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
 fun ResultRow.toOrderStatus(): OrderStatus {
     return when {
         this[CoffeeOrdersTable.isExpired] -> OrderStatus.EXPIRED
-        this[CoffeeOrdersTable.isCancelledByClient] || this[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED
+        this[CoffeeOrdersTable.isCancelledByClient] -> OrderStatus.CANCELLED_BY_CLIENT
+        this[CoffeeOrdersTable.isCancelledBySeller] -> OrderStatus.CANCELLED_BY_SELLER
         this[CoffeeOrdersTable.isNotPickedUp] -> OrderStatus.NOT_PICKED_UP
         this[CoffeeOrdersTable.finishedTime] != null -> OrderStatus.COMPLETED
         this[CoffeeOrdersTable.readyTime] != null -> OrderStatus.READY
