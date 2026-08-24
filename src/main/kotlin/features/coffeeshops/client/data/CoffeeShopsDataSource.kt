@@ -1,7 +1,9 @@
 package com.ducks.features.coffeeshops.client.data
 
+import com.ducks.common.geo.GeoPoint
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
+import com.ducks.features.coffeeshops.database.CoffeeShopDistanceExpression
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeShopPreview
@@ -32,6 +34,33 @@ class CoffeeShopsDataSource {
             .limit(limit ?: Int.MAX_VALUE)
             .map {
                 it.mapToCoffeeShopPreview()
+            }
+    }
+
+    /**
+     * То же, что [getAllShops], но по возрастанию расстояния до [userLocation].
+     *
+     * Курсор по lastId здесь не работает — порядок задаёт не id, — поэтому листается
+     * offset'ом. Кофейни без координат встают в конец, между собой сортируются как и
+     * в обычном списке, по убыванию id.
+     */
+    fun getAllShopsNearby(
+        userLocation: GeoPoint,
+        offset: Long?,
+        limit: Int?,
+    ): List<CoffeeShopPreviewDTO> {
+        val distance = CoffeeShopDistanceExpression(userLocation)
+
+        return CoffeeShopTable
+            .selectAll()
+            .orderBy(
+                distance to SortOrder.ASC_NULLS_LAST,
+                CoffeeShopTable.id to SortOrder.DESC,
+            )
+            .limit(limit ?: Int.MAX_VALUE)
+            .offset(offset ?: 0)
+            .map {
+                it.mapToCoffeeShopPreview(userLocation)
             }
     }
 

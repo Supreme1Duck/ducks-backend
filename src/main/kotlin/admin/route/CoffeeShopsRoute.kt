@@ -3,6 +3,7 @@ package com.ducks.admin.route
 import com.ducks.admin.repository.AdminCoffeeShopsRepository
 import com.ducks.admin.request.CreateCoffeeCategoryRequest
 import com.ducks.admin.request.CreateCoffeeShopRequest
+import com.ducks.admin.request.SetCoffeeShopCoordinatesRequest
 import com.ducks.admin.request.SetPinCodeRequest
 import com.ducks.auth.admin.JWTAdminPrincipal
 import com.ducks.features.coffeeshops.seller.data.SellerPinCodeDataSource
@@ -25,6 +26,16 @@ fun Route.adminCoffeeShopsRoute() {
                 val adminId = call.principal<JWTAdminPrincipal>()!!.adminId
 
                 coffeeShopsRepository.createNewShop(request, adminId)
+
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+        post("/coordinates/set") {
+            ducksTryCatch {
+                val request = call.receive<SetCoffeeShopCoordinatesRequest>()
+
+                coffeeShopsRepository.setCoordinates(request)
 
                 call.respond(HttpStatusCode.NoContent)
             }

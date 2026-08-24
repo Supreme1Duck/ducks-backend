@@ -13,11 +13,13 @@ fun Application.runServices() {
     val actualizeTechnicalPausesService by this.inject<ActualizeTechnicalPausesService>()
     val calculateCoffeeShopsOrdersTimeService by this.inject<CalculateCoffeeShopsOrdersTimeService>()
     val coffeeShopDeleteUnusedImagesService by this.inject<CoffeeShopDeleteUnusedImagesService>()
+    val coffeeShopNormalizeProductImagesService by this.inject<CoffeeShopNormalizeProductImagesService>()
     val actualizeCoffeeShopsVisibilityService by this.inject<ActualizeCoffeeShopsVisibilityService>()
 
     actualizeOrdersService.invoke()
     actualizeTechnicalPausesService.invoke()
     calculateCoffeeShopsOrdersTimeService.initialize()
     coffeeShopDeleteUnusedImagesService.invoke()
+    coffeeShopNormalizeProductImagesService.invoke()
     actualizeCoffeeShopsVisibilityService.initialize()
 }

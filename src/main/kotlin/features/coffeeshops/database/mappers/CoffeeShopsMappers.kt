@@ -1,5 +1,6 @@
 package com.ducks.features.coffeeshops.database.mappers
 
+import com.ducks.common.geo.GeoPoint
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.WorkTimeDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
@@ -15,8 +16,9 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
-fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
+fun ResultRow.mapToCoffeeShopPreview(userLocation: GeoPoint? = null): CoffeeShopPreviewDTO {
     return CoffeeShopPreviewDTO(
         id = this[CoffeeShopTable.id].value,
         name = this[CoffeeShopTable.name],
@@ -26,7 +28,24 @@ fun ResultRow.mapToCoffeeShopPreview(): CoffeeShopPreviewDTO {
         pricesStartsFrom = this[CoffeeShopTable.lowestPrice],
         images = this[CoffeeShopTable.imageUrls].orEmpty(),
         rating = this[CoffeeShopTable.rating],
+        distanceKm = distanceKmTo(userLocation),
     )
+}
+
+/**
+ * Километры с одним знаком после запятой: столько и показывается в списке,
+ * а лишняя точность только развела бы выдачу с подписью под кофейней.
+ */
+private fun ResultRow.distanceKmTo(userLocation: GeoPoint?): Double? {
+    if (userLocation == null) return null
+
+    val latitude = this[CoffeeShopTable.latitude] ?: return null
+    val longitude = this[CoffeeShopTable.longitude] ?: return null
+
+    val meters = GeoPoint(latitude = latitude, longitude = longitude)
+        .distanceMetersTo(userLocation)
+
+    return (meters / 100.0).roundToInt() / 10.0
 }
 
 

@@ -1,5 +1,7 @@
 package com.ducks.features.coffeeshops.client.routings
 
+import com.ducks.common.geo.GeoPoint
+import com.ducks.common.geo.toDegreesOrThrow
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
 import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
@@ -22,8 +24,20 @@ fun Route.clientRoute() {
         ducksTryCatch {
             val lastId = call.parameters["lastId"]?.toLong()
             val limit = call.parameters["limit"]?.toInt()
+            val offset = call.parameters["offset"]?.toLong()
 
-            val shops = coffeeShopsRepository.getShopsList(lastId, limit)
+            // Геолокация клиента: если пришла — список сортируется по удалённости.
+            val userLocation = GeoPoint.parse(
+                latitude = call.parameters["lat"]?.toDegreesOrThrow("lat"),
+                longitude = call.parameters["lon"]?.toDegreesOrThrow("lon"),
+            )
+
+            val shops = coffeeShopsRepository.getShopsList(
+                lastId = lastId,
+                limit = limit,
+                offset = offset,
+                userLocation = userLocation,
+            )
 
             call.respond(HttpStatusCode.OK, shops)
         }

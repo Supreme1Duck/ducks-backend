@@ -3,6 +3,8 @@ package com.ducks.admin.repository
 import com.ducks.admin.database.CoffeeShopCredentialsTable
 import com.ducks.admin.request.CategoriesForGroup
 import com.ducks.admin.request.CreateCoffeeShopRequest
+import com.ducks.admin.request.SetCoffeeShopCoordinatesRequest
+import com.ducks.common.geo.GeoPoint
 import com.ducks.features.coffeeshops.database.CoffeeCategoryGroupTable
 import com.ducks.features.coffeeshops.database.CoffeeProductCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
@@ -16,6 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 class AdminCoffeeShopsRepository(
@@ -45,12 +48,16 @@ class AdminCoffeeShopsRepository(
         data: CreateCoffeeShopRequest,
         createdByAdminID: Long,
     ): Long {
+        val coordinates = GeoPoint.parse(data.latitude, data.longitude)
+
         return try {
             newSuspendedTransaction {
                 val shopId = CoffeeShopTable.insertAndGetId {
                     it[name] = data.name
                     it[address] = data.address
                     it[rating] = data.rating
+                    it[latitude] = coordinates?.latitude
+                    it[longitude] = coordinates?.longitude
                 }.value
 
                 CoffeeShopCredentialsTable.insert {
@@ -71,6 +78,26 @@ class AdminCoffeeShopsRepository(
             }
         } catch (e: Exception) {
             throw Exception("Ошибка в процессе создания магазина, ${e.stackTrace}")
+        }
+    }
+
+    /**
+     * Проставляет координаты уже заведённой кофейне: без них она не участвует
+     * в сортировке по удалённости и висит в конце списка.
+     */
+    suspend fun setCoordinates(request: SetCoffeeShopCoordinatesRequest) {
+        val coordinates = GeoPoint.parse(request.latitude, request.longitude)
+            ?: throw DucksBadRequestError("Нужны и широта, и долгота.")
+
+        newSuspendedTransaction {
+            val updated = CoffeeShopTable.update({ CoffeeShopTable.id eq request.shopId }) {
+                it[latitude] = coordinates.latitude
+                it[longitude] = coordinates.longitude
+            }
+
+            if (updated == 0) {
+                throw DucksBadRequestError("Кофешоп с id ${request.shopId} не найден")
+            }
         }
     }
 

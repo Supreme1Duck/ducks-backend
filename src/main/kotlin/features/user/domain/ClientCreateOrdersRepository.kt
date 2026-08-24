@@ -1,5 +1,6 @@
 package com.ducks.features.user.domain
 
+import com.ducks.features.coffeeshops.checkShopIsNotTemporaryClosed
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.coffeeshops.client.routings.request.CreateOrderRequest
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
@@ -46,6 +47,8 @@ class ClientCreateOrdersRepository(
                     }
                 }
             }
+
+            checkShopIsNotTemporaryClosed(request.shopId)
 
             if (userHasActiveOrder(clientId)) {
                 throw DucksBadRequestError("Вы не можете создать новый заказ, когда у вас есть активный заказ")

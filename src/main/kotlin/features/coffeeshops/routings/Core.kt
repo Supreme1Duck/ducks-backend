@@ -25,6 +25,9 @@ fun Route.coffeeShopsRoute() {
 
         sellerAuthRoute()
 
+        // Раздача с диска остаётся на переходный период: новые картинки уже уезжают в S3,
+        // но в базе ещё лежат ссылки на файлы этого сервера. Удалить оба блока вместе с
+        // папками можно после того, как миграция перепишет URL и они отстоятся.
         staticFiles(
             remotePath = "/products/images",
             dir = File("coffee-shops/products/images")

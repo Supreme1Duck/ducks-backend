@@ -7,6 +7,7 @@ logback-version = "1.4.14"
 exposed-version = "1.0.0-beta-2"
 flyway-version = "9.22.0"
 postgre-version = "42.7.5"
+aws-sdk-version = "2.54.0"
 
 [libraries]
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin-version" }
@@ -33,6 +34,7 @@ jetbrains-exposed-json = { module = "org.jetbrains.exposed:exposed-json", versio
 jetbrains-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed-version" }
 migrations-flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway-version" }
 database-postgre = { module = "org.postgresql:postgresql", version.ref = "postgre-version" }
+aws-sdk-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws-sdk-version" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

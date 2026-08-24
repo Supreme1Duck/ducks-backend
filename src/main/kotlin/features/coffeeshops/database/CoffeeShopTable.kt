@@ -47,6 +47,10 @@ object CoffeeShopTable : LongIdTable("ducks_coffee_shop_table") {
 
     val rating = double("rating")
 
+    // Координаты кофейни (WGS84). null — координаты ещё не проставлены админом.
+    val latitude = double("latitude").nullable()
+    val longitude = double("longitude").nullable()
+
     // FCM токен приложения продавца (для пушей о новых заказах)
     val fcmToken = text("fcm_token").nullable()
 }

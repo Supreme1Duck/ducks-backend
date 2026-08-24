@@ -1,5 +1,7 @@
 package com.ducks.features.coffeeshops.client.domain
 
+import com.ducks.common.geo.GeoPoint
+import com.ducks.features.coffeeshops.checkShopIsNotTemporaryClosed
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopWithProductsDTO
@@ -35,9 +37,22 @@ class CoffeeShopsRepository(
         }
     }
 
-    suspend fun getShopsList(lastId: Long?, limit: Int?): List<CoffeeShopPreviewDTO> {
+    /**
+     * Список кофеен. Если клиент прислал свои координаты — по возрастанию расстояния
+     * от него (тогда листается через offset), иначе прежний курсор по lastId.
+     */
+    suspend fun getShopsList(
+        lastId: Long?,
+        limit: Int?,
+        offset: Long?,
+        userLocation: GeoPoint?,
+    ): List<CoffeeShopPreviewDTO> {
         return newSuspendedTransaction {
-            val shops = shopsDataSource.getAllShops(lastId, limit)
+            val shops = if (userLocation != null) {
+                shopsDataSource.getAllShopsNearby(userLocation, offset, limit)
+            } else {
+                shopsDataSource.getAllShops(lastId, limit)
+            }
             shops.map { shop ->
                 val workTime = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shop.id)
                 shop.copy(
@@ -54,6 +69,8 @@ class CoffeeShopsRepository(
         productIds: List<Long>,
     ): OrderTimeDTO {
         return newSuspendedTransaction {
+            checkShopIsNotTemporaryClosed(shopId)
+
             val minutesToCook = productDataSource.calculateMinutesToCook(productIds)
             val timestamps = fetchAvailableOrdersTimeListRepository.invoke(
                 shopId = shopId,

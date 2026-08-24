@@ -1,6 +1,8 @@
 package com.ducks.features.coffeeshops
 
 import com.ducks.auth.coffee_seller.JWTCoffeeSellerService
+import com.ducks.common.storage.S3Config
+import com.ducks.common.storage.S3Storage
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
@@ -15,14 +17,15 @@ import com.ducks.features.coffeeshops.seller.domain.*
 import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityService
 import org.koin.dsl.module
 
-fun coffeeShopsModule(baseUrl: String, photoroomApiKey: String) = module {
+fun coffeeShopsModule(photoroomApiKey: String, s3Config: S3Config) = module {
 
     single { CoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeProductsRepository(get()) }
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }
-    single { CoffeeShopImageRepository(get(), baseUrl, photoroomApiKey) }
+    single { S3Storage(s3Config) }
+    single { CoffeeShopImageRepository(get(), get(), photoroomApiKey) }
 
     single { SellerCoffeeProductDataSource() }
     single { SellerCoffeeShopsDataSource() }

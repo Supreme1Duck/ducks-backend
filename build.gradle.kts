@@ -15,7 +15,12 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    // headless обязателен: нормализация картинок товаров идёт через Graphics2D,
+    // а на сервере нет ни дисплея, ни X11.
+    applicationDefaultJvmArgs = listOf(
+        "-Dio.ktor.development=$isDevelopment",
+        "-Djava.awt.headless=true",
+    )
 }
 
 repositories {
@@ -45,6 +50,7 @@ dependencies {
     implementation(libs.jetbrains.exposed.kotlin.datetime)
     implementation(libs.migrations.flyway)
     implementation(libs.database.postgre)
+    implementation(libs.aws.sdk.s3)
     implementation("org.reflections:reflections:0.10.2")
     implementation("com.google.firebase:firebase-admin:9.4.2")
 

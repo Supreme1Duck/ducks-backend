@@ -6,10 +6,16 @@ ktor:
         port: 8080
     database:
       password: "$DB_PASS"
-app:
-  baseUrl: "$BASE_URL"
 photoroom:
   apiKey: "$PHOTOROOM_API_KEY"
+s3:
+  endpoint: "$S3_ENDPOINT"
+  region: "$S3_REGION"
+  bucket: "$S3_BUCKET"
+  accessKey: "$S3_ACCESS_KEY"
+  secretKey: "$S3_SECRET_KEY"
+  publicBaseUrl: "$S3_PUBLIC_BASE_URL"
+  publicReadAcl: "$S3_PUBLIC_READ_ACL:false"
 jwt:
   domain: "https://jwt-provider-domain/"
   audience: "ducks-audience"

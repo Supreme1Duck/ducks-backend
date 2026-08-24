@@ -11,6 +11,9 @@ data class CreateCoffeeShopRequest(
     val initialPass: String,
     val rating: Double,
     val pinCode: String,
+    // Координаты кофейни (WGS84). Без них кофейня попадёт в конец списка «ближайшие».
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     // Список из 7 элементов, с пн по пт.
     val workTime: SetCoffeeShopScheduleRequest,
 )

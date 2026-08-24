@@ -9,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import java.io.File
 import kotlin.time.Duration.Companion.hours
 
 class CoffeeShopDeleteUnusedImagesService(
@@ -21,70 +20,51 @@ class CoffeeShopDeleteUnusedImagesService(
     fun invoke() {
         scope.launch {
             while (true) {
-                newSuspendedTransaction {
-                    val savedImages = findSavedShopsImages()
-
-                    val allShopsImages = CoffeeShopTable.select(
-                        CoffeeShopTable.imageUrls
-                    ).flatMap {
-                        it[CoffeeShopTable.imageUrls] ?: emptyList()
-                    }.map {
-                        it.substringAfterLast("/")
-                    }
-
-                    val listToDelete = savedImages.filter { it !in allShopsImages }
-
-                    listToDelete.forEach {
-                        shopImageRepository.deleteImage(it)
-                    }
-                }
-
-                newSuspendedTransaction {
-                    val savedImages = findSavedProductImages()
-
-                    val allProductsImages = CoffeeProductTable.select(
-                        CoffeeProductTable.imageUrl
-                    ).map {
-                        it[CoffeeProductTable.imageUrl]
-                    }.map {
-                        it.substringAfterLast("/")
-                    }
-
-                    val listToDelete = savedImages.filter { it !in allProductsImages }
-
-                    listToDelete.forEach {
-                        shopImageRepository.deleteProductImage(it)
-                    }
-                }
+                deleteUnusedShopImages()
+                deleteUnusedProductImages()
 
                 delay(24.hours)
             }
         }
     }
 
-    private fun findSavedShopsImages(): List<String> {
-        val folder = File("coffee-shops/images")
+    private suspend fun deleteUnusedShopImages() {
+        // Запросы в хранилище держим снаружи транзакции: незачем занимать соединение
+        // с базой на время сетевых вызовов к S3.
+        val savedImages = shopImageRepository.listShopImageNames()
 
-        return if (folder.exists() && folder.isDirectory) {
-            folder.listFiles()
-                ?.filter { it.isFile }
-                ?.map { it.name }
-                ?: emptyList()
-        } else {
-            emptyList()
+        val usedImages = newSuspendedTransaction {
+            CoffeeShopTable.select(
+                CoffeeShopTable.imageUrls
+            ).flatMap {
+                it[CoffeeShopTable.imageUrls] ?: emptyList()
+            }
+        }.mapTo(mutableSetOf()) {
+            // Сравниваем по имени файла, а не по URL целиком: в базе могут лежать ссылки
+            // и на старую раздачу с сервера, и на хранилище.
+            it.substringAfterLast("/")
         }
+
+        savedImages
+            .filter { it !in usedImages }
+            .forEach { shopImageRepository.deleteImage(it) }
     }
 
-    private fun findSavedProductImages(): List<String> {
-        val folder = File("coffee-shops/products/images")
+    private suspend fun deleteUnusedProductImages() {
+        val savedImages = shopImageRepository.listProductImageNames()
 
-        return if (folder.exists() && folder.isDirectory) {
-            folder.listFiles()
-                ?.filter { it.isFile }
-                ?.map { it.name }
-                ?: emptyList()
-        } else {
-            emptyList()
+        val usedImages = newSuspendedTransaction {
+            CoffeeProductTable.select(
+                CoffeeProductTable.imageUrl
+            ).map {
+                it[CoffeeProductTable.imageUrl]
+            }
+        }.mapTo(mutableSetOf()) {
+            it.substringAfterLast("/")
         }
+
+        savedImages
+            .filter { it !in usedImages }
+            .forEach { shopImageRepository.deleteProductImage(it) }
     }
 }
