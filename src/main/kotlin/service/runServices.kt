@@ -4,6 +4,7 @@ import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityServ
 import com.ducks.features.orders.service.ActualizeOrdersService
 import com.ducks.features.orders.service.ActualizeTechnicalPausesService
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
+import com.ducks.features.user.service.AnonymizeDeletedUsersService
 import io.ktor.server.application.*
 import org.koin.ktor.ext.inject
 
@@ -15,6 +16,7 @@ fun Application.runServices() {
     val coffeeShopDeleteUnusedImagesService by this.inject<CoffeeShopDeleteUnusedImagesService>()
     val coffeeShopNormalizeProductImagesService by this.inject<CoffeeShopNormalizeProductImagesService>()
     val actualizeCoffeeShopsVisibilityService by this.inject<ActualizeCoffeeShopsVisibilityService>()
+    val anonymizeDeletedUsersService by this.inject<AnonymizeDeletedUsersService>()
 
     actualizeOrdersService.invoke()
     actualizeTechnicalPausesService.invoke()
@@ -22,4 +24,5 @@ fun Application.runServices() {
     coffeeShopDeleteUnusedImagesService.invoke()
     coffeeShopNormalizeProductImagesService.invoke()
     actualizeCoffeeShopsVisibilityService.initialize()
+    anonymizeDeletedUsersService.invoke()
 }

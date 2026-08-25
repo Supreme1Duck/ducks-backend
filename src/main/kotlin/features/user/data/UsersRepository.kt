@@ -13,9 +13,20 @@ import org.jetbrains.exposed.v1.jdbc.update
 
 class UsersRepository {
 
+    companion object {
+        // TODO заменить на реальную проверку, когда появится отправка отп
+        private const val TEST_OTP = "123456"
+    }
+
     fun generateOtp(otpRequest: OtpRequest) {
 
     }
+
+    /**
+     * Проверка кода из СМС. Точка одна на все сценарии — вход и удаление аккаунта, —
+     * чтобы с приходом настоящего отп менять её в единственном месте.
+     */
+    fun verifyOtp(phoneNumber: String, otp: String): Boolean = otp == TEST_OTP
 
     suspend fun saveUserAndGetId(request: LoginRequest): Long {
         val firstName = request.firstName?.takeIf { it.isNotBlank() }
@@ -53,7 +64,9 @@ class UsersRepository {
             UserTable
                 .selectAll()
                 .where {
-                    (UserTable.id eq userId) and (UserTable.phoneNumber eq phoneNumber)
+                    (UserTable.id eq userId) and
+                            (UserTable.phoneNumber eq phoneNumber) and
+                            (UserTable.deletionRequestedAt eq null)
                 }
                 .map {
                     it.mapToUserDTO()

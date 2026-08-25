@@ -5,7 +5,7 @@ import com.ducks.features.orders.data.dto.OrderDTO
 import com.ducks.features.orders.data.dto.OrderProductDTO
 import com.ducks.features.orders.data.dto.OrderStatus
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
-import com.ducks.features.user.database.UserTable
+import com.ducks.features.user.domain.clientPhoneNumberOrDeletedTitle
 import org.jetbrains.exposed.v1.core.ResultRow
 import java.math.BigDecimal
 
@@ -14,7 +14,7 @@ fun ResultRow.mapToOrderDTO(products: List<OrderProductDTO>): OrderDTO {
     return OrderDTO(
         id = this[CoffeeOrdersTable.id].value,
         createdAt = this[CoffeeOrdersTable.createdTime],
-        userPhoneNumber = this[UserTable.phoneNumber],
+        userPhoneNumber = clientPhoneNumberOrDeletedTitle(),
         comment = this[CoffeeOrdersTable.comment],
         isTakeaway = this[CoffeeOrdersTable.isTakeaway],
         products = products,

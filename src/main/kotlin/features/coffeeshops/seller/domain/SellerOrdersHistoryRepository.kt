@@ -7,6 +7,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.database.toOrderProductDTO
 import com.ducks.features.orders.database.toOrderStatus
 import com.ducks.features.user.database.UserTable
+import com.ducks.features.user.domain.clientPhoneNumberOrDeletedTitle
 import com.ducks.util.APP_ZONE_OFFSET
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -34,7 +35,12 @@ class SellerOrdersHistoryRepository {
                     onColumn = CoffeeOrdersTable.userId,
                     otherColumn = UserTable.id,
                 )
-                .select(CoffeeOrdersTable.columns + UserTable.phoneNumber)
+                .select(
+                    CoffeeOrdersTable.columns +
+                            UserTable.phoneNumber +
+                            UserTable.deletedPhoneNumber +
+                            UserTable.deletedAt
+                )
                 .where {
                     (CoffeeOrdersTable.coffeeShop eq shopId) and
                             (CoffeeOrdersTable.createdTime greaterEq dayStart) and
@@ -45,7 +51,7 @@ class SellerOrdersHistoryRepository {
                     SellerDayOrderDTO(
                         id = it[CoffeeOrdersTable.id].value,
                         createdAt = it[CoffeeOrdersTable.createdTime],
-                        userPhoneNumber = it[UserTable.phoneNumber],
+                        userPhoneNumber = it.clientPhoneNumberOrDeletedTitle(),
                         status = it.toOrderStatus().value,
                         // Будет заполнено дальше.
                         productsCount = 0,
@@ -81,7 +87,12 @@ class SellerOrdersHistoryRepository {
                     onColumn = CoffeeOrdersTable.userId,
                     otherColumn = UserTable.id,
                 )
-                .select(CoffeeOrdersTable.columns + UserTable.phoneNumber)
+                .select(
+                    CoffeeOrdersTable.columns +
+                            UserTable.phoneNumber +
+                            UserTable.deletedPhoneNumber +
+                            UserTable.deletedAt
+                )
                 .where {
                     (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.coffeeShop eq shopId)
                 }
@@ -104,7 +115,7 @@ class SellerOrdersHistoryRepository {
         readyAt = this[CoffeeOrdersTable.readyTime],
         finishedAt = this[CoffeeOrdersTable.finishedTime],
         estimatedFinishTime = this[CoffeeOrdersTable.estimatedFinishTime],
-        userPhoneNumber = this[UserTable.phoneNumber],
+        userPhoneNumber = clientPhoneNumberOrDeletedTitle(),
         status = this.toOrderStatus().value,
         comment = this[CoffeeOrdersTable.comment],
         cancelledMessage = this[CoffeeOrdersTable.cancelledMessage],

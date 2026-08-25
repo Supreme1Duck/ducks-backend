@@ -11,6 +11,7 @@ fun Route.userRoute() {
 
         authenticate(JWT_CLIENT_NAME) {
             ordersRoute()
+            accountRoute()
         }
     }
 }
