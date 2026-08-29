@@ -1,6 +1,7 @@
 package com.ducks.features.user.domain
 
 import com.ducks.features.coffeeshops.checkShopIsNotTemporaryClosed
+import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.coffeeshops.client.routings.request.CreateOrderRequest
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
@@ -9,6 +10,7 @@ import com.ducks.features.coffeeshops.database.CoffeeProductsWithConstructorsTab
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
+import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
@@ -27,6 +29,8 @@ import java.math.BigDecimal
 
 class ClientCreateOrdersRepository(
     application: Application,
+    private val coffeeProductsDataSource: CoffeeProductsDataSource,
+    private val availableOrdersTimeListRepository: FetchAvailableOrdersTimeListRepository,
 ) {
 
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
@@ -39,6 +43,14 @@ class ClientCreateOrdersRepository(
         val (createdOrderId, sellerFcmToken) = newSuspendedTransaction {
             val clientId = getUserIdByPhone(clientPhoneNumber)
 
+            if (request.products.isEmpty()) {
+                throw DucksBadRequestError("Заказ не может быть пустым.")
+            }
+
+            if (request.products.any { (it.quantity ?: 1) < 1 }) {
+                throw DucksBadRequestError("Количество товара должно быть больше нуля.")
+            }
+
             // Получаем полный список продуктов с дубликатами если их несколько.
             val allProducts = buildList {
                 request.products.forEach { request ->
@@ -48,32 +60,36 @@ class ClientCreateOrdersRepository(
                 }
             }
 
+            // Дальше идёт чтение занятости кофейни и вставка заказа в выбранный слот —
+            // всё это должно быть под замком, иначе два одновременных заказа встанут
+            // в одно и то же время.
+            lockShop(request.shopId)
+
             checkShopIsNotTemporaryClosed(request.shopId)
 
             if (userHasActiveOrder(clientId)) {
                 throw DucksBadRequestError("Вы не можете создать новый заказ, когда у вас есть активный заказ")
             }
 
-            val (estimatedTimeToFinish, minutesToCookAllProducts) = calculateOrderFinishTimeMs(
-                request.shopId,
-                allProducts.map { it.productId },
+            val productsById = fetchShopProducts(
+                shopId = request.shopId,
+                productIds = request.products.map { it.productId },
             )
 
-            if (estimatedTimeToFinish == null) {
-                throw DucksBadRequestError("У кофешопа нет свободного времени для принятия заказа.")
-            }
-
-            // Если посчитанное время окончания заказа отличается от времени выбранного клиентом более чем на 2 минуты, выбрасываем ошибку.
-            if (estimatedTimeToFinish > request.estimatedTimeToFinish + 2.times(60_000)) {
-                throw DucksBadRequestError("Это время было только что занято, попробуйте еще раз.")
-            }
-
             val currentTime = Clock.System.now().toEpochMilliseconds()
+            val minutesToCookAllProducts = coffeeProductsDataSource
+                .calculateMinutesToCook(allProducts.map { it.productId })
 
-            // Не больше полутора часа от текущего времени
-            if (request.estimatedTimeToFinish > currentTime + 90 * 60_000) {
-                throw DucksBadRequestError("Время заказа должно быть не позже полутора часа.")
-            }
+            // Список доступных времён отдаётся по целым минутам — выравниваем, чтобы в базу
+            // не попал заказ с секундами и не ломал проверки пересечений.
+            val orderFinishTime = ceilToMinute(request.estimatedTimeToFinish)
+
+            validateOrderTime(
+                shopId = request.shopId,
+                finishTime = orderFinishTime,
+                minutesToCook = minutesToCookAllProducts,
+                currentTime = currentTime,
+            )
 
             val orderId = CoffeeOrdersTable.insertAndGetId {
                 it[createdTime] = currentTime
@@ -81,10 +97,7 @@ class ClientCreateOrdersRepository(
                 it[userId] = clientId
                 it[comment] = request.comment
 
-                // Список доступных времён отдаётся по целым минутам, но само поле
-                // сверяется только по допуску в 2 минуты — выравниваем, чтобы в базу
-                // не попал заказ с секундами и не ломал проверки пересечений.
-                it[estimatedFinishTime] = ceilToMinute(request.estimatedTimeToFinish)
+                it[estimatedFinishTime] = orderFinishTime
                 it[timeToCookInMinutes] = minutesToCookAllProducts
 
                 it[tips] = request.tips
@@ -96,70 +109,42 @@ class ClientCreateOrdersRepository(
                 it[totalPrice] = 0.toBigDecimal()
             }
 
-            val allProductIds = request.products.map { it.productId }
-
-            val emptyOrderedProducts = CoffeeProductTable
-                .select(
-                    CoffeeProductTable.id,
-                    CoffeeProductTable.name,
-                    CoffeeProductTable.imageUrl,
-                    CoffeeProductTable.sizes,
-                    CoffeeProductTable.minutesToCook,
-                )
-                .where {
-                    CoffeeProductTable.id inList allProductIds
-                }
-                .map {
-                    OrderedProduct(
-                        id = it[CoffeeProductTable.id].value,
-                        name = it[CoffeeProductTable.name],
-                        imageUrl = it[CoffeeProductTable.imageUrl],
-                        minutesToCook = it[CoffeeProductTable.minutesToCook],
-
-                        // Будут заполнены дальше
-                        constructors = emptyList(),
-                        size = null,
-                        quantity = 0,
-                        price = null,
-                    )
-                }
-
             val orderedProducts = request.products.map { requestProduct ->
-                val size = getSelectedSize(
-                    sizeId = requestProduct.sizeId,
-                    productId = requestProduct.productId
-                )
+                val product = productsById.getValue(requestProduct.productId)
+                val quantity = requestProduct.quantity ?: 1
+
+                val size = product.sizes.firstOrNull { it.id == requestProduct.sizeId }
+                    ?: throw DucksBadRequestError("Выбранного размера больше нет в меню, обновите корзину.")
 
                 val constructors = getSelectedConstructors(
                     productId = requestProduct.productId,
                     requestedConstructorIds = requestProduct.constructorIds ?: emptyList(),
                 )
 
-                val price = calculateProductPrice(
-                    size = size,
+                OrderedProduct(
+                    id = product.id,
+                    name = product.name,
+                    imageUrl = product.imageUrl,
+                    minutesToCook = product.minutesToCook,
                     constructors = constructors,
-                    quantity = requestProduct.quantity ?: 1,
-                )
-
-                val orderedProduct = emptyOrderedProducts.first { it.id == requestProduct.productId }
-                    .copy(
-                        constructors = constructors,
+                    size = size,
+                    quantity = quantity,
+                    price = calculateProductPrice(
                         size = size,
-                        quantity = requestProduct.quantity ?: 1,
-                        price = price,
-                    )
-
-                orderedProduct
+                        constructors = constructors,
+                        quantity = quantity,
+                    ),
+                )
             }
 
-            val orderPrice = orderedProducts.sumOf { it.price ?: 0.toBigDecimal() }
+            val orderPrice = orderedProducts.sumOf { it.price }
 
             CoffeeOrderedProductsTable.batchInsert(orderedProducts) { product ->
                 this[CoffeeOrderedProductsTable.orderId] = orderId
                 this[CoffeeOrderedProductsTable.productName] = product.name
                 this[CoffeeOrderedProductsTable.productId] = product.id
                 this[CoffeeOrderedProductsTable.imageUrl] = product.imageUrl
-                this[CoffeeOrderedProductsTable.selectedSize] = product.size ?: throw IllegalStateException("size is required")
+                this[CoffeeOrderedProductsTable.selectedSize] = product.size
                 this[CoffeeOrderedProductsTable.constructors] = product.constructors
                 this[CoffeeOrderedProductsTable.minutesToCook] = product.minutesToCook?.let {
                     it * product.quantity
@@ -201,17 +186,47 @@ class ClientCreateOrdersRepository(
             .firstOrNull()
     }
 
-    private fun getSelectedSize(
-        sizeId: String,
-        productId: Long
-    ): CoffeeProductSizeDTO? {
-        return CoffeeProductTable
-            .select(CoffeeProductTable.sizes)
+    /**
+     * Продукты заказа, проверенные по кофейне из запроса.
+     *
+     * Привязка к shopId обязательна: без неё клиент со старым меню (или с подменённым
+     * запросом) мог заказать товар чужого заведения — цена и время готовки уехали бы
+     * из чужой кофейни, а продавец увидел бы у себя незнакомую позицию.
+     */
+    private fun fetchShopProducts(shopId: Long, productIds: List<Long>): Map<Long, ShopProduct> {
+        val products = CoffeeProductTable
+            .select(
+                CoffeeProductTable.id,
+                CoffeeProductTable.name,
+                CoffeeProductTable.imageUrl,
+                CoffeeProductTable.sizes,
+                CoffeeProductTable.minutesToCook,
+                CoffeeProductTable.inStock,
+            )
             .where {
-                CoffeeProductTable.id eq productId
-            }.map {
-                it[CoffeeProductTable.sizes].firstOrNull { it.id == sizeId }
-            }.firstOrNull()
+                (CoffeeProductTable.id inList productIds) and (CoffeeProductTable.shopId eq shopId)
+            }
+            .associate {
+                it[CoffeeProductTable.id].value to ShopProduct(
+                    id = it[CoffeeProductTable.id].value,
+                    name = it[CoffeeProductTable.name],
+                    imageUrl = it[CoffeeProductTable.imageUrl],
+                    sizes = it[CoffeeProductTable.sizes],
+                    minutesToCook = it[CoffeeProductTable.minutesToCook],
+                    inStock = it[CoffeeProductTable.inStock],
+                )
+            }
+
+        if (productIds.any { it !in products }) {
+            throw DucksBadRequestError("Некоторых товаров больше нет в меню кофейни, обновите корзину.")
+        }
+
+        val outOfStock = products.values.filterNot { it.inStock }
+        if (outOfStock.isNotEmpty()) {
+            throw DucksBadRequestError("Закончилось: ${outOfStock.joinToString { it.name }}.")
+        }
+
+        return products
     }
 
     private fun getSelectedConstructors(
@@ -231,34 +246,46 @@ class ClientCreateOrdersRepository(
                 CoffeeConstructorsTable.id,
                 CoffeeConstructorsTable.name,
                 CoffeeConstructorsTable.price,
+                CoffeeConstructorsTable.isInStock,
             )
             .where {
                 (CoffeeProductsWithConstructorsTable.product eq productId) and
                         (CoffeeProductsWithConstructorsTable.constructor inList requestedConstructorIds)
             }.map {
-                OrderedProductConstructorDBModel(
+                it[CoffeeConstructorsTable.isInStock] to OrderedProductConstructorDBModel(
                     it[CoffeeConstructorsTable.id].value,
                     it[CoffeeConstructorsTable.name],
                     it[CoffeeConstructorsTable.price],
                 )
             }
 
-        return constructors
+        // Раньше недоступные добавки просто отваливались из выборки: заказ создавался
+        // молча дешевле, чем видел клиент, и без того, что он выбирал.
+        if (constructors.size != requestedConstructorIds.distinct().size) {
+            throw DucksBadRequestError("Некоторых добавок больше нет в меню, обновите корзину.")
+        }
+
+        val outOfStock = constructors.filterNot { (isInStock, _) -> isInStock }
+        if (outOfStock.isNotEmpty()) {
+            throw DucksBadRequestError("Закончилось: ${outOfStock.joinToString { (_, it) -> it.name }}.")
+        }
+
+        return constructors.map { (_, constructor) -> constructor }
     }
 
     private fun userHasActiveOrder(userId: Long): Boolean {
         return CoffeeOrdersTable
-            .selectAll()
+            .select(CoffeeOrdersTable.id)
             .where {
-                CoffeeOrdersTable.userId eq userId
+                (CoffeeOrdersTable.userId eq userId) and (CoffeeOrdersTable.finishedTime eq null)
             }
-            .map {
-                it[CoffeeOrdersTable.finishedTime] == null
-            }.any { it }
+            .limit(1)
+            .empty()
+            .not()
     }
 
     private fun getUserIdByPhone(clientPhoneNumber: String): Long {
-        val clientId = UserTable
+        return UserTable
             .select(UserTable.id)
             .where {
                 UserTable.phoneNumber eq clientPhoneNumber
@@ -266,9 +293,8 @@ class ClientCreateOrdersRepository(
             .map {
                 it[UserTable.id].value
             }
-            .first()
-
-        return clientId
+            .firstOrNull()
+            ?: throw DucksBadRequestError("Пользователь не найден.")
     }
 
     private fun calculateProductPrice(
@@ -284,50 +310,96 @@ class ClientCreateOrdersRepository(
         return singleProductPrice.times(quantity.toBigDecimal())
     }
 
-    private fun calculateOrderFinishTimeMs(
+    /**
+     * Блокирует строку кофейни до конца транзакции.
+     *
+     * Без замка два клиента, оформляющиеся одновременно, читают одну и ту же занятость,
+     * оба видят слот свободным и оба в него встают: допуск в 2 минуты сравнивал
+     * вычисленное время с запрошенным, а не с занятостью, и такую пару пропускал.
+     * Замок выстраивает оформление заказов внутри одной кофейни в очередь, кофейни
+     * друг друга при этом не ждут.
+     */
+    private fun lockShop(shopId: Long) {
+        CoffeeShopTable
+            .select(CoffeeShopTable.id)
+            .where { CoffeeShopTable.id eq shopId }
+            .forUpdate()
+            .firstOrNull()
+            ?: throw DucksBadRequestError("Кофешоп не найден.")
+    }
+
+    /**
+     * Проверяет, что выбранное клиентом время готовности можно занять прямо сейчас.
+     *
+     * Вызывать только под [lockShop] и в одной транзакции со вставкой заказа: занятость
+     * читается здесь же, и между проверкой и вставкой никто не должен успеть занять
+     * тот же слот.
+     *
+     * Раньше сервер сверял только «посчитанное ближайшее время не позже выбранного» —
+     * а выбранное могло лежать поверх чужого заказа или не влезать в окно между двумя
+     * заказами, и такой заказ спокойно создавался.
+     */
+    private fun validateOrderTime(
         shopId: Long,
-        productIds: List<Long>,
-    ): Pair<Long?, Int> {
-        // Делаем так потому что обычным select + where можно не получить два продукта с одинаковым id.
-        val minutesToCook = productIds.mapNotNull {
-            CoffeeProductTable
-                .select(CoffeeProductTable.minutesToCook)
-                .where {
-                    CoffeeProductTable.id eq it
-                }.firstNotNullOfOrNull {
-                    it[CoffeeProductTable.minutesToCook]
-                }
-        }.takeIf {
-            it.isNotEmpty()
-        }?.sumOf {
-            it
-        } ?: 0
+        finishTime: Long,
+        minutesToCook: Int,
+        currentTime: Long,
+    ) {
+        val startTime = finishTime - minutesToCook.times(60_000L)
 
-        val closestTimeToStartMs = CoffeeShopTable
-            .select(CoffeeShopTable.closestTimeToTakeOrders)
-            .where {
-                CoffeeShopTable.id eq shopId
-            }
-            .map {
-                it[CoffeeShopTable.closestTimeToTakeOrders]
-            }
-            .first()
-
-        val timeToFinishMs = closestTimeToStartMs?.let {
-            it + minutesToCook.times(60_000)
+        if (finishTime > currentTime + MAX_ORDER_AHEAD_MS) {
+            throw DucksBadRequestError("Время заказа должно быть не позже полутора часа.")
         }
 
-        return timeToFinishMs to minutesToCook
+        // Слоты выдаются по целым минутам, и пока клиент дожимает оформление, выбранная
+        // минута успевает уйти в прошлое — на эти секунды даём допуск.
+        if (startTime < currentTime - START_TIME_TOLERANCE_MS) {
+            throw DucksBadRequestError("Это время уже прошло, выберите другое.")
+        }
+
+        val busySlots = availableOrdersTimeListRepository.getAllBusyTimeSlots(shopId)
+        val isSlotTaken = busySlots.any { slot -> startTime < slot.endTime && slot.startTime < finishTime }
+
+        if (isSlotTaken) {
+            throw DucksBadRequestError("Это время было только что занято, попробуйте еще раз.")
+        }
+
+        val workTime = availableOrdersTimeListRepository.findShopsCurrentWorkTime(shopId)
+
+        if (workTime == null || workTime.isClosed || currentTime !in workTime.startTime..workTime.endTime) {
+            throw DucksBadRequestError("Кофейня сейчас не принимает заказы.")
+        }
+
+        if (startTime < workTime.startTime || finishTime > workTime.endTime) {
+            throw DucksBadRequestError("Заказ не успеет приготовиться до закрытия кофейни.")
+        }
     }
+
+    private companion object {
+        // Заказ ко времени — не дальше чем на полтора часа вперёд.
+        const val MAX_ORDER_AHEAD_MS = 90 * 60_000L
+
+        // Допуск на оформление: выбранная минута к моменту POST'а уже могла начаться.
+        const val START_TIME_TOLERANCE_MS = 2 * 60_000L
+    }
+
+    private data class ShopProduct(
+        val id: Long,
+        val name: String,
+        val imageUrl: String,
+        val sizes: List<CoffeeProductSizeDTO>,
+        val minutesToCook: Int?,
+        val inStock: Boolean,
+    )
 
     private data class OrderedProduct(
         val id: Long,
         val name: String,
-        val size: CoffeeProductSizeDTO?,
+        val size: CoffeeProductSizeDTO,
         val imageUrl: String,
         val constructors: List<OrderedProductConstructorDBModel>,
         val minutesToCook: Int?,
         val quantity: Int,
-        val price: BigDecimal?,
+        val price: BigDecimal,
     )
 }

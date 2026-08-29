@@ -2,9 +2,11 @@ package com.ducks.features.coffeeshops.client.routings
 
 import com.ducks.common.geo.GeoPoint
 import com.ducks.common.geo.toDegreesOrThrow
+import com.ducks.features.coffeeshops.client.domain.CartRecommendationsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
 import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
+import com.ducks.features.coffeeshops.client.routings.request.CartRecommendationsRequest
 import com.ducks.features.coffeeshops.client.routings.request.CheckProductsExistenceRequest
 import com.ducks.features.coffeeshops.client.routings.request.EstimateCookingTimeRequest
 import com.ducks.features.coffeeshops.client.routings.request.OrderTimeRequest
@@ -19,6 +21,7 @@ fun Route.clientRoute() {
 
     val coffeeShopsRepository by application.inject<CoffeeShopsRepository>()
     val coffeeProductsRepository by application.inject<CoffeeProductsRepository>()
+    val cartRecommendationsRepository by application.inject<CartRecommendationsRepository>()
 
     get("/list") {
         ducksTryCatch {
@@ -79,6 +82,18 @@ fun Route.clientRoute() {
             val missing = coffeeProductsRepository.findMissingPairs(request.pairs)
 
             call.respond(HttpStatusCode.OK, CheckProductsExistenceResponse(missing = missing))
+        }
+    }
+
+    // Что предложить добавить к уже собранной корзине. Отдельной ручкой, а не полем
+    // в ответе магазина: корзина меняется, подбор должен пересчитываться вместе с ней.
+    post("/cart/recommendations") {
+        ducksTryCatch {
+            val request = call.receive<CartRecommendationsRequest>()
+
+            val recommendations = cartRecommendationsRepository.recommendForCart(request)
+
+            call.respond(HttpStatusCode.OK, recommendations)
         }
     }
 

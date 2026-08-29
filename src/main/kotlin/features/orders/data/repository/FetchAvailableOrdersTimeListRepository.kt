@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -23,36 +22,42 @@ import java.time.format.DateTimeFormatter
 
 class FetchAvailableOrdersTimeListRepository {
 
-    suspend fun invoke(
+    /**
+     * Времена готовности, которые кофейня реально может обещать для заказа такой
+     * длительности: свободны с учётом занятости, влезают целиком и заканчиваются
+     * до закрытия смены. null — свободного времени нет вообще.
+     *
+     * Вызывать внутри транзакции.
+     */
+    fun availableFinishTimes(
         shopId: Long,
         estimatedOrderFinishTimeInMinutes: Int,
     ): List<Long>? {
-        return newSuspendedTransaction {
-            val currentTime = Clock.System.now().toEpochMilliseconds()
-            val maxOrderTime = currentTime + 60 * (60_000)
+        val currentTime = Clock.System.now().toEpochMilliseconds()
 
-            val busyTimeSlots = getAllBusyTimeSlots(shopId)
+        val busyTimeSlots = getAllBusyTimeSlots(shopId)
 
-            val workTime = findShopsCurrentWorkTime(shopId)
+        val workTime = findShopsCurrentWorkTime(shopId)
 
-            val closestTimeToTakeOrder =
-                calculateClosestTimeToTakeOrder(
-                    busyTimeSlotsDataList = busyTimeSlots,
-                    coffeeShopWorkTime = workTime,
-                    currentTime = currentTime,
-                ).closestTime
-                    ?: return@newSuspendedTransaction null
+        val closestTimeToTakeOrder =
+            calculateClosestTimeToTakeOrder(
+                busyTimeSlotsDataList = busyTimeSlots,
+                coffeeShopWorkTime = workTime,
+                currentTime = currentTime,
+            ).closestTime
+                ?: return null
 
-            val availableOrderTimeList =
-                calculateAvailableOrderTimeList(
-                    orderTimeStartsFrom = closestTimeToTakeOrder,
-                    maxOrderTime = maxOrderTime,
-                    busyTimeSlots = busyTimeSlots,
-                    estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes
-                )
+        val maxOrderTime = minOf(currentTime + ORDER_MAX_END_TIME, workTime?.endTime ?: Long.MAX_VALUE)
 
-            filterByMinInterval(availableOrderTimeList, estimatedOrderFinishTimeInMinutes)
-        }
+        val availableOrderTimeList =
+            calculateAvailableOrderTimeList(
+                orderTimeStartsFrom = closestTimeToTakeOrder,
+                maxOrderTime = maxOrderTime,
+                busyTimeSlots = busyTimeSlots,
+                estimatedOrderFinishTimeInMinutes = estimatedOrderFinishTimeInMinutes
+            )
+
+        return filterByMinInterval(availableOrderTimeList, estimatedOrderFinishTimeInMinutes)
     }
 
     fun getAllBusyTimeSlots(shopId: Long): List<BusyTimeSlotsData> {
@@ -66,6 +71,9 @@ class FetchAvailableOrdersTimeListRepository {
             .where {
                 (CoffeeOrdersTable.coffeeShop eq shopId) and
                         (CoffeeOrdersTable.estimatedFinishTime greater currentTime) and
+                        // Приготовленный, но ещё не выданный заказ бариста уже не занимает,
+                        // поэтому его слот освобождается по readyTime, а не по finishedTime.
+                        (CoffeeOrdersTable.readyTime eq null) and
                         (CoffeeOrdersTable.finishedTime eq null)
             }
             .map {
@@ -278,6 +286,9 @@ class FetchAvailableOrdersTimeListRepository {
     )
 
     companion object {
+        // Заказ можно оформить не дальше чем на час вперёд.
+        private const val ORDER_MAX_END_TIME = 60 * 60_000L
+
         private const val ZONE_ID = "+03:00"
         private const val HH_MM_PATTERN = "HH:mm"
     }

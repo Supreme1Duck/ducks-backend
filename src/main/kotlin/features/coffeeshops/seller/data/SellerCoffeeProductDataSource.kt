@@ -92,6 +92,7 @@ class SellerCoffeeProductDataSource {
 
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
+                table[cooksInParallel] = productRequest.cooksInParallel
                 table[inStock] = productRequest.isInStock
 
                 table[carbohydrates] = productRequest.carbohydrates
@@ -166,6 +167,7 @@ class SellerCoffeeProductDataSource {
                 table[categoryId] = productRequest.categoryId
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
+                table[cooksInParallel] = productRequest.cooksInParallel
                 table[inStock] = productRequest.isInStock
                 table[carbohydrates] = productRequest.carbohydrates
                 table[protein] = productRequest.protein

@@ -5,6 +5,7 @@ import com.ducks.features.coffeeshops.seller.domain.CoffeeShopImageRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -17,6 +18,9 @@ import org.slf4j.LoggerFactory
  * хранилища: в обычной ситуации выборка пуста и сервис не делает ровно ничего. Работы
  * у него появляются в двух случаях — остался хвост картинок, залитых до нормализации,
  * или в ProductImageNormalizer подняли REVISION, поменяв правило масштабирования.
+ *
+ * Мимо проходят картинки с меткой [CoffeeShopImageRepository.RAW_MARKER]: их админ залил
+ * как есть, сознательно минуя нашу обработку, и перезаливать их под общий холст нельзя.
  *
  * Photoroom при этом не дёргается: работаем с уже вырезанным PNG, кредиты не тратятся.
  */
@@ -33,8 +37,12 @@ class CoffeeShopNormalizeProductImagesService(
                 CoffeeProductTable
                     .select(CoffeeProductTable.id, CoffeeProductTable.imageUrl)
                     .where {
-                        CoffeeProductTable.imageUrl notLike
-                                "%${CoffeeShopImageRepository.NORMALIZED_MARKER}.png"
+                        (CoffeeProductTable.imageUrl notLike
+                                "%${CoffeeShopImageRepository.NORMALIZED_MARKER}.png") and
+                                // Картинки, залитые админом как есть, — ручная работа,
+                                // и общий масштаб к ним намеренно не применяли.
+                                (CoffeeProductTable.imageUrl notLike
+                                        "%${CoffeeShopImageRepository.RAW_MARKER}.%")
                     }
                     .map { it[CoffeeProductTable.id].value to it[CoffeeProductTable.imageUrl] }
             }

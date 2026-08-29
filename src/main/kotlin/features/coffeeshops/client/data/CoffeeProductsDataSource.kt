@@ -7,11 +7,14 @@ import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.database.mappers.mapToProductPreviewDTO
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
+import com.ducks.features.coffeeshops.service.CookingTimeCalculator
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
-class CoffeeProductsDataSource {
+class CoffeeProductsDataSource(
+    private val cookingTimeCalculator: CookingTimeCalculator = CookingTimeCalculator(),
+) {
 
     fun fetchByShop(shopId: Long): List<ProductsByCategoryDTO> {
         return CoffeeProductTable
@@ -36,16 +39,18 @@ class CoffeeProductsDataSource {
     fun calculateMinutesToCook(productIds: List<Long>): Int {
         val quantityById = productIds.groupingBy { it }.eachCount()
 
-        val rows = CoffeeProductTable
+        val items = CoffeeProductTable
             .selectAll()
             .where { CoffeeProductTable.id inList productIds }
-            .toList()
+            .map {
+                CookingTimeCalculator.CookingItem(
+                    minutesToCook = it[CoffeeProductTable.minutesToCook] ?: 0,
+                    cooksInParallel = it[CoffeeProductTable.cooksInParallel],
+                    quantity = quantityById[it[CoffeeProductTable.id].value] ?: 1,
+                )
+            }
 
-        val totalMinutes = rows.sumOf {
-            val quantity = quantityById[it[CoffeeProductTable.id].value] ?: 1
-            (it[CoffeeProductTable.minutesToCook] ?: 0) * quantity
-        }
-        return totalMinutes + 1
+        return cookingTimeCalculator.minutesToCook(items)
     }
 
     /**
@@ -65,14 +70,6 @@ class CoffeeProductsDataSource {
             .toSet()
 
         return distinctPairs.filter { it !in existingPairs }
-    }
-
-    fun getClosestTimeToTakeOrder(shopId: Long): Long? {
-        return CoffeeShopTable
-            .select(CoffeeShopTable.closestTimeToTakeOrders)
-            .where { CoffeeShopTable.id eq shopId }
-            .map { it[CoffeeShopTable.closestTimeToTakeOrders] }
-            .firstOrNull()
     }
 
     fun getProductDetails(productId: Long): CoffeeProductWithDetailsDTO {

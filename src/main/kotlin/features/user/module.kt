@@ -20,6 +20,6 @@ val usersModule = module {
 
     // orders
     single { ClientsOrdersRepository(get()) }
-    single { ClientCreateOrdersRepository(get()) }
+    single { ClientCreateOrdersRepository(get(), get(), get()) }
     single { ReorderPreviewRepository() }
 }

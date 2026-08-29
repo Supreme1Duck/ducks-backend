@@ -72,7 +72,7 @@ class CoffeeShopsRepository(
             checkShopIsNotTemporaryClosed(shopId)
 
             val minutesToCook = productDataSource.calculateMinutesToCook(productIds)
-            val timestamps = fetchAvailableOrdersTimeListRepository.invoke(
+            val timestamps = fetchAvailableOrdersTimeListRepository.availableFinishTimes(
                 shopId = shopId,
                 estimatedOrderFinishTimeInMinutes = minutesToCook,
             ) ?: throw DucksBadRequestError("У кофешопа нет свободного время для заказа.")

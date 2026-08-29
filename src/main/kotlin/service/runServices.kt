@@ -1,6 +1,7 @@
 package com.ducks.service
 
 import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityService
+import com.ducks.features.coffeeshops.service.ProductRecommendationsService
 import com.ducks.features.orders.service.ActualizeOrdersService
 import com.ducks.features.orders.service.ActualizeTechnicalPausesService
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
@@ -17,6 +18,7 @@ fun Application.runServices() {
     val coffeeShopNormalizeProductImagesService by this.inject<CoffeeShopNormalizeProductImagesService>()
     val actualizeCoffeeShopsVisibilityService by this.inject<ActualizeCoffeeShopsVisibilityService>()
     val anonymizeDeletedUsersService by this.inject<AnonymizeDeletedUsersService>()
+    val productRecommendationsService by this.inject<ProductRecommendationsService>()
 
     actualizeOrdersService.invoke()
     actualizeTechnicalPausesService.invoke()
@@ -25,4 +27,5 @@ fun Application.runServices() {
     coffeeShopNormalizeProductImagesService.invoke()
     actualizeCoffeeShopsVisibilityService.initialize()
     anonymizeDeletedUsersService.invoke()
+    productRecommendationsService.invoke()
 }

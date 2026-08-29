@@ -268,5 +268,7 @@ enum class PushType(val value: String) {
     // Клиент сам отменил заказ, который продавец ещё не принял. Уходит продавцу.
     ORDER_CANCELLED_BY_CLIENT("order_cancelled_by_client"),
     ORDER_EXPIRED("order_expired"),
+    // Принятый заказ просрочен: обещанное время готовности прошло. Уходит продавцу.
+    ORDER_LATE("order_late"),
     NEW_ORDER("new_order"),
 }

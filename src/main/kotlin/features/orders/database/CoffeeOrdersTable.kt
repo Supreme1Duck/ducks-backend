@@ -18,6 +18,8 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
     val cancelledMessage = text("cancelled_message").nullable()
 
     val isExpired = bool("isExpired").default(false)
+    // Продавцу уже напомнили, что заказ просрочен, — второй раз не напоминаем.
+    val isLateNotified = bool("is_late_notified").default(false)
     val isCancelledByClient = bool("isCancelledByClient").default(false)
     // Заказ был готов, но клиент так и не забрал его.
     val isNotPickedUp = bool("isNotPickedUp").default(false)

@@ -4,21 +4,12 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.websocket.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import util.BigDecimalSerializer
-import java.math.BigDecimal
+import com.ducks.util.ducksJson
 import kotlin.time.Duration.Companion.milliseconds
 
 fun Application.installServerPlugins() {
     install(ContentNegotiation) {
-        json(
-            Json {
-                serializersModule = SerializersModule {
-                    contextual(BigDecimal::class, BigDecimalSerializer)
-                }
-            }
-        )
+        json(ducksJson)
     }
 
     install(WebSockets) {

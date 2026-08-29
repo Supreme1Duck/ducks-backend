@@ -4,7 +4,9 @@ import com.ducks.auth.coffee_seller.JWTCoffeeSellerService
 import com.ducks.common.storage.S3Config
 import com.ducks.common.storage.S3Storage
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
+import com.ducks.features.coffeeshops.client.data.CoffeeRecommendationsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
+import com.ducks.features.coffeeshops.client.domain.CartRecommendationsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
 import com.ducks.features.coffeeshops.seller.analytics.CoffeeSellerAnalyticsRepository
@@ -15,15 +17,18 @@ import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
 import com.ducks.features.coffeeshops.seller.data.SellerPinCodeDataSource
 import com.ducks.features.coffeeshops.seller.domain.*
 import com.ducks.features.coffeeshops.service.ActualizeCoffeeShopsVisibilityService
+import com.ducks.features.coffeeshops.service.ProductRecommendationsService
 import org.koin.dsl.module
 
 fun coffeeShopsModule(photoroomApiKey: String, s3Config: S3Config) = module {
 
     single { CoffeeShopsRepository(get(), get(), get()) }
-    single { CoffeeProductsRepository(get()) }
+    single { CoffeeProductsRepository(get(), get()) }
+    single { CartRecommendationsRepository(get()) }
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }
+    single { CoffeeRecommendationsDataSource() }
     single { S3Storage(s3Config) }
     single { CoffeeShopImageRepository(get(), get(), photoroomApiKey) }
 
@@ -45,4 +50,5 @@ fun coffeeShopsModule(photoroomApiKey: String, s3Config: S3Config) = module {
     single { CoffeeSellerAnalyticsRepository() }
     single { SellerPinCodeDataSource() }
     single { ActualizeCoffeeShopsVisibilityService(get()) }
+    single { ProductRecommendationsService(get()) }
 }

@@ -17,6 +17,13 @@ data class CreateCoffeeProductRequest(
 
     val minutesToCook: Int?,
 
+    /**
+     * Товар греется или ждёт готовым и не занимает руки баристы — его время
+     * не складывается с остальным заказом. По умолчанию false: обычную позицию
+     * безопаснее считать дольше, чем обещать заказ раньше, чем он будет готов.
+     */
+    val cooksInParallel: Boolean = false,
+
     @SerialName("inStock")
     val isInStock: Boolean = true,
 

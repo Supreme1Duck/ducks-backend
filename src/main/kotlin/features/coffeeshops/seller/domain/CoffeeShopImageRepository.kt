@@ -21,19 +21,16 @@ class CoffeeShopImageRepository(
     private val photoroomApiKey: String,
 ) {
 
-    private val allowedExtensions = listOf("jpg", "jpeg", "png")
+    private val allowedExtensions = listOf("jpg", "jpeg", "png", "webp")
 
     suspend fun saveImage(fileItem: PartData.FileItem): SaveImageResult {
-        val originalName = fileItem.originalFileName ?: "unknown"
-        val fileExtension = originalName.substringAfterLast(".", "").lowercase()
+        val fileExtension = extensionOf(fileItem.originalFileName)
 
         if (fileExtension !in allowedExtensions) {
             return SaveImageResult.UnsupportedFileType
         }
 
-        val imageBytes = withContext(Dispatchers.IO) {
-            fileItem.streamProvider.invoke().readAllBytes()
-        }
+        val imageBytes = readImageBytes(fileItem)
 
         val key = "$SHOPS_PREFIX${UUID.randomUUID()}.$fileExtension"
 
@@ -42,16 +39,14 @@ class CoffeeShopImageRepository(
         return SaveImageResult.Success(imageUrl)
     }
 
-    suspend fun saveProductImage(fileItem: PartData.FileItem): SaveImageResult {
-        val originalName = fileItem.originalFileName ?: "unknown"
-        val fileExtension = originalName.substringAfterLast(".", "").lowercase()
+    suspend fun saveProductImage(fileItem: PartData.FileItem): SaveImageResult =
+        saveProductImage(readImageBytes(fileItem), fileItem.originalFileName)
+
+    suspend fun saveProductImage(imageBytes: ByteArray, originalFileName: String?): SaveImageResult {
+        val fileExtension = extensionOf(originalFileName)
 
         if (fileExtension !in allowedExtensions) {
             return SaveImageResult.UnsupportedFileType
-        }
-
-        val imageBytes = withContext(Dispatchers.IO) {
-            fileItem.streamProvider.invoke().readAllBytes()
         }
 
         val imageWithoutBackground = removeBackgroundOnImage(imageBytes)
@@ -63,6 +58,33 @@ class CoffeeShopImageRepository(
         }
 
         val imageUrl = s3.put(productImageKey(), normalized, "image/png")
+
+        return SaveImageResult.Success(imageUrl)
+    }
+
+    /**
+     * Кладёт картинку товара в хранилище байт в байт: ни Photoroom, ни нормализации.
+     * Нужна, когда картинку уже подготовили руками и любая наша обработка её только
+     * испортит — например, Photoroom срезал у товара часть силуэта.
+     *
+     * Имя такого файла помечено [RAW_MARKER], и CoffeeShopNormalizeProductImagesService
+     * его не трогает: иначе ручную картинку на ближайшем старте перезалило бы под общий
+     * холст, а ссылка в базе сменилась бы сама собой.
+     */
+    suspend fun saveProductImageAsIs(fileItem: PartData.FileItem): SaveImageResult =
+        saveProductImageAsIs(readImageBytes(fileItem), fileItem.originalFileName)
+
+    /** Тот же путь для картинки, уже вычитанной из запроса — см. [saveProductImage]. */
+    suspend fun saveProductImageAsIs(imageBytes: ByteArray, originalFileName: String?): SaveImageResult {
+        val fileExtension = extensionOf(originalFileName)
+
+        if (fileExtension !in allowedExtensions) {
+            return SaveImageResult.UnsupportedFileType
+        }
+
+        val key = "$PRODUCTS_PREFIX${UUID.randomUUID()}$RAW_MARKER.$fileExtension"
+
+        val imageUrl = s3.put(key, imageBytes, contentTypeOf(fileExtension))
 
         return SaveImageResult.Success(imageUrl)
     }
@@ -177,14 +199,37 @@ class CoffeeShopImageRepository(
         }
     }
 
+    /**
+     * Публично, потому что читать часть запроса приходится и снаружи: в multipart
+     * с несколькими полями файл нельзя оставить «на потом» — как только разбор дошёл
+     * до следующей части, поток предыдущей уже недоступен.
+     */
+    suspend fun readImageBytes(fileItem: PartData.FileItem): ByteArray =
+        withContext(Dispatchers.IO) {
+            fileItem.streamProvider.invoke().readAllBytes()
+        }
+
+    private fun extensionOf(originalFileName: String?): String =
+        (originalFileName ?: "unknown").substringAfterLast(".", "").lowercase()
+
+    // Тип проставляется один раз и навсегда: объекты уезжают с `Cache-Control: immutable`,
+    // и починить заголовок потом можно только перезаливкой под новым ключом.
     private fun contentTypeOf(extension: String): String = when (extension) {
         "png" -> "image/png"
+        "webp" -> "image/webp"
         else -> "image/jpeg"
     }
 
     companion object {
         /** Хвост имени у картинок товаров, приведённых к текущему масштабу. */
         const val NORMALIZED_MARKER = "-n${ProductImageNormalizer.REVISION}"
+
+        /**
+         * Хвост имени у картинок, залитых как есть. Метка нужна не для красоты: по ней
+         * автонормализация отличает наши картинки от подготовленных руками и обходит
+         * вторые стороной. В UUID такого сочетания не бывает — там только hex.
+         */
+        const val RAW_MARKER = "-raw"
 
         private const val SHOPS_PREFIX = "coffee-shops/images/"
         private const val PRODUCTS_PREFIX = "coffee-shops/products/images/"

@@ -14,6 +14,7 @@ data class UpdateCoffeeProductRequest(
     val categoryId: Long,
     val imageUrl: String,
     val minutesToCook: Int?,
+    val cooksInParallel: Boolean = false,
     @SerialName("inStock")
     val isInStock: Boolean = true,
     val constructors: List<UpdateCoffeeConstructorRequest>? = null,

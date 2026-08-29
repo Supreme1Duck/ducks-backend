@@ -21,7 +21,7 @@ val adminsModule = module {
     single { ShopCredentialsRepository() }
 
     // Coffee-shops
-    single { AdminCoffeeShopsRepository(get(), get()) }
+    single { AdminCoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeShopCredentialsRepository() }
 
     single<HttpClient> { HttpClient(CIO) }

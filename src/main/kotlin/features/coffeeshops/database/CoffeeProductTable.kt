@@ -25,6 +25,8 @@ object CoffeeProductTable: LongIdTable("ducks_coffee_shop_product_table") {
 
     val inStock = bool("in_stock").default(true)
 
+    val cooksInParallel = bool("cooks_in_parallel").default(false)
+
     val carbohydrates = integer("carbohydrates").nullable()
     val protein = integer("protein").nullable()
     val fats = integer("fats").nullable()

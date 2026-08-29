@@ -58,6 +58,7 @@ fun ResultRow.mapToSellerCoffeeProductPreviewDTO(): CoffeeShopProductSellerPrevi
         inStock = this[CoffeeProductTable.inStock],
         categoryId = this[CoffeeProductTable.categoryId].value,
         minutesToCook = this[CoffeeProductTable.minutesToCook],
+        cooksInParallel = this[CoffeeProductTable.cooksInParallel],
         shopId = this[CoffeeProductTable.shopId].value,
     )
 }
