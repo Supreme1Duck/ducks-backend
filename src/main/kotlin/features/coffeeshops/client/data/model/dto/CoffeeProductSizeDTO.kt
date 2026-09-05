@@ -12,6 +12,8 @@ data class CoffeeProductSizeDTO(
     val sizeValue: String,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
+    @Serializable(with = BigDecimalSerializer::class)
+    val priceWithoutDiscount: BigDecimal? = null,
 )
 
 object CoffeeShopSizeSerializer{

@@ -2,6 +2,7 @@ package com.ducks.features.user.route
 
 import com.ducks.auth.client.JWTClientService
 import com.ducks.features.user.data.UsersRepository
+import com.ducks.features.user.domain.OtpService
 import com.ducks.features.user.ratelimit.OtpRateLimiter
 import com.ducks.features.user.route.request.LoginRequest
 import com.ducks.features.user.route.request.OtpRequest
@@ -28,8 +29,8 @@ fun Route.authRoute() {
     val jwtService by application.inject<JWTClientService> { parametersOf(application) }
     val userRepository by application.inject<UsersRepository>()
     val otpRateLimiter by application.inject<OtpRateLimiter>()
+    val otpService by application.inject<OtpService>()
 
-    // TODO вставить реальный запрос отп
     post("/otp/generate") {
         try {
             val request = call.receive<OtpRequest>()
@@ -55,9 +56,15 @@ fun Route.authRoute() {
             }
 
             otpRateLimiter.recordIpRequest(ip)
-            otpRateLimiter.recordPhoneRequest(request.phoneNumber)
 
-            userRepository.generateOtp(request)
+            if (!otpService.sendCode(request.phoneNumber)) {
+                return@post call.respond(
+                    HttpStatusCode.BadGateway,
+                    "Не удалось отправить код. Попробуйте ещё раз.",
+                )
+            }
+
+            otpRateLimiter.recordPhoneRequest(request.phoneNumber)
 
             call.respond(message = HttpStatusCode.Created)
         } catch (e: Exception) {
@@ -68,7 +75,7 @@ fun Route.authRoute() {
     post("/otp/verify") {
         val request = call.receive<LoginRequest>()
 
-        if (userRepository.verifyOtp(phoneNumber = request.phoneNumber, otp = request.otp)) {
+        if (otpService.verify(phoneNumber = request.phoneNumber, otp = request.otp)) {
             val userId = userRepository.saveUserAndGetId(request = request)
             val token = jwtService.generateClientToken(
                 userId = userId,

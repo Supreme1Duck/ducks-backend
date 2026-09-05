@@ -5,7 +5,9 @@ import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopProduc
 import com.ducks.features.coffeeshops.database.CoffeeConstructorCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
 import com.ducks.features.coffeeshops.database.CoffeeModifiedConstructorCategoryTable
+import com.ducks.features.coffeeshops.database.CoffeeProductCategoryTable
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
+import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import org.jetbrains.exposed.v1.core.ResultRow
 
 fun List<ResultRow>.mapToCoffeeProductWithDetailsDTO(): CoffeeProductWithDetailsDTO {
@@ -112,9 +114,11 @@ fun List<ResultRow>.mapToProductPreviewDTO(): CoffeeShopProductPreviewDTO {
         name = firstRow[CoffeeProductTable.name],
         imageUrl = firstRow[CoffeeProductTable.imageUrl],
         categoryId = firstRow[CoffeeProductTable.categoryId].value,
+        categoryName = firstRow[CoffeeProductCategoryTable.name],
         inStock = firstRow[CoffeeProductTable.inStock],
         minutesToCook = firstRow[CoffeeProductTable.minutesToCook],
         shopId = firstRow[CoffeeProductTable.shopId].value,
+        shopName = firstRow[CoffeeShopTable.name],
         sizes = firstRow[CoffeeProductTable.sizes],
         constructors = constructors,
         description = firstRow[CoffeeProductTable.description],

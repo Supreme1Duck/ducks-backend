@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops.database.mappers
 import com.ducks.common.geo.GeoPoint
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.WorkTimeDTO
+import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopMapPinDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
@@ -48,6 +49,23 @@ private fun ResultRow.distanceKmTo(userLocation: GeoPoint?): Double? {
     return (meters / 100.0).roundToInt() / 10.0
 }
 
+fun ResultRow.mapToCoffeeShopMapPin(userLocation: GeoPoint? = null): CoffeeShopMapPinDTO? {
+    val latitude = this[CoffeeShopTable.latitude] ?: return null
+    val longitude = this[CoffeeShopTable.longitude] ?: return null
+
+    return CoffeeShopMapPinDTO(
+        id = this[CoffeeShopTable.id].value,
+        name = this[CoffeeShopTable.name],
+        address = this[CoffeeShopTable.address],
+        latitude = latitude,
+        longitude = longitude,
+        isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
+        rating = this[CoffeeShopTable.rating],
+        pricesStartsFrom = this[CoffeeShopTable.lowestPrice],
+        image = this[CoffeeShopTable.imageUrls]?.firstOrNull(),
+        distanceKm = distanceKmTo(userLocation),
+    )
+}
 
 fun ResultRow.mapToSellerCoffeeProductPreviewDTO(): CoffeeShopProductSellerPreviewDTO {
     return CoffeeShopProductSellerPreviewDTO(

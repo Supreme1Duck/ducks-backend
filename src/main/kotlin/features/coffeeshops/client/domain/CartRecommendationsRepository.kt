@@ -7,6 +7,8 @@ import com.ducks.features.coffeeshops.client.data.model.dto.CartRecommendationDT
 import com.ducks.features.coffeeshops.client.data.model.dto.CartRecommendationsResponse
 import com.ducks.features.coffeeshops.client.routings.request.CartRecommendationsRequest
 import com.ducks.features.coffeeshops.service.CookingTimeCalculator
+import com.ducks.features.config.domain.ClientConfigRepository
+import com.ducks.features.config.model.ClientFeature
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 
 /**
@@ -22,10 +24,16 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
  */
 class CartRecommendationsRepository(
     private val dataSource: CoffeeRecommendationsDataSource,
+    private val configRepository: ClientConfigRepository,
     private val cookingTimeCalculator: CookingTimeCalculator = CookingTimeCalculator(),
 ) {
 
     suspend fun recommendForCart(request: CartRecommendationsRequest): CartRecommendationsResponse {
+        // Рубильник из /config проверяем и здесь: приложения на руках у людей обновляются
+        // не сразу, и версия, которая про флаг ещё не знает, продолжит дёргать эту ручку.
+        // Пустой ответ прячет карусель в любой сборке.
+        if (!configRepository.isEnabled(ClientFeature.CART_RECOMMENDATIONS)) return EMPTY_RESPONSE
+
         val limit = (request.limit ?: DEFAULT_LIMIT).coerceIn(1, MAX_LIMIT)
 
         return newSuspendedTransaction {

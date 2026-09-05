@@ -21,10 +21,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class CoffeeRecommendationsDataSource {
 
-    /**
-     * Товары корзины. Отдаются только те, что действительно принадлежат кофейне:
-     * чужой id в запросе просто выпадает и на подбор не влияет.
-     */
     fun fetchCartProducts(shopId: Long, productIds: List<Long>): List<CartProduct> {
         if (productIds.isEmpty()) return emptyList()
 
@@ -50,15 +46,11 @@ class CoffeeRecommendationsDataSource {
             }
     }
 
-    /**
-     * Всё, что кофейня в принципе может допродать: её товары в наличии, кроме тех,
-     * что уже в корзине. Меню одной кофейни — это десятки позиций, поэтому отбор
-     * по группе и ранжирование делаются уже в репозитории, на готовых DTO.
-     */
     fun fetchCandidates(shopId: Long, excludedProductIds: Set<Long>): List<RecommendationCandidate> {
         return CoffeeProductTable
             .join(CoffeeProductCategoryTable, JoinType.INNER, CoffeeProductTable.categoryId, CoffeeProductCategoryTable.id)
             .join(CoffeeCategoryGroupTable, JoinType.INNER, CoffeeProductCategoryTable.groupId, CoffeeCategoryGroupTable.id)
+            .join(CoffeeShopTable, JoinType.INNER, CoffeeProductTable.shopId, CoffeeShopTable.id)
             .join(CoffeeProductsWithConstructorsTable, JoinType.LEFT, CoffeeProductsWithConstructorsTable.product, CoffeeProductTable.id)
             .join(CoffeeConstructorsTable, JoinType.LEFT, CoffeeConstructorsTable.id, CoffeeProductsWithConstructorsTable.constructor)
             .join(CoffeeModifiedConstructorCategoryTable, JoinType.LEFT, CoffeeProductsWithConstructorsTable.modifiedCategory, CoffeeModifiedConstructorCategoryTable.id)
@@ -77,6 +69,7 @@ class CoffeeRecommendationsDataSource {
                     cooksInParallel = productRows.first()[CoffeeProductTable.cooksInParallel],
                 )
             }
+            .filter { it.product.sizes.isNotEmpty() }
     }
 
     /** Сколько штук каждого товара кофейня продала начиная с [from]. */

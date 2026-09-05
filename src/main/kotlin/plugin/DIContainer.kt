@@ -1,6 +1,7 @@
 package com.ducks.plugin
 
 import com.ducks.common.storage.S3Config
+import com.ducks.features.sms.SmsByConfig
 import com.ducks.di.baseModule
 import io.ktor.server.application.*
 import org.koin.ktor.plugin.Koin
@@ -10,10 +11,11 @@ import org.koin.logger.SLF4JLogger
 fun Application.installDI() {
     val photoroomApiKey = environment.config.property("photoroom.apiKey").getString()
     val s3Config = readS3Config()
+    val smsByConfig = readSmsByConfig()
 
     install(Koin) {
         SLF4JLogger() // Включает логирование Koin
-        modules(baseModule(photoroomApiKey, s3Config))
+        modules(baseModule(photoroomApiKey, s3Config, smsByConfig))
     }
 }
 
@@ -34,5 +36,19 @@ private fun Application.readS3Config(): S3Config {
             ?.getString()
             ?.toBooleanStrictOrNull()
             ?: false,
+    )
+}
+
+private fun Application.readSmsByConfig(): SmsByConfig {
+    val config = environment.config
+
+    return SmsByConfig(
+        // Пустой токен — рабочий вариант для локальной разработки: коды не уходят
+        // в sms.by, а пишутся в лог. См. com.ducks.features.sms.smsModule.
+        token = config.propertyOrNull("sms.token")?.getString().orEmpty(),
+        alphanameId = config.propertyOrNull("sms.alphanameId")
+            ?.getString()
+            ?.takeIf { it.isNotBlank() }
+            ?: SmsByConfig.SYSTEM_ALPHANAME_ID,
     )
 }

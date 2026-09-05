@@ -1,5 +1,6 @@
 package com.ducks.features.coffeeshops.client.routings
 
+import com.ducks.common.geo.GeoBounds
 import com.ducks.common.geo.GeoPoint
 import com.ducks.common.geo.toDegreesOrThrow
 import com.ducks.features.coffeeshops.client.domain.CartRecommendationsRepository
@@ -43,6 +44,36 @@ fun Route.clientRoute() {
             )
 
             call.respond(HttpStatusCode.OK, shops)
+        }
+    }
+
+    // Карта кофеен: метки внутри видимой области экрана. Отдельно от /list, потому что
+    // на карте не нужны ни расписание, ни постраничность — нужны координаты, которых
+    // в списке нет вовсе.
+    get("/map") {
+        ducksTryCatch {
+            // Границы экрана двумя углами, как их отдаёт карта на клиенте. Не пришли —
+            // отдаём все кофейни с координатами, до лимита.
+            val bounds = GeoBounds.parse(
+                southLatitude = call.parameters["swLat"]?.toDegreesOrThrow("swLat"),
+                westLongitude = call.parameters["swLon"]?.toDegreesOrThrow("swLon"),
+                northLatitude = call.parameters["neLat"]?.toDegreesOrThrow("neLat"),
+                eastLongitude = call.parameters["neLon"]?.toDegreesOrThrow("neLon"),
+            )
+
+            // Геолокация клиента здесь только ради расстояния в карточке метки.
+            val userLocation = GeoPoint.parse(
+                latitude = call.parameters["lat"]?.toDegreesOrThrow("lat"),
+                longitude = call.parameters["lon"]?.toDegreesOrThrow("lon"),
+            )
+
+            val pins = coffeeShopsRepository.getShopsForMap(
+                bounds = bounds,
+                userLocation = userLocation,
+                limit = call.parameters["limit"]?.toInt(),
+            )
+
+            call.respond(HttpStatusCode.OK, pins)
         }
     }
 

@@ -28,8 +28,6 @@ class SellerCoffeeShopRepository(
 
     suspend fun getShopDetails(shopId: Long): SellerCoffeeShopDetailsDTO {
         return newSuspendedTransaction {
-            println("$shopId")
-
             CoffeeShopTable
                 .join(
                     otherTable = CoffeeShopTechnicalPausesTable,

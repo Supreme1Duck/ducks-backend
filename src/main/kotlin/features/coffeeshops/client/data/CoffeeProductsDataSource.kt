@@ -19,6 +19,7 @@ class CoffeeProductsDataSource(
     fun fetchByShop(shopId: Long): List<ProductsByCategoryDTO> {
         return CoffeeProductTable
             .join(CoffeeProductCategoryTable, joinType = JoinType.LEFT, CoffeeProductTable.categoryId, CoffeeProductCategoryTable.id)
+            .join(CoffeeShopTable, joinType = JoinType.INNER, CoffeeProductTable.shopId, CoffeeShopTable.id)
             .join(CoffeeProductsWithConstructorsTable, joinType = JoinType.LEFT, CoffeeProductsWithConstructorsTable.product, CoffeeProductTable.id)
             .join(CoffeeConstructorsTable, joinType = JoinType.LEFT, CoffeeConstructorsTable.id, CoffeeProductsWithConstructorsTable.constructor)
             .join(CoffeeModifiedConstructorCategoryTable, joinType = JoinType.LEFT, CoffeeProductsWithConstructorsTable.modifiedCategory, CoffeeModifiedConstructorCategoryTable.id)

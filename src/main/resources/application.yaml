@@ -8,6 +8,9 @@ ktor:
       password: "$DB_PASS"
 photoroom:
   apiKey: "$PHOTOROOM_API_KEY"
+sms:
+  token: "$SMS_BY_TOKEN:"
+  alphanameId: "$SMS_BY_ALPHANAME_ID:0"
 s3:
   endpoint: "$S3_ENDPOINT"
   region: "$S3_REGION"

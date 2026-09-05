@@ -24,7 +24,7 @@ fun coffeeShopsModule(photoroomApiKey: String, s3Config: S3Config) = module {
 
     single { CoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeProductsRepository(get(), get()) }
-    single { CartRecommendationsRepository(get()) }
+    single { CartRecommendationsRepository(get(), get()) }
 
     single { CoffeeShopsDataSource() }
     single { CoffeeProductsDataSource() }

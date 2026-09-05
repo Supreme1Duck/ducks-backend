@@ -1,11 +1,12 @@
 package com.ducks.features.coffeeshops.seller.data
 
-import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductSizeDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
+import com.ducks.features.coffeeshops.seller.routings.request.products.lowestPrice
+import com.ducks.features.coffeeshops.seller.routings.request.products.validatedSizes
 import com.ducks.util.DucksBadRequestError
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
@@ -69,26 +70,16 @@ class SellerCoffeeProductDataSource {
                 }
             )
 
-            val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
-                it.price
-            }.takeIf { it != BigDecimal.ZERO }
-                ?: throw IllegalArgumentException("Минимальная цена не может быть равна 0")
+            val productSizes = productRequest.sizes.validatedSizes()
 
             val productId = CoffeeProductTable.insertAndGetId { table ->
                 table[name] = productRequest.name
                 table[description] = productRequest.description
-                table[priceFrom] = pricesStartsFrom
+                table[priceFrom] = productSizes.lowestPrice()
                 table[categoryId] = productRequest.categoryId
                 table[CoffeeProductTable.shopId] = shopId
 
-                table[sizes] = productRequest.sizes.map { coffeeProductSizeRequest ->
-                    CoffeeProductSizeDTO(
-                        id = coffeeProductSizeRequest.id,
-                        sizeName = coffeeProductSizeRequest.sizeName,
-                        sizeValue = coffeeProductSizeRequest.sizeValue,
-                        price = coffeeProductSizeRequest.price,
-                    )
-                }
+                table[sizes] = productSizes
 
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
@@ -153,17 +144,14 @@ class SellerCoffeeProductDataSource {
                 }
             )
 
-            val pricesStartsFrom: BigDecimal = productRequest.sizes.minOf {
-                it.price
-            }.takeIf { it != BigDecimal.ZERO }
-                ?: throw IllegalArgumentException("Минимальная цена не может быть равна 0")
+            val productSizes = productRequest.sizes.validatedSizes()
 
             val updatedRows = CoffeeProductTable.update({
                 (CoffeeProductTable.id eq productRequest.productId) and (CoffeeProductTable.shopId eq shopId)
             }) { table ->
                 table[name] = productRequest.name
                 table[description] = productRequest.description
-                table[priceFrom] = pricesStartsFrom
+                table[priceFrom] = productSizes.lowestPrice()
                 table[categoryId] = productRequest.categoryId
                 table[imageUrl] = productRequest.imageUrl
                 table[minutesToCook] = productRequest.minutesToCook
@@ -177,14 +165,7 @@ class SellerCoffeeProductDataSource {
                     fats = productRequest.fats,
                     carbohydrates = productRequest.carbohydrates,
                 )
-                table[sizes] = productRequest.sizes.map { sizeRequest ->
-                    CoffeeProductSizeDTO(
-                        id = sizeRequest.id,
-                        sizeName = sizeRequest.sizeName,
-                        sizeValue = sizeRequest.sizeValue,
-                        price = sizeRequest.price,
-                    )
-                }
+                table[sizes] = productSizes
             }
 
             // Продукт чужого магазина не обновится, но связи с конструкторами ниже

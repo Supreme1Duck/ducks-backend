@@ -9,6 +9,7 @@ import com.ducks.admin.repository.AdminShopsRepository
 import com.ducks.auth.admin.JWTAdminService
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import org.koin.dsl.module
 
 val adminsModule = module {
@@ -24,5 +25,5 @@ val adminsModule = module {
     single { AdminCoffeeShopsRepository(get(), get(), get()) }
     single { CoffeeShopCredentialsRepository() }
 
-    single<HttpClient> { HttpClient(CIO) }
+    single<HttpClient> { HttpClient(CIO) { install(HttpTimeout) } }
 }

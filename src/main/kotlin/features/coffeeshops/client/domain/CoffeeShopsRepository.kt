@@ -1,11 +1,13 @@
 package com.ducks.features.coffeeshops.client.domain
 
+import com.ducks.common.geo.GeoBounds
 import com.ducks.common.geo.GeoPoint
 import com.ducks.features.coffeeshops.checkShopIsNotTemporaryClosed
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeShopWithProductsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.OrderTimeDTO
+import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopMapPinDTO
 import com.ducks.features.coffeeshops.client.data.model.preview.CoffeeShopPreviewDTO
 import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.util.DucksBadRequestError
@@ -64,6 +66,34 @@ class CoffeeShopsRepository(
         }
     }
 
+    suspend fun getShopsForMap(
+        bounds: GeoBounds?,
+        userLocation: GeoPoint?,
+        limit: Int?,
+    ): List<CoffeeShopMapPinDTO> {
+        val pinsLimit = (limit ?: DEFAULT_MAP_PINS_LIMIT).coerceIn(1, MAX_MAP_PINS_LIMIT)
+
+        return newSuspendedTransaction {
+            val pins = shopsDataSource.getShopsOnMap(
+                bounds = bounds,
+                userLocation = userLocation,
+                limit = pinsLimit,
+            )
+
+            val workTimes = fetchAvailableOrdersTimeListRepository
+                .findShopsCurrentWorkTime(pins.map { it.id })
+
+            pins.map { pin ->
+                val workTime = workTimes[pin.id]
+                pin.copy(
+                    openTime = workTime?.startTime,
+                    closeTime = workTime?.endTime,
+                    isClosed = workTime?.isClosed ?: true,
+                )
+            }
+        }
+    }
+
     suspend fun getOrdersTimeList(
         shopId: Long,
         productIds: List<Long>,
@@ -78,5 +108,13 @@ class CoffeeShopsRepository(
             ) ?: throw DucksBadRequestError("У кофешопа нет свободного время для заказа.")
             OrderTimeDTO(availableTimestamps = timestamps)
         }
+    }
+
+    private companion object {
+
+        // Столько меток экран показывает без тормозов, а город целиком в них помещается
+        // с запасом. Клиент, который не прислал границы, всё равно не останется без карты.
+        const val DEFAULT_MAP_PINS_LIMIT = 200
+        const val MAX_MAP_PINS_LIMIT = 500
     }
 }

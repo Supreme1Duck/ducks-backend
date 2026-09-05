@@ -3,6 +3,7 @@
 # Заводит товар в кофейне через админский API.
 #
 #   ./scripts/create-coffee-product.sh --list-shops
+#   ./scripts/create-coffee-product.sh --list-products 3
 #   ./scripts/create-coffee-product.sh --list-categories
 #   ./scripts/create-coffee-product.sh \
 #       --shop 3 --category 7 --name "Раф лавандовый" \
@@ -30,13 +31,16 @@ usage() {
     cat >&2 <<'USAGE'
 Использование:
   create-coffee-product.sh --shop <id> --category <id> --name <имя> --size <размер> [опции]
-  create-coffee-product.sh --list-shops | --list-categories | --token
+  create-coffee-product.sh --list-shops | --list-products <id кофейни>
+  create-coffee-product.sh --list-categories | --token
 
 Обязательное:
   --shop <id>            id кофейни
   --category <id>        id категории товара (--list-categories покажет)
   --name <текст>         название товара
-  --size <размер>        "Название:Объём:Цена" или "Объём:Цена", можно повторять
+  --size <размер>        "Название:Объём:Цена", можно повторять
+                         (для единственного размера — просто "Объём:Цена")
+                         Название — короткая подпись кнопки в карточке: S, M, Порция
 
 Опции:
   --image <путь>         картинка; без неё товар заведётся без картинки
@@ -102,6 +106,14 @@ list_shops() {
     remote_psql "SELECT id, name, address FROM public.ducks_coffee_shop_table ORDER BY id;"
 }
 
+list_products() {
+    local shop_id="$1"
+
+    [[ "$shop_id" =~ ^[0-9]+$ ]] || die "--list-products ждёт id кофейни"
+
+    remote_psql "SELECT p.id, p.name, c.name AS category, p.price, p.in_stock, coalesce(nullif(p.\"imageUrl\", ''), '— нет картинки —') AS image FROM public.ducks_coffee_shop_product_table p JOIN public.ducks_coffee_product_category_table c ON c.id = p.category_id WHERE p.shop_id = $shop_id ORDER BY p.id;"
+}
+
 list_categories() {
     remote_psql "SELECT c.id, c.name, g.name AS group FROM public.ducks_coffee_product_category_table c JOIN public.ducks_coffee_category_group_table g ON g.id = c.group_id ORDER BY c.id;"
 }
@@ -130,6 +142,7 @@ main() {
             --out-of-stock) in_stock=false; shift ;;
             --dry-run) dry_run=true; shift ;;
             --list-shops) require_tools; list_shops; return ;;
+            --list-products) require_tools; list_products "${2:-}"; return ;;
             --list-categories) require_tools; list_categories; return ;;
             --token) require_tools; admin_token; echo; return ;;
             -h|--help) usage ;;
@@ -179,15 +192,26 @@ def number(value, field):
 
 sizes = []
 
+single_size = len(raw_sizes) == 1
+
 for raw in raw_sizes:
     parts = raw.split(":")
 
-    if len(parts) == 3:
+    # У товара с единственным размером выбирать нечего, подпись не показывается —
+    # для него разрешаем короткую форму "Объём:Цена".
+    if len(parts) == 2 and single_size:
+        size_name, size_value, price = "", parts[0], parts[1]
+    elif len(parts) == 3:
         size_name, size_value, price = parts
-    elif len(parts) == 2:
-        size_name, (size_value, price) = None, parts
-    else:
+    elif single_size:
         sys.exit(f"Ошибка: размер '{raw}' — ожидается \"Название:Объём:Цена\" или \"Объём:Цена\"")
+    else:
+        sys.exit(f"Ошибка: размер '{raw}' — ожидается \"Название:Объём:Цена\"")
+
+    # Когда размеров несколько, без подписи клиент рисует пустые кнопки выбора,
+    # поэтому пустое название отбиваем здесь же, не доводя до сервера.
+    if not single_size and not size_name.strip():
+        sys.exit(f"Ошибка: в размере '{raw}' пустое название")
 
     try:
         price = float(price.replace(",", "."))
@@ -201,13 +225,18 @@ for raw in raw_sizes:
         # id размера живёт в заказах, поэтому он должен быть уникальным и стабильным —
         # ровно тот же uuid, что генерит приложение продавца.
         "id": str(uuid.uuid4()),
-        "sizeName": size_name,
+        # Единственному размеру подпись не нужна — сервер её всё равно обнулит.
+        "sizeName": None if single_size else size_name,
         "sizeValue": size_value,
         "price": price,
     })
 
 print(json.dumps({
     "name": name,
+    # Пустая строка, а не отсутствие поля: на сборках до дефолта в модели запрос без
+    # imageUrl отлетает с 400. Для заливки с картинкой сервер всё равно перезапишет его
+    # ссылкой на файл, для запроса без картинки пустая строка и означает «картинки нет».
+    "imageUrl": "",
     "description": description or None,
     "categoryId": int(category),
     "minutesToCook": number(minutes, "--minutes"),

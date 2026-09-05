@@ -1,9 +1,9 @@
 package com.ducks.features.user.route
 
-import com.ducks.features.user.data.UsersRepository
 import com.ducks.features.user.domain.AccountDeletionConfirmations
 import com.ducks.features.user.domain.DELETION_CONFIRMATION_HEADER
 import com.ducks.features.user.domain.DeleteAccountRepository
+import com.ducks.features.user.domain.OtpService
 import com.ducks.features.user.route.request.VerifyDeletionOtpRequest
 import com.ducks.features.user.util.getClientPrincipal
 import com.ducks.util.ducksTryCatch
@@ -17,7 +17,7 @@ fun Route.accountRoute() {
 
     val deleteAccountRepository by application.inject<DeleteAccountRepository>()
     val deletionConfirmations by application.inject<AccountDeletionConfirmations>()
-    val usersRepository by application.inject<UsersRepository>()
+    val otpService by application.inject<OtpService>()
 
     // Код запрашивается обычным /users/otp/generate на номер из токена. Здесь он проверяется
     // и обменивается на одноразовое подтверждение для самого удаления.
@@ -35,7 +35,7 @@ fun Route.accountRoute() {
                 )
             }
 
-            val isOtpValid = usersRepository.verifyOtp(
+            val isOtpValid = otpService.verify(
                 phoneNumber = principal.phoneNumber,
                 otp = request.otp,
             )

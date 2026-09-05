@@ -7,4 +7,5 @@ fun Route.adminRoute() {
     adminCoffeeProductImageRoute()
     adminShopsRoute()
     adminRecommendationsRoute()
+    adminClientConfigRoute()
 }

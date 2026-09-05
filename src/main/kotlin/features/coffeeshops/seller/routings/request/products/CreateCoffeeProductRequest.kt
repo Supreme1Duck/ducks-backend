@@ -36,12 +36,14 @@ data class CreateCoffeeProductRequest(
 
 @Serializable
 data class CoffeeProductSizeRequest(
-    val id: String,
-    val sizeName: String? = null,
-    val sizeValue: String,
+    override val id: String,
+    override val sizeName: String? = null,
+    override val sizeValue: String,
     @Serializable(with = BigDecimalSerializer::class)
-    val price: BigDecimal,
-)
+    override val price: BigDecimal,
+    @Serializable(with = BigDecimalSerializer::class)
+    override val priceWithoutDiscount: BigDecimal? = null,
+) : CoffeeProductSize
 
 @Serializable
 data class CoffeeCreateConstructorRequest(

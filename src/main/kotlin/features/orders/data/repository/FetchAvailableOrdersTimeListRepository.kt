@@ -214,6 +214,30 @@ class FetchAvailableOrdersTimeListRepository {
         return calculateWorkTime(schedule, now)
     }
 
+    fun findShopsCurrentWorkTime(shopIds: List<Long>): Map<Long, WorkTimeModel> {
+        if (shopIds.isEmpty()) return emptyMap()
+
+        val scheduleByShop = CoffeeShopScheduleTable
+            .selectAll()
+            .where { CoffeeShopScheduleTable.shopId inList shopIds }
+            .groupBy({ it[CoffeeShopScheduleTable.shopId].value }) {
+                Schedule(
+                    dayOfWeek = it[CoffeeShopScheduleTable.dayOfWeek],
+                    startTime = it[CoffeeShopScheduleTable.startTime],
+                    endTime = it[CoffeeShopScheduleTable.endTime],
+                    isClosed = it[CoffeeShopScheduleTable.isClosed],
+                )
+            }
+
+        // Offset +3 — хардкод часового пояса Москвы, как и в одиночной версии.
+        val now = Clock.System.now().toJavaInstant().atOffset(ZoneOffset.ofHours(3))
+
+        return scheduleByShop.mapNotNull { (shopId, schedule) ->
+            val workTime = calculateWorkTime(schedule, now) ?: return@mapNotNull null
+            shopId to workTime
+        }.toMap()
+    }
+
     internal fun calculateWorkTime(schedule: List<Schedule>, now: OffsetDateTime): WorkTimeModel? {
         val candidateDays = listOf(now.minusDays(1), now, now.plusDays(1))
 
