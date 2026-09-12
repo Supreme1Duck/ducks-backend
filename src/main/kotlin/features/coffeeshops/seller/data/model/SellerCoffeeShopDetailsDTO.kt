@@ -16,6 +16,7 @@ data class SellerCoffeeShopDetailsDTO(
     val tags: List<String>?,
     val tablesCapacity: Int,
     val freeTables: Int,
+    val cookingMode: Int,
     val closestTimeToTakeOrder: Long?,
     val canTakeOrdersReason: Int?,
     val activePause: SellerCoffeeShopActivePauseDTO?,

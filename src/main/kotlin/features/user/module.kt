@@ -5,19 +5,19 @@ import com.ducks.features.user.domain.AccountDeletionConfirmations
 import com.ducks.features.user.domain.ClientCreateOrdersRepository
 import com.ducks.features.user.domain.ClientsOrdersRepository
 import com.ducks.features.user.domain.DeleteAccountRepository
-import com.ducks.features.user.domain.OtpCodes
-import com.ducks.features.user.domain.OtpService
 import com.ducks.features.user.domain.ReorderPreviewRepository
-import com.ducks.features.user.ratelimit.OtpRateLimiter
+import com.ducks.features.user.ratelimit.LoginRateLimiter
 import com.ducks.features.user.service.AnonymizeDeletedUsersService
 import org.koin.dsl.module
 
 val usersModule = module {
 
     single { UsersRepository() }
-    single { OtpRateLimiter() }
-    single { OtpCodes() }
-    single { OtpService(get(), get()) }
+    single { LoginRateLimiter() }
+    // TODO вернуть вместе со входом по номеру телефона.
+//    single { OtpRateLimiter() }
+//    single { OtpCodes() }
+//    single { OtpService(get(), get()) }
     single { AccountDeletionConfirmations() }
     single { DeleteAccountRepository(get()) }
     single { AnonymizeDeletedUsersService() }

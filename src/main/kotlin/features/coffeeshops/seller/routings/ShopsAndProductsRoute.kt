@@ -9,6 +9,7 @@ import com.ducks.features.coffeeshops.seller.routings.request.products.CreateCof
 import com.ducks.features.coffeeshops.seller.routings.request.products.DeleteCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateCoffeeProductRequest
 import com.ducks.features.coffeeshops.seller.routings.request.products.UpdateProductStockRequest
+import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCookingModeRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetCoffeeShopScheduleRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTechnicalPauseRequest
 import com.ducks.features.coffeeshops.seller.routings.request.shop.SetTemporaryClosedRequest
@@ -89,6 +90,17 @@ fun Route.shopsAndProductsRoute() {
             val freeTables = call.receive<Int>()
 
             coffeeShopsRepository.updateFreeTables(shopId, freeTables)
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
+    post("/shop/cooking-mode") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val request = call.receive<SetCookingModeRequest>()
+
+            coffeeShopsRepository.updateCookingMode(shopId, request.mode)
 
             call.respond(HttpStatusCode.NoContent)
         }

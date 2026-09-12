@@ -15,27 +15,31 @@ class JWTClientService(
     private val userRepository: UsersRepository,
 ) : DucksJWTService(application) {
     companion object {
-        const val PHONE_CLAIM = "userPhoneNumberClaim"
+        // TODO вернуть номер телефона в токен, когда вернётся вход по номеру.
+//        const val PHONE_CLAIM = "userPhoneNumberClaim"
         const val ID_CLAIM = "userIdClaim"
     }
 
-    private fun extractPhoneNumber(credential: JWTCredential): String? {
-        return credential.payload.getClaim(PHONE_CLAIM)?.asString()
-    }
+//    private fun extractPhoneNumber(credential: JWTCredential): String? {
+//        return credential.payload.getClaim(PHONE_CLAIM)?.asString()
+//    }
 
     private fun extractUserId(credential: JWTCredential): Long? {
         return credential.payload.getClaim(ID_CLAIM)?.asLong()
     }
 
+    // Проверяем только id: номера в новых токенах нет. Токены, выданные раньше по номеру,
+    // тоже проходят — у них тот же id, а удалённый аккаунт отсекается по заявке на удаление.
     fun customValidator(credential: JWTCredential): JWTClientPrincipal? {
-        val userPhone = extractPhoneNumber(credential)
-        val userId = extractUserId(credential)
+//        val userPhone = extractPhoneNumber(credential)
+        val userId = extractUserId(credential) ?: return null
 
-        if (userId == null || userPhone == null)
-            return null
+//        if (userId == null || userPhone == null)
+//            return null
 
         val user = runBlocking {
-            userRepository.getUserByCredentials(userId, userPhone)
+//            userRepository.getUserByCredentials(userId, userPhone)
+            userRepository.getActiveUser(userId)
         }
 
         return user?.let {
@@ -45,13 +49,13 @@ class JWTClientService(
         }
     }
 
-    fun generateClientToken(userId: Long, phoneNumber: String): String? {
+    fun generateClientToken(userId: Long): String? {
         return JWT
             .create()
             .withAudience(audience)
             .withIssuer(issuer)
             .withClaim(ROLE_CLAIM, Roles.Client.role)
-            .withClaim(PHONE_CLAIM, phoneNumber)
+//            .withClaim(PHONE_CLAIM, phoneNumber)
             .withClaim(ID_CLAIM, userId)
             .withIssuedAt(Date())
             .sign(Algorithm.HMAC256(secret))

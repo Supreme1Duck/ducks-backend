@@ -1,5 +1,6 @@
 package com.ducks.features.coffeeshops.seller.domain
 
+import com.ducks.features.cashregister.AlfaCashRegisterRepository
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
@@ -23,6 +24,7 @@ class SellerOrdersRepository(
 
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
     private val pushNotificationService by application.inject<PushNotificationService>()
+    private val alfaCashRegisterRepository by application.inject<AlfaCashRegisterRepository>()
 
     suspend fun acceptOrder(orderId: Long, shopId: Long) {
         val fcmToken = newSuspendedTransaction {
@@ -175,6 +177,8 @@ class SellerOrdersRepository(
             ) {
                 it[finishedTime] = currentTime
             }
+
+            alfaCashRegisterRepository.enqueueCompletedOrder(orderId, shopId)
 
             getFcmToken(orderId)
         }

@@ -2,53 +2,81 @@ package com.ducks.features.user.data
 
 import com.ducks.features.user.database.UserTable
 import com.ducks.features.user.model.UserDTO
-import com.ducks.features.user.route.request.LoginRequest
+import com.ducks.features.user.route.request.DeviceLoginRequest
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 
 class UsersRepository {
 
-    /** При входе сохраняется только имя: фамилию приложение не спрашивает и не присылает. */
-    suspend fun saveUserAndGetId(request: LoginRequest): Long {
+    // TODO вернуть вход по номеру телефона (код ниже закомментирован), пока клиент входит по id устройства.
+//    /** При входе сохраняется только имя: фамилию приложение не спрашивает и не присылает. */
+//    suspend fun saveUserAndGetId(request: LoginRequest): Long {
+//        val firstName = request.firstName?.takeIf { it.isNotBlank() }
+//
+//        return newSuspendedTransaction {
+//            val existingUserId = UserTable
+//                .select(UserTable.id)
+//                .where {
+//                    UserTable.phoneNumber eq request.phoneNumber
+//                }
+//                .map { it[UserTable.id].value }
+//                .firstOrNull()
+//                ?: return@newSuspendedTransaction UserTable.insertAndGetId {
+//                    it[name] = firstName
+//                    it[phoneNumber] = request.phoneNumber
+//                }.value
+//
+//            // Имя приходит не в каждой авторизации, поэтому перезаписываем только то,
+//            // что реально передали, иначе стёрли бы уже сохранённое.
+//            if (firstName != null) {
+//                UserTable.update({ UserTable.id eq existingUserId }) {
+//                    it[name] = firstName
+//                }
+//            }
+//
+//            existingUserId
+//        }
+//    }
+//
+//    suspend fun getUserByCredentials(userId: Long, phoneNumber: String): UserDTO? {
+//        return newSuspendedTransaction {
+//            UserTable
+//                .selectAll()
+//                .where {
+//                    (UserTable.id eq userId) and
+//                            (UserTable.phoneNumber eq phoneNumber) and
+//                            (UserTable.deletionRequestedAt eq null)
+//                }
+//                .map {
+//                    it.mapToUserDTO()
+//                }.firstOrNull()
+//        }
+//    }
+
+    /**
+     * Клиент ничем не идентифицируется, поэтому каждый вход создаёт новый аккаунт: потеряв
+     * токен, к старому аккаунту уже не вернуться. Сохраняется только имя — фамилию приложение
+     * не спрашивает и не присылает.
+     */
+    suspend fun createAnonymousUserAndGetId(request: DeviceLoginRequest): Long {
         val firstName = request.firstName?.takeIf { it.isNotBlank() }
 
         return newSuspendedTransaction {
-            val existingUserId = UserTable
-                .select(UserTable.id)
-                .where {
-                    UserTable.phoneNumber eq request.phoneNumber
-                }
-                .map { it[UserTable.id].value }
-                .firstOrNull()
-                ?: return@newSuspendedTransaction UserTable.insertAndGetId {
-                    it[name] = firstName
-                    it[phoneNumber] = request.phoneNumber
-                }.value
-
-            // Имя приходит не в каждой авторизации, поэтому перезаписываем только то,
-            // что реально передали, иначе стёрли бы уже сохранённое.
-            if (firstName != null) {
-                UserTable.update({ UserTable.id eq existingUserId }) {
-                    it[name] = firstName
-                }
-            }
-
-            existingUserId
+            UserTable.insertAndGetId {
+                it[name] = firstName
+            }.value
         }
     }
 
-    suspend fun getUserByCredentials(userId: Long, phoneNumber: String): UserDTO? {
+    suspend fun getActiveUser(userId: Long): UserDTO? {
         return newSuspendedTransaction {
             UserTable
                 .selectAll()
                 .where {
-                    (UserTable.id eq userId) and
-                            (UserTable.phoneNumber eq phoneNumber) and
-                            (UserTable.deletionRequestedAt eq null)
+                    (UserTable.id eq userId) and (UserTable.deletionRequestedAt eq null)
                 }
                 .map {
                     it.mapToUserDTO()

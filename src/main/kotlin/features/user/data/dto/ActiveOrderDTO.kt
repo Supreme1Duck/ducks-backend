@@ -20,6 +20,4 @@ data class ActiveOrderDTO(
     val products: List<ActiveOrderProductDTO>,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
-    @Serializable(with = BigDecimalSerializer::class)
-    val tips: BigDecimal?,
 )

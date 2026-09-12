@@ -1,5 +1,6 @@
 package com.ducks.features.user.ratelimit
 
+import com.ducks.common.ratelimit.SlidingWindowLimiter
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
@@ -11,7 +12,7 @@ class OtpRateLimiter {
     )
 
     private val phoneStates = ConcurrentHashMap<String, PhoneState>()
-    private val ipRequests = ConcurrentHashMap<String, ArrayDeque<Instant>>()
+    private val ipRequests = SlidingWindowLimiter(IP_LIMIT, IP_WINDOW_SECONDS)
 
     companion object {
         // Cooldown in seconds indexed by number of previous calls (capped at last element)
@@ -53,27 +54,7 @@ class OtpRateLimiter {
     /**
      * Returns seconds until the window resets if the IP is rate-limited, null if allowed.
      */
-    fun checkIpLimit(ip: String): Long? {
-        val now = Instant.now()
-        val windowStart = now.minusSeconds(IP_WINDOW_SECONDS)
-        val timestamps = ipRequests.getOrPut(ip) { ArrayDeque() }
-        synchronized(timestamps) {
-            timestamps.removeAll { it.isBefore(windowStart) }
-            if (timestamps.size >= IP_LIMIT) {
-                val oldest = timestamps.first()
-                return IP_WINDOW_SECONDS - (now.epochSecond - oldest.epochSecond)
-            }
-            return null
-        }
-    }
+    fun checkIpLimit(ip: String): Long? = ipRequests.check(ip)
 
-    fun recordIpRequest(ip: String) {
-        val now = Instant.now()
-        val timestamps = ipRequests.getOrPut(ip) { ArrayDeque() }
-        synchronized(timestamps) {
-            val windowStart = now.minusSeconds(IP_WINDOW_SECONDS)
-            timestamps.removeAll { it.isBefore(windowStart) }
-            timestamps.addLast(now)
-        }
-    }
+    fun recordIpRequest(ip: String) = ipRequests.record(ip)
 }

@@ -6,7 +6,9 @@ import com.ducks.features.coffeeshops.client.data.model.RecommendationCandidate
 import com.ducks.features.coffeeshops.client.data.model.dto.CartRecommendationDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.CartRecommendationsResponse
 import com.ducks.features.coffeeshops.client.routings.request.CartRecommendationsRequest
+import com.ducks.features.coffeeshops.service.CookingMode
 import com.ducks.features.coffeeshops.service.CookingTimeCalculator
+import com.ducks.features.coffeeshops.service.fetchCookingMode
 import com.ducks.features.config.domain.ClientConfigRepository
 import com.ducks.features.config.model.ClientFeature
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
@@ -42,6 +44,7 @@ class CartRecommendationsRepository(
 
             val cartGroups = cart.map { it.group }.toSet()
             val quantityById = request.productIds.groupingBy { it }.eachCount()
+            val cookingMode = fetchCookingMode(request.shopId)
 
             // Считаем ровно тем же калькулятором, что и /products/estimate-cooking-time:
             // «+N мин» на карточке обязан совпасть со временем, которое клиент увидит
@@ -82,7 +85,7 @@ class CartRecommendationsRepository(
             val byStatistics = candidates
                 .filter { coOccurrenceScores.containsKey(it.product.id) }
                 .sortedWith(
-                    compareBy<RecommendationCandidate> { extraMinutes(it, cartCookingItems) > 0 }
+                    compareBy<RecommendationCandidate> { extraMinutes(it, cartCookingItems, cookingMode) > 0 }
                         .thenByDescending { coOccurrenceScores[it.product.id] ?: 0.0 }
                 )
 
@@ -94,7 +97,7 @@ class CartRecommendationsRepository(
                 .ifEmpty { candidates }
                 .filterNot { coOccurrenceScores.containsKey(it.product.id) }
                 .sortedWith(
-                    compareBy<RecommendationCandidate> { extraMinutes(it, cartCookingItems) > 0 }
+                    compareBy<RecommendationCandidate> { extraMinutes(it, cartCookingItems, cookingMode) > 0 }
                         .thenByDescending { soldQuantities[it.product.id] ?: 0 }
                         .thenBy { it.minPrice }
                 )
@@ -104,7 +107,7 @@ class CartRecommendationsRepository(
                 products = pickDiverse(byStatistics + byRules, limit).map { candidate ->
                     CartRecommendationDTO(
                         product = candidate.product,
-                        extraMinutes = extraMinutes(candidate, cartCookingItems),
+                        extraMinutes = extraMinutes(candidate, cartCookingItems, cookingMode),
                         isQuickAdd = candidate.isQuickAdd(),
                     )
                 },
@@ -132,12 +135,14 @@ class CartRecommendationsRepository(
     private fun extraMinutes(
         candidate: RecommendationCandidate,
         cartCookingItems: List<CookingTimeCalculator.CookingItem>,
+        mode: CookingMode,
     ): Int = cookingTimeCalculator.extraMinutes(
         items = cartCookingItems,
         addition = CookingTimeCalculator.CookingItem(
             minutesToCook = candidate.minutesToCook,
             cooksInParallel = candidate.cooksInParallel,
         ),
+        mode = mode,
     )
 
     /**

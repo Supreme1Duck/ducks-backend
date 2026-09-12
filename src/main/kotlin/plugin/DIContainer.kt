@@ -2,6 +2,7 @@ package com.ducks.plugin
 
 import com.ducks.common.storage.S3Config
 import com.ducks.features.sms.SmsByConfig
+import com.ducks.features.telegram.TelegramConfig
 import com.ducks.di.baseModule
 import io.ktor.server.application.*
 import org.koin.ktor.plugin.Koin
@@ -12,10 +13,11 @@ fun Application.installDI() {
     val photoroomApiKey = environment.config.property("photoroom.apiKey").getString()
     val s3Config = readS3Config()
     val smsByConfig = readSmsByConfig()
+    val telegramConfig = readTelegramConfig()
 
     install(Koin) {
         SLF4JLogger() // Включает логирование Koin
-        modules(baseModule(photoroomApiKey, s3Config, smsByConfig))
+        modules(baseModule(photoroomApiKey, s3Config, smsByConfig, telegramConfig))
     }
 }
 
@@ -50,5 +52,14 @@ private fun Application.readSmsByConfig(): SmsByConfig {
             ?.getString()
             ?.takeIf { it.isNotBlank() }
             ?: SmsByConfig.SYSTEM_ALPHANAME_ID,
+    )
+}
+
+private fun Application.readTelegramConfig(): TelegramConfig {
+    val config = environment.config
+
+    return TelegramConfig(
+        botToken = config.propertyOrNull("telegram.botToken")?.getString().orEmpty(),
+        chatId = config.propertyOrNull("telegram.chatId")?.getString().orEmpty(),
     )
 }

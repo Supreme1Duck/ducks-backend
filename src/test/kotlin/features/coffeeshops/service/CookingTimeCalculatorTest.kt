@@ -1,5 +1,6 @@
 package features.coffeeshops.service
 
+import com.ducks.features.coffeeshops.service.CookingMode
 import com.ducks.features.coffeeshops.service.CookingTimeCalculator
 import com.ducks.features.coffeeshops.service.CookingTimeCalculator.CookingItem
 import kotlin.test.Test
@@ -55,5 +56,52 @@ class CookingTimeCalculatorTest {
         assertEquals(4, calculator.extraMinutes(cart, serial(4)))
         // Печь дольше всей остальной работы — сдвиг ровно на разницу.
         assertEquals(2, calculator.extraMinutes(cart, parallel(8)))
+    }
+
+    @Test
+    fun `x2 — один товар вдвоём быстрее не сделать`() {
+        // Раф на семь минут остаётся рафом на семь минут, сколько бы бариста ни стояло.
+        assertEquals(8, calculator.minutesToCook(listOf(serial(7)), CookingMode.SPLIT_ORDER))
+        assertEquals(8, calculator.minutesToCook(listOf(serial(7))))
+    }
+
+    @Test
+    fun `x2 — заказ разбирают двое`() {
+        // Латте и капучино уходят разным бариста: заказ идёт по самой долгой позиции.
+        assertEquals(4, calculator.minutesToCook(listOf(serial(3), serial(2)), CookingMode.SPLIT_ORDER))
+        // Два одинаковых напитка — по одному на каждого, количество время не удваивает.
+        assertEquals(4, calculator.minutesToCook(listOf(serial(3, quantity = 2)), CookingMode.SPLIT_ORDER))
+    }
+
+    @Test
+    fun `x2 — раскладка честнее, чем сумма пополам`() {
+        // Три напитка по три минуты: пополам вышло бы 4.5, но третий напиток целиком
+        // достаётся кому-то одному — 3 + 3 против 3.
+        assertEquals(7, calculator.minutesToCook(listOf(serial(3, quantity = 3)), CookingMode.SPLIT_ORDER))
+        // Долгая позиция уходит первой, две короткие складываются у второго бариста.
+        assertEquals(6, calculator.minutesToCook(listOf(serial(5), serial(2), serial(3)), CookingMode.SPLIT_ORDER))
+    }
+
+    @Test
+    fun `x2 — печь не ускоряется вторым баристой`() {
+        // Руки освобождаются за 3 минуты вместо 6, но сэндвич всё те же 8 минут в печи.
+        assertEquals(
+            9,
+            calculator.minutesToCook(listOf(serial(3), serial(3), parallel(8)), CookingMode.SPLIT_ORDER),
+        )
+    }
+
+    @Test
+    fun `x2 — пустой заказ и один товар считаются как обычно`() {
+        assertEquals(1, calculator.minutesToCook(emptyList(), CookingMode.SPLIT_ORDER))
+        assertEquals(4, calculator.minutesToCook(listOf(serial(3)), CookingMode.SPLIT_ORDER))
+    }
+
+    @Test
+    fun `x2 — сдвиг выдачи считается в том же режиме`() {
+        // Второй бариста свободен, пока первый льёт латте: капучино проезжает бесплатно.
+        assertEquals(0, calculator.extraMinutes(listOf(serial(5)), serial(4), CookingMode.SPLIT_ORDER))
+        // Оба заняты — добавка ложится к тому, кто освободится раньше.
+        assertEquals(2, calculator.extraMinutes(listOf(serial(5), serial(4)), serial(3), CookingMode.SPLIT_ORDER))
     }
 }

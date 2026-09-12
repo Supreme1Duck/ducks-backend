@@ -143,6 +143,7 @@ fun ResultRow.mapToSellerCoffeeShopDetailsDTO(
         workTime = workTime,
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
         freeTables = this[CoffeeShopTable.freeTables],
+        cookingMode = this[CoffeeShopTable.cookingMode],
         closestTimeToTakeOrder = this[CoffeeShopTable.closestTimeToTakeOrders],
         activePause = activePause,
         canTakeOrdersReason = this[CoffeeShopTable.canTakeOrdersReason],

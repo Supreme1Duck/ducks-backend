@@ -59,7 +59,6 @@ class ClientsOrdersRepository(
                         // Будут заполнены дальше.
                         products = emptyList(),
                         price = it[CoffeeOrdersTable.totalPrice],
-                        tips = it[CoffeeOrdersTable.tips],
                     )
                 }
                 .firstOrNull()

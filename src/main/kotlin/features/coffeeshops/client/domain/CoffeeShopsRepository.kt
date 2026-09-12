@@ -101,7 +101,7 @@ class CoffeeShopsRepository(
         return newSuspendedTransaction {
             checkShopIsNotTemporaryClosed(shopId)
 
-            val minutesToCook = productDataSource.calculateMinutesToCook(productIds)
+            val minutesToCook = productDataSource.calculateMinutesToCook(shopId, productIds)
             val timestamps = fetchAvailableOrdersTimeListRepository.availableFinishTimes(
                 shopId = shopId,
                 estimatedOrderFinishTimeInMinutes = minutesToCook,

@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops.seller.data
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.coffeeshops.service.CookingMode
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.shop.UpdateCoffeeShopRequest
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
@@ -68,6 +69,12 @@ class SellerCoffeeShopsDataSource {
     fun updateFreeTables(shopId: Long, freeTables: Int) {
         CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
             it[CoffeeShopTable.freeTables] = freeTables
+        }
+    }
+
+    fun updateCookingMode(shopId: Long, mode: CookingMode) {
+        CoffeeShopTable.update(where = { CoffeeShopTable.id eq shopId }) {
+            it[cookingMode] = mode.value
         }
     }
 

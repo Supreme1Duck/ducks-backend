@@ -35,7 +35,8 @@ fun ResultRow.clientPhoneNumberOrDeletedTitle(): String {
     this[UserTable.deletedPhoneNumber]?.let { return it }
 
     return if (this[UserTable.deletedAt] == null) {
-        this[UserTable.phoneNumber]
+        // У анонимного аккаунта номера нет — продавцу отдаём пустую строку.
+        this[UserTable.phoneNumber].orEmpty()
     } else {
         DELETED_CLIENT_PHONE_TITLE
     }

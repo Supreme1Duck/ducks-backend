@@ -28,7 +28,7 @@ class CoffeeProductsRepository(
 
     suspend fun estimateCookingTime(request: EstimateCookingTimeRequest): CookingTimeEstimateDTO {
         return newSuspendedTransaction {
-            val minutesToCook = dataSource.calculateMinutesToCook(request.productIds)
+            val minutesToCook = dataSource.calculateMinutesToCook(request.shopId, request.productIds)
 
             val estimatedFinishTime = availableOrdersTimeListRepository
                 .availableFinishTimes(request.shopId, minutesToCook)

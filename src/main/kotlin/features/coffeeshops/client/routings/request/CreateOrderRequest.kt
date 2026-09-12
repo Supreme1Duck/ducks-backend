@@ -10,8 +10,6 @@ class CreateOrderRequest(
     val products: List<OrderProductRequest>,
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
-    @Serializable(with = BigDecimalSerializer::class)
-    val tips: BigDecimal? = null,
     val comment: String? = null,
 
     // Является ли заказ "ко времени"

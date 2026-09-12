@@ -40,11 +40,9 @@ data class SellerOrderDetailsDTO(
     val isTakeaway: Boolean,
     val timeToCookInMinutes: Int,
     val products: List<OrderProductDTO>,
-    // Стоимость позиций без чаевых.
+    // Стоимость позиций заказа.
     @Serializable(with = BigDecimalSerializer::class)
     val price: BigDecimal,
-    @Serializable(with = BigDecimalSerializer::class)
-    val tips: BigDecimal?,
     @Serializable(with = BigDecimalSerializer::class)
     val totalPrice: BigDecimal,
 )

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Утки для кофеен — заказы до подхода к кассе</title>
+<meta name="description" content="Утки принимают заказ до того, как гость дошёл до кассы: расчёт выручки, съёмка меню и точка на карте. 0% с оборота, 6 месяцев бесплатно, дальше 49 Б в месяц.">
+<link rel="icon" href="assets/logo-duck.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#080808;--s1:#141414;--s2:#1E1E1E;--s3:#262626;--line:rgba(255,255,255,.09);--text:#fff;--muted:rgba(255,255,255,.62);--faint:rgba(255,255,255,.4);--acc:#FFC183;--acc2:#FED1A8;--ink:#150E04;--ser1:#2F2F2F;--ser2:#C98500;--ser3:#9085E9}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.55;text-wrap:pretty;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Manrope',system-ui,sans-serif;letter-spacing:-.025em;margin:0;font-weight:800;text-wrap:balance}
+a{color:var(--acc);text-decoration:none}a:hover{color:#fff}
+img{max-width:100%;height:auto}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:24px;top:14px;z-index:100;background:var(--acc);color:var(--ink);padding:10px 16px;border-radius:12px;font-weight:700}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+section{padding:96px 0;position:relative;overflow:hidden}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 18px}
+h1{font-size:clamp(34px,5.2vw,62px);line-height:1.03}
+h2{font-size:clamp(28px,3.6vw,42px);line-height:1.08}
+.lead{color:var(--muted);font-size:clamp(16px,1.4vw,18.5px);max-width:66ch;margin:20px 0 0}
+.glow{position:absolute;pointer-events:none;border-radius:50%;background:var(--acc);filter:blur(140px);opacity:.12;z-index:0}
+header{position:sticky;top:0;z-index:60;backdrop-filter:blur(16px);background:rgba(8,8,8,.78);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:28px;height:68px}
+.logo{display:flex;align-items:baseline;gap:9px;font-family:'Manrope';font-weight:800;font-size:20px;letter-spacing:-.02em;color:#fff}
+.logo span{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:400;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+.hnav{display:flex;gap:26px;margin-left:auto}
+.hnav a{color:var(--muted);font-size:14.5px;font-weight:500}
+.hnav a:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:13px;padding:14px 22px;font-family:'Manrope';font-weight:700;font-size:15.5px;border:1px solid transparent;cursor:pointer;transition:background .16s ease,color .16s ease,border-color .16s ease,transform .1s ease;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--acc);color:var(--ink)}.btn-primary:hover{background:var(--acc2);color:var(--ink)}
+.btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.18)}.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn-sm{padding:11px 17px;font-size:14px;border-radius:11px}
+.hero{padding:40px 0 84px;z-index:1}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.herogrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:start;margin-top:44px}
+.herogrid .lead{margin-top:0}
+.heroimg{position:relative;border-radius:26px;overflow:hidden;border:1px solid var(--line)}
+.heroimg img{display:block;width:100%;aspect-ratio:21/9;object-fit:cover;object-position:50% 46%}
+.heroimg::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(8,8,8,.55),rgba(8,8,8,0) 42%);pointer-events:none}
+.finalimg{position:relative;margin-top:56px;border-radius:26px;overflow:hidden;border:1px solid var(--line)}
+.finalimg img{display:block;width:100%;aspect-ratio:21/9;object-fit:cover;object-position:50% 52%}
+.finalimg::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(8,8,8,.5),rgba(8,8,8,0) 45%);pointer-events:none}
+.terms{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:20px;background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:13px 18px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.terms b{color:#fff;font-weight:500}
+.terms .dot{color:rgba(255,255,255,.22)}
+.facts{margin-top:52px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,var(--s1),#0d0d0d);overflow:hidden}
+.fact{padding:30px 30px 28px;border-left:1px solid var(--line)}
+.fact:first-child{border-left:0}
+.fact .num{font-family:'Manrope';font-weight:800;font-size:clamp(32px,3.6vw,44px);letter-spacing:-.03em;line-height:1;color:var(--acc)}
+.fact p{margin:12px 0 0;font-size:15.5px;color:#fff}
+.fact .src{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);line-height:1.4}
+.calcbox{margin-top:44px;border:1px solid var(--line);border-radius:26px;overflow:hidden;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr)}
+.calc-in{background:var(--s1);padding:34px}
+.calc-out{background:#0d0d0d;padding:34px;border-left:1px solid var(--line)}
+.field{margin-bottom:22px}
+.field:last-child{margin-bottom:0}
+.flabel{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14.5px;font-weight:500;color:#fff}
+.fval{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--acc);font-variant-numeric:tabular-nums}
+.field input[type=number]{width:100%;margin-top:9px;background:#0d0d0d;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:16px;font-variant-numeric:tabular-nums}
+.field input[type=number]:focus{outline:none;border-color:var(--acc)}
+.field input[type=range]{width:100%;margin:14px 0 0;-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:var(--s3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;border-radius:50%;background:var(--acc);border:0;cursor:pointer}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:var(--s3)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:var(--acc);cursor:pointer}
+.hint{margin:9px 0 0;font-size:12.5px;color:var(--faint);line-height:1.45}
+.res-label{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+.res-big{font-family:'Manrope';font-weight:800;font-size:clamp(38px,5vw,58px);letter-spacing:-.035em;color:var(--acc);line-height:1.02;margin-top:10px;font-variant-numeric:tabular-nums}
+.res-sub{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.res-sub b{color:#fff;font-weight:600}
+.chart{margin-top:30px;padding-top:26px;border-top:1px solid var(--line)}
+.barrow{margin-bottom:18px}
+.barrow .cap{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.barrow .cap b{color:#fff;font-weight:600;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.track{position:relative;height:34px}
+.bar{display:flex;gap:2px;height:34px}
+.bar i{display:block;height:100%;border-radius:3px;transition:width .25s}
+.bar i:first-child{border-radius:6px 3px 3px 6px}
+.bar i:last-child{border-radius:3px 6px 6px 3px}
+.nowline{position:absolute;top:-8px;bottom:-8px;width:0;border-left:1px dashed rgba(255,255,255,.45)}
+.nowline span{position:absolute;top:11px;left:7px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);white-space:nowrap;background:rgba(13,13,13,.82);padding:2px 5px;border-radius:5px}
+.nowline.flip span{left:auto;right:7px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.breakdown{margin-top:24px;border-top:1px solid var(--line)}
+.brow{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+.brow b{color:#fff;font-weight:500;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.brow.total{color:#fff;font-weight:600;border-bottom:0}
+.brow.total b{color:var(--acc)}
+.assume{margin-top:26px;border:1px dashed rgba(255,255,255,.16);border-radius:16px;padding:22px 24px}
+.assume h4{font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.assume p{margin:0 0 12px;font-size:14.5px;color:var(--muted)}
+.assume p:last-child{margin-bottom:0}
+.assume b{color:#fff;font-weight:600}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin-top:44px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
+.card h3{font-size:18.5px;margin-bottom:8px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);display:block;margin-bottom:12px}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;margin-top:36px}
+.tbl{background:var(--s1);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.tbl h4{font-size:15px;padding:20px 22px 16px;font-weight:700}
+.tblscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:330px}
+th,td{text-align:right;padding:11px 22px;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:400}
+td{color:var(--muted);font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+td:first-child{color:#fff;font-family:'Inter',sans-serif}
+td.win{color:var(--acc)}
+.note{margin-top:26px;border:1px dashed rgba(255,255,255,.16);border-radius:18px;padding:26px 28px}
+.note h3{font-size:18px;margin-bottom:10px}
+.note p{margin:0;color:var(--muted);font-size:15.5px;max-width:78ch}
+.tabgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:44px;align-items:start;margin-top:44px}
+.cards6{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.cards6 .card{padding:22px 20px}
+.cards6 h3{font-size:16.5px}
+.cards6 p{font-size:14px}
+.tablet{border:1px solid rgba(255,255,255,.14);background:#0d0d0d;border-radius:26px;padding:12px}
+.tablet img{display:block;width:100%;border-radius:16px}
+.tablet .cap{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);text-align:center;padding:12px 4px 4px}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:16px;margin-top:34px}
+.gal figure{margin:0}
+.gal .fr{border:1px solid rgba(255,255,255,.14);background:#0d0d0d;border-radius:20px;padding:8px}
+.gal img{display:block;width:100%;border-radius:13px}
+.gal figcaption{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:12px}
+.gal-lead{margin:52px 0 0;font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+.accent{background:var(--acc);color:var(--ink)}
+.accent h2,.accent h3{color:var(--ink)}
+.accent .eyebrow{color:rgba(21,14,4,.6)}
+.accent .lead{color:rgba(21,14,4,.78)}
+.rows{margin-top:40px;display:grid;gap:12px}
+.rowitem{display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:rgba(21,14,4,.06);border:1px solid rgba(21,14,4,.14);border-radius:16px;padding:18px 22px}
+.badge{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:8px;background:var(--ink);color:var(--acc)}
+.badge.plan{background:rgba(21,14,4,.14);color:rgba(21,14,4,.7)}
+.rowitem p{margin:0;font-size:15.5px;color:rgba(21,14,4,.82)}
+.rowitem p b{color:var(--ink);font-weight:600}
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;margin-top:44px}
+.pair{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pair figure{margin:0}
+.pair img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px}
+.pair .after img{background:#fff;object-fit:contain;padding:6%}
+.pair figcaption{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);text-align:center}
+.pair .after figcaption{color:var(--acc)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin-top:44px}
+.tile{background:linear-gradient(180deg,var(--s1),#0d0d0d);border:1px solid var(--line);border-radius:24px;padding:40px 32px}
+.tile .big{font-family:'Manrope';font-weight:800;font-size:clamp(40px,5vw,58px);letter-spacing:-.035em;color:var(--acc);line-height:1}
+.tile p{margin:14px 0 0;font-size:15.5px;color:#fff}
+.tile .sub{margin-top:8px;font-size:13.5px;color:var(--faint)}
+.finalgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:56px;align-items:center;z-index:1;position:relative}
+form{background:var(--s1);border:1px solid var(--line);border-radius:24px;padding:30px}
+form label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+form input{width:100%;margin:10px 0 16px;background:#0d0d0d;border:1px solid var(--line);border-radius:13px;padding:15px 16px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:17px;font-variant-numeric:tabular-nums}
+form input::placeholder{color:var(--faint)}
+form input:focus{outline:none;border-color:var(--acc)}
+form .btn{width:100%}
+form .fine{margin:14px 0 0;font-size:12.5px;color:var(--faint);text-align:center}
+.formnote{margin:14px 0 0;font-size:14px;color:var(--acc);text-align:center;min-height:1.4em}
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--faint);font-size:13.5px}
+.frow{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+@media(max-width:940px){.calcbox,.tabgrid,.finalgrid,.herogrid{grid-template-columns:minmax(0,1fr)}.herogrid{gap:26px}.heroimg img,.finalimg img{aspect-ratio:4/3}.calc-out{border-left:0;border-top:1px solid var(--line)}.facts{grid-template-columns:minmax(0,1fr)}.fact{border-left:0;border-top:1px solid var(--line)}.hnav{display:none}section{padding:70px 0}.tabgrid,.finalgrid{gap:32px}.hero{padding:56px 0 60px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#calc">К расчёту</a>
+
+<header>
+<div class="wrap hrow">
+<a class="logo" href="/">Утки<span>для кофеен</span></a>
+<nav class="hnav" aria-label="Основная навигация"><a href="#calc">Расчёт</a><a href="#time">Время</a><a href="#tablet">Планшет</a><a href="#pos">Касса</a><a href="#photo">Фото</a><a href="#map">Карта</a><a href="/">Для гостей</a></nav>
+<a class="btn btn-primary btn-sm" href="#final">Оставить заявку</a>
+</div>
+</header>
+
+<main>
+
+<section class="hero">
+<div class="glow" style="width:640px;height:640px;top:-260px;right:-160px"></div>
+<div class="wrap">
+<div class="heroimg"><img src="assets/seller-hero.jpg" alt="Бариста отдаёт гостю готовый кофе и выпечку у стойки" width="1800" height="1200"></div>
+<div class="herogrid">
+<div>
+<p class="eyebrow">Кофейням</p>
+<h1>Утренняя очередь — это не поток.<br>Это <em>те, кто ушёл</em>.</h1>
+</div>
+<div>
+<p class="lead">В 8:40 гость видит семь человек у кассы и идёт дальше. Утки принимают его заказ ещё на подходе к кофейне и отдают бариста готовым заказом — со временем готовности, посчитанным по вашему меню и вашей смене.</p>
+<div class="cta-row"><a class="btn btn-primary" href="#calc">Посчитать для моей кофейни</a><a class="btn btn-ghost" href="#time">Как мы считаем время</a></div>
+<div class="terms"><b>0%</b> с оборота<span class="dot">·</span><b>6 месяцев</b> бесплатно<span class="dot">·</span>дальше <b>49 Б</b> в месяц</div>
+</div>
+</div>
+<div class="facts">
+<div class="fact"><div class="num mono">31%</div><p>транзакций Starbucks в США — мобильный предзаказ</p><div class="src">Q4 FY25, отчётность компании</div></div>
+<div class="fact"><div class="num mono">15 сек</div><p>на оформление заказа в приложении</p><div class="src">Запись экрана без монтажа</div></div>
+<div class="fact"><div class="num mono">−45%</div><p>времени заказа, когда на смене двое бариста</p><div class="src">Так считает наш алгоритм. Разбор ниже</div></div>
+</div>
+</div>
+</section>
+
+<section id="calc">
+<div class="wrap">
+<p class="eyebrow">Юнит-экономика</p>
+<h2>Сколько вы теряете каждое утро</h2>
+<p class="lead">Подставьте свои числа. Мы считаем осознанно консервативно и объясняем каждый коэффициент — чтобы вы могли поспорить с расчётом, а не поверить на слово.</p>
+<div class="calcbox">
+<div class="calc-in">
+<div class="field"><div class="flabel"><label for="f-check">Средний чек</label><span class="fval" id="v-check">7 Б</span></div><input type="number" id="f-check" value="7" min="1" max="200" step="0.5" inputmode="decimal"></div>
+<div class="field"><div class="flabel"><label for="f-orders">Заказов в день</label><span class="fval" id="v-orders">50</span></div><input type="number" id="f-orders" value="50" min="10" max="2000" step="5" inputmode="numeric"></div>
+<div class="field"><div class="flabel"><label for="f-days">Рабочих дней в месяц</label><span class="fval" id="v-days">30</span></div><input type="number" id="f-days" value="30" min="1" max="31" step="1" inputmode="numeric"></div>
+<div class="field"><div class="flabel"><label for="f-leave">Уходят, не дождавшись, в пик</label><span class="fval" id="v-leave">12%</span></div><input type="range" id="f-leave" value="12" min="0" max="30" step="1"><p class="hint">Отраслевые замеры дают 15–30% в час пик. По умолчанию берём ниже нижней границы.</p></div>
+<div class="field"><div class="flabel"><label for="f-share">Доля заказов через приложение</label><span class="fval" id="v-share">15%</span></div><input type="range" id="f-share" value="15" min="1" max="40" step="1"><p class="hint">Ориентир: 31% у Starbucks, 8% у Dutch Bros на старте канала.</p></div>
+<div class="field"><div class="flabel"><label for="f-up">Рост чека в приложении</label><span class="fval" id="v-up">10%</span></div><input type="range" id="f-up" value="10" min="0" max="25" step="1"><p class="hint">Допродажа считается по совместным покупкам вашей кофейни.</p></div>
+</div>
+<div class="calc-out">
+<div class="res-label">Дополнительная выручка в год</div>
+<div class="res-big" id="r-total">10 200 Б</div>
+<p class="res-sub">Это <b id="r-pct">+8,1%</b> к обороту — без новой площади и без найма.</p>
+<div class="chart">
+<div class="barrow"><div class="cap"><span>Сейчас</span><b id="r-now">126 000 Б</b></div><div class="track"><div class="bar"><i id="b-now" style="background:var(--ser1);width:92.5%"></i></div></div></div>
+<div class="barrow"><div class="cap"><span>С Утками</span><b id="r-new">136 206 Б</b></div><div class="track"><div class="bar"><i id="b-base" style="background:var(--ser1);width:92.5%"></i><i id="b-catch" style="background:var(--ser2);width:5.55%"></i><i id="b-up" style="background:var(--ser3);width:1.94%"></i></div><div class="nowline flip" id="b-line" style="left:92.5%"><span>сейчас</span></div></div></div>
+<div class="legend"><span><i style="background:var(--ser1)"></i>текущая выручка</span><span><i style="background:var(--ser2)"></i>перехвачено из очереди</span><span><i style="background:var(--ser3)"></i>допродажа</span></div>
+</div>
+<div class="breakdown">
+<div class="brow"><span>Перехвачено из очереди, в год</span><b id="r-catch">7 560 Б</b></div>
+<div class="brow"><span>Допродажа в приложении, в год</span><b id="r-upsell">2 646 Б</b></div>
+<div class="brow total"><span>Итого</span><b id="r-sum">10 206 Б</b></div>
+</div>
+</div>
+</div>
+<div class="assume">
+<h4>Допущения расчёта</h4>
+<p><b>Что мы намеренно не считаем.</b> Возвращаемость, повторные заказы и пуши — они работают, но обещать по ним процент до релиза нечестно. Всё, что они дадут, будет сверх расчёта.</p>
+<p><b>Половина, а не все.</b> Из ушедших из очереди засчитываем только 50%.</p>
+<p><b>Допродажа — только на заказы в приложении</b>, включая перехваченные.</p>
+</div>
+</div>
+</section>
+
+<section id="time">
+<div class="wrap">
+<p class="eyebrow">Наш алгоритм</p>
+<h2>Мы не складываем всё подряд</h2>
+<p class="lead">Большинство приложений показывает «~10 минут» с запасом, гость приходит к остывшему стакану и перестаёт верить времени.</p>
+<div class="cards3">
+<div class="card"><span class="tag">Параллельно</span><h3>Параллельные позиции</h3><p>Сэндвич греется в печи, пока бариста собирает латте. Печь и витрина не занимают руки — и не занимают время.</p></div>
+<div class="card"><span class="tag">Смена</span><h3>Двое на смене</h3><p>Режим смены задаётся на планшете. Два бариста на заказ — время пересчитывается, а не остаётся «на всякий случай».</p></div>
+<div class="card"><span class="tag">Честность</span><h3>Один раф не делится пополам</h3><p>Одну позицию нельзя приготовить вдвоём быстрее. Такие заказы мы не ускоряем даже там, где это выглядело бы красиво.</p></div>
+</div>
+<div class="tables">
+<div class="tbl"><h4>Режим «двое на смене»</h4><div class="tblscroll"><table><thead><tr><th scope="col">Заказ</th><th scope="col">Один бариста</th><th scope="col">Двое</th><th scope="col">Выигрыш</th></tr></thead><tbody>
+<tr><td>Латте + капучино</td><td>9 мин</td><td>6 мин</td><td class="win">−33%</td></tr>
+<tr><td>Три капучино</td><td>10 мин</td><td>7 мин</td><td class="win">−30%</td></tr>
+<tr><td>Раф + эспрессо + латте</td><td>11 мин</td><td>6 мин</td><td class="win">−45%</td></tr>
+</tbody></table></div></div>
+<div class="tbl"><h4>Позиции, которые готовятся параллельно</h4><div class="tblscroll"><table><thead><tr><th scope="col">Заказ</th><th scope="col">Если складывать всё</th><th scope="col">Наш расчёт</th><th scope="col">Выигрыш</th></tr></thead><tbody>
+<tr><td>Латте + сэндвич в печи</td><td>12 мин</td><td>9 мин</td><td class="win">−25%</td></tr>
+<tr><td>Два сэндвича одной закладкой</td><td>11 мин</td><td>6 мин</td><td class="win">−45%</td></tr>
+</tbody></table></div></div>
+</div>
+<div class="note"><h3>Почему это ваша выручка, а не наша техническая деталь</h3><p>Заниженное время — это остывший напиток в мусор и переделка на смене. Завышенное — гость смотрит на «12 минут» и уходит к соседям. Точность времени и есть то, из-за чего канал либо приносит заказы, либо не приносит.</p></div>
+</div>
+</section>
+
+<section id="tablet">
+<div class="wrap">
+<p class="eyebrow">Рабочее место</p>
+<h2>Планшет бариста и цифры владельца</h2>
+<p class="lead">Одно устройство на точке. Бариста видит очередь заказов, владелец — выручку, отмены и топ позиций, не приезжая на смену.</p>
+<div class="tabgrid">
+<div class="cards6">
+<div class="card"><span class="tag">Смена</span><h3>Очередь заказов</h3><p>Карточки со временем выдачи, состав и сумма. Принять или отменить одним касанием.</p></div>
+<div class="card"><span class="tag">Смена</span><h3>Стоп-лист и техпауза</h3><p>Закончилось молоко — позиция уходит из приложения сразу, заказ на неё не придёт.</p></div>
+<div class="card"><span class="tag">Меню</span><h3>Своё меню и модификаторы</h3><p>Категории, размеры, сиропы, время приготовления по каждой позиции.</p></div>
+<div class="card"><span class="tag">Аналитика</span><h3>Выручка день и месяц</h3><p>График по дням, средний чек и топ товаров под кодом владельца.</p></div>
+<div class="card"><span class="tag">Аналитика</span><h3>Отмены и просрочки</h3><p>Видно, где смена не успевает и какие позиции ломают время.</p></div>
+</div>
+<div class="tablet"><img src="assets/seller-analytics.jpg" alt="Экран аналитики: выручка за день и месяц, график по дням и популярные товары" width="800" height="1280" loading="lazy"><div class="cap">Экран аналитики. Реальный скриншот продукта</div></div>
+</div>
+<p class="gal-lead">Остальные экраны — без монтажа и без ретуши</p>
+<div class="gal">
+<figure><div class="fr"><img src="assets/seller-orders.jpg" alt="Очередь заказов на планшете бариста" width="800" height="1280" loading="lazy"></div><figcaption>Очередь заказов</figcaption></figure>
+<figure><div class="fr"><img src="assets/seller-product.jpg" alt="Карточка товара с размерами и ценами" width="800" height="1280" loading="lazy"></div><figcaption>Карточка товара</figcaption></figure>
+<figure><div class="fr"><img src="assets/seller-cooking-mode.jpg" alt="Выбор режима приготовления" width="800" height="1280" loading="lazy"></div><figcaption>Режим приготовления</figcaption></figure>
+<figure><div class="fr"><img src="assets/seller-settings.jpg" alt="Настройки кофейни и код владельца" width="800" height="1280" loading="lazy"></div><figcaption>Настройки кофейни</figcaption></figure>
+</div>
+</div>
+</section>
+
+<section id="pos" class="accent">
+<div class="wrap">
+<p class="eyebrow">Касса</p>
+<h2>Встаём рядом с вашей кассой, а не вместо неё</h2>
+<p class="lead">Гость платит там же, где платил всегда. Мы не берём на себя эквайринг и фискализацию — это ваша касса и ваша выручка.</p>
+<div class="rows">
+<div class="rowitem"><span class="badge">Работает</span><p>Кофейня на <b>Альфа-Кассе</b> — заказы принимаются на смене, оплата на кассе</p></div>
+<div class="rowitem"><span class="badge plan">В работе</span><p><b>Quick Resto</b> — синхронизация меню и проброс заказов на кассу</p></div>
+<div class="rowitem"><span class="badge plan">План</span><p>Оплата в приложении — сознательно отложена</p></div>
+</div>
+</div>
+</section>
+
+<section id="photo">
+<div class="wrap">
+<p class="eyebrow">Витрина</p>
+<h2>Фотографии меню снимаем сами</h2>
+<p class="lead">Гость выбирает глазами. Мы приезжаем на точку, снимаем ваши напитки и готовим карточки для приложения: напиток вырезан, фон чистый, свет одинаковый по всему меню. Ни стока, ни чужих картинок — ваш латте, ваш стакан.</p>
+<!-- TODO: заменить на реальную съёмку с точки и её же карточки. Сейчас в паре
+     сгенерированные изображения, а подпись обещает съёмку у клиента. -->
+<div class="pairs">
+<div class="pair"><figure><img src="assets/photo-before-drink.jpg" alt="Съёмка напитка на точке" width="1200" height="654" loading="lazy"><figcaption>Съёмка на точке</figcaption></figure><figure class="after"><img src="assets/photo-after-drink.webp" alt="Готовая карточка напитка" width="1512" height="1512" loading="lazy"><figcaption>Карточка в приложении</figcaption></figure></div>
+<div class="pair"><figure><img src="assets/photo-before-cappuccino.jpg" alt="Съёмка капучино на точке" width="669" height="1200" loading="lazy"><figcaption>Съёмка на точке</figcaption></figure><figure class="after"><img src="assets/photo-after-cappuccino.webp" alt="Готовая карточка капучино" width="1512" height="1512" loading="lazy"><figcaption>Карточка в приложении</figcaption></figure></div>
+</div>
+<div class="note"><h3>Почему меню целиком, а не пара позиций</h3><p>Когда половина карточек снята на телефон, а половина — студийно, меню выглядит собранным на коленке, и гость листает мимо. Мы снимаем всю витрину в одном свете и держим её в одном стиле при каждом обновлении меню.</p></div>
+</div>
+</section>
+
+<section id="map">
+<div class="wrap">
+<p class="eyebrow">Новые гости</p>
+<h2>Вас находят те, кто шёл мимо</h2>
+<p class="lead">Кофейня появляется на карте в приложении — с меню, ценами и временем приготовления. Гость рядом открывает карту, видит вашу точку и заказывает, не зная её раньше.</p>
+<div class="cards3">
+<div class="card"><span class="tag">Карта</span><h3>Точка на карте с меню</h3><p>Не просто пин, а витрина: что есть сейчас, сколько стоит и через сколько будет готово.</p></div>
+<div class="card"><span class="tag">Поиск</span><h3>Гость рядом</h3><p>Человек ищет кофе поблизости и попадает к вам, а не к сети через дорогу.</p></div>
+<div class="card"><span class="tag">Витрина</span><h3>Карточки работают на выбор</h3><p>Снятое меню решает, у кого из соседних точек закажут утром.</p></div>
+</div>
+</div>
+</section>
+
+<section id="terms">
+<div class="wrap">
+<p class="eyebrow">Условия</p>
+<h2>0% с оборота. Совсем.</h2>
+<p class="lead">Мы не зарабатываем на вашей выручке. Чем больше вы продаёте через Утки, тем больше вы зарабатываете.</p>
+<div class="tiles">
+<div class="tile"><div class="big mono">0%</div><p>комиссии с оборота</p><div class="sub">Ни с заказа, ни с чека</div></div>
+<div class="tile"><div class="big mono">6 месяцев</div><p>бесплатно с подключения</p><div class="sub">Полный доступ, без урезанного тарифа</div></div>
+<div class="tile"><div class="big mono">49 Б</div><p>в месяц за точку</p><div class="sub">Фиксированно, сколько бы заказов ни прошло</div></div>
+</div>
+<p class="lead" style="margin-top:26px">Бесплатное подключение, без оборудования — планшет, который уже стоит на точке, подходит.</p>
+</div>
+</section>
+
+<section id="final">
+<div class="glow" style="width:560px;height:560px;bottom:-280px;left:-140px"></div>
+<div class="wrap finalgrid">
+<div>
+<p class="eyebrow">Заявка</p>
+<h2>Посчитаем на ваших цифрах, а не на средних по рынку</h2>
+<p class="lead">Оставьте номер — перезвоним, посмотрим ваше меню и утренний поток и скажем, что канал даст именно вашей точке. Если немного — так и скажем.</p>
+</div>
+<form id="lead" novalidate>
+<label for="phone">Телефон</label>
+<input type="tel" id="phone" name="phone" placeholder="+375 (29) 000-00-00" autocomplete="tel" required>
+<button class="btn btn-primary" type="submit">Перезвоните мне</button>
+<p class="formnote" id="note" role="status"></p>
+<p class="fine">Или напишите в Telegram — <a href="https://t.me/supreme1duck" target="_blank" rel="noopener">@supreme1duck</a></p>
+</form>
+</div>
+<div class="wrap"><div class="finalimg"><img src="assets/seller-final.jpg" alt="Бариста за стойкой с планшетом Уток" width="1800" height="1200" loading="lazy"></div></div>
+</section>
+
+</main>
+
+<footer><div class="wrap frow"><span>Утки — приложение для заказа кофе без очереди</span><span><a href="/">Для гостей</a> · <a href="https://t.me/supreme1duck" target="_blank" rel="noopener">@supreme1duck</a></span></div></footer>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Валюта в приложении показывается как «Б» — на лендинге держим тот же знак.
+  var money = function (n) {
+    return Math.round(n).toLocaleString('ru-RU').replace(/ /g, ' ') + ' Б';
+  };
+
+  function calc() {
+    var check = +$('f-check').value || 0;
+    var orders = +$('f-orders').value || 0;
+    var days = +$('f-days').value || 0;
+    var leave = +$('f-leave').value / 100;
+    var share = +$('f-share').value / 100;
+    var up = +$('f-up').value / 100;
+
+    $('v-check').textContent = money(check);
+    $('v-orders').textContent = orders.toLocaleString('ru-RU');
+    $('v-days').textContent = days;
+    $('v-leave').textContent = $('f-leave').value + '%';
+    $('v-share').textContent = $('f-share').value + '%';
+    $('v-up').textContent = $('f-up').value + '%';
+
+    var baseYear = check * orders * days * 12;
+
+    // Перехваченные: те, кто разворачивался у очереди. Засчитываем половину —
+    // не каждый ушедший поставит приложение.
+    var caught = orders * leave * 0.5;
+    var catchYear = caught * check * days * 12;
+
+    // Допродажа работает только на заказы в приложении, включая перехваченные.
+    var appOrders = orders * share + caught;
+    var upYear = appOrders * check * up * days * 12;
+
+    var total = catchYear + upYear;
+    var newYear = baseYear + total;
+
+    $('r-total').textContent = money(Math.round(total / 100) * 100);
+    $('r-pct').textContent = baseYear ? '+' + (total / baseYear * 100).toFixed(1).replace('.', ',') + '%' : '—';
+    $('r-now').textContent = money(baseYear);
+    $('r-new').textContent = money(newYear);
+    $('r-catch').textContent = money(catchYear);
+    $('r-upsell').textContent = money(upYear);
+    $('r-sum').textContent = money(total);
+
+    // Обе полосы в одной шкале: максимум — «с Утками».
+    var max = newYear || 1;
+    var pct = function (v) { return v / max * 100; };
+
+    $('b-now').style.width = pct(baseYear) + '%';
+    $('b-base').style.width = pct(baseYear) + '%';
+    $('b-catch').style.width = pct(catchYear) + '%';
+    $('b-up').style.width = pct(upYear) + '%';
+    $('b-line').style.left = pct(baseYear) + '%';
+    // У самого края подпись «сейчас» уехала бы за полосу — отзеркаливаем её.
+    $('b-line').classList.toggle('flip', pct(baseYear) > 85);
+  }
+
+  ['f-check', 'f-orders', 'f-days', 'f-leave', 'f-share', 'f-up'].forEach(function (id) {
+    $(id).addEventListener('input', calc);
+  });
+
+  calc();
+
+  // Та же ручка, что и на странице для гостей: заявка уходит нам в Telegram.
+  var form = $('lead');
+  var note = $('note');
+  var button = form.querySelector('button[type=submit]');
+  var FAILED = 'Не удалось отправить заявку. Напишите нам в Telegram.';
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var phone = form.phone.value.trim();
+    button.disabled = true;
+    note.textContent = 'Отправляем…';
+
+    fetch('/landing/callback-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneNumber: phone })
+    }).then(function (response) {
+      if (response.ok) {
+        form.reset();
+        note.textContent = 'Приняли. Перезвоним в рабочее время.';
+        return;
+      }
+      // Сервер объясняет отказ понятным текстом — показываем его как есть.
+      return response.text().then(function (text) { note.textContent = text || FAILED; });
+    }).catch(function () {
+      note.textContent = FAILED;
+    }).then(function () {
+      button.disabled = false;
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

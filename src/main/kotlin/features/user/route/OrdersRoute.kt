@@ -70,9 +70,11 @@ fun Route.ordersRoute() {
     post("order/create") {
         ducksTryCatch {
             val request = call.receive<CreateOrderRequest>()
-            val clientPhoneNumber = getClientPrincipal().phoneNumber
+            // TODO вернуть поиск клиента по номеру, когда вернётся вход по номеру телефона.
+//            val clientPhoneNumber = getClientPrincipal().phoneNumber
+            val clientId = getClientPrincipal().userId
 
-            createOrdersRepository.createOrder(request, clientPhoneNumber)
+            createOrdersRepository.createOrder(request, clientId)
 
             call.respond(HttpStatusCode.Created)
         }

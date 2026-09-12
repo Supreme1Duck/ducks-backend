@@ -3,6 +3,7 @@ package com.ducks.features.coffeeshops
 import com.ducks.auth.coffee_seller.JWTCoffeeSellerService
 import com.ducks.common.storage.S3Config
 import com.ducks.common.storage.S3Storage
+import com.ducks.features.cashregister.AlfaCashRegisterRepository
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeRecommendationsDataSource
 import com.ducks.features.coffeeshops.client.data.CoffeeShopsDataSource
@@ -46,6 +47,7 @@ fun coffeeShopsModule(photoroomApiKey: String, s3Config: S3Config) = module {
 
     single { ObserveOrdersRepository() }
     single { SellerOrdersRepository(get()) }
+    single { AlfaCashRegisterRepository() }
     single { SellerOrdersHistoryRepository() }
     single { CoffeeSellerAnalyticsRepository() }
     single { SellerPinCodeDataSource() }

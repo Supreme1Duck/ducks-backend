@@ -38,10 +38,13 @@ class ClientCreateOrdersRepository(
 
     suspend fun createOrder(
         request: CreateOrderRequest,
-        clientPhoneNumber: String,
+        // TODO вернуть clientPhoneNumber, когда вернётся вход по номеру телефона.
+//        clientPhoneNumber: String,
+        clientId: Long,
     ) {
         val (createdOrderId, sellerFcmToken) = newSuspendedTransaction {
-            val clientId = getUserIdByPhone(clientPhoneNumber)
+            // Существование клиента уже проверил валидатор токена.
+//            val clientId = getUserIdByPhone(clientPhoneNumber)
 
             if (request.products.isEmpty()) {
                 throw DucksBadRequestError("Заказ не может быть пустым.")
@@ -78,7 +81,7 @@ class ClientCreateOrdersRepository(
 
             val currentTime = Clock.System.now().toEpochMilliseconds()
             val minutesToCookAllProducts = coffeeProductsDataSource
-                .calculateMinutesToCook(allProducts.map { it.productId })
+                .calculateMinutesToCook(request.shopId, allProducts.map { it.productId })
 
             // Список доступных времён отдаётся по целым минутам — выравниваем, чтобы в базу
             // не попал заказ с секундами и не ломал проверки пересечений.
@@ -100,7 +103,6 @@ class ClientCreateOrdersRepository(
                 it[estimatedFinishTime] = orderFinishTime
                 it[timeToCookInMinutes] = minutesToCookAllProducts
 
-                it[tips] = request.tips
                 it[isToTime] = request.isToTime
                 it[isTakeaway] = request.isTakeaway
 
@@ -159,7 +161,7 @@ class ClientCreateOrdersRepository(
                 }
             ) {
                 it[price] = orderPrice
-                it[totalPrice] = orderPrice + (request.tips ?: 0.toBigDecimal())
+                it[totalPrice] = orderPrice
             }
 
             orderId.value to getShopFcmToken(request.shopId)
@@ -284,18 +286,18 @@ class ClientCreateOrdersRepository(
             .not()
     }
 
-    private fun getUserIdByPhone(clientPhoneNumber: String): Long {
-        return UserTable
-            .select(UserTable.id)
-            .where {
-                UserTable.phoneNumber eq clientPhoneNumber
-            }
-            .map {
-                it[UserTable.id].value
-            }
-            .firstOrNull()
-            ?: throw DucksBadRequestError("Пользователь не найден.")
-    }
+//    private fun getUserIdByPhone(clientPhoneNumber: String): Long {
+//        return UserTable
+//            .select(UserTable.id)
+//            .where {
+//                UserTable.phoneNumber eq clientPhoneNumber
+//            }
+//            .map {
+//                it[UserTable.id].value
+//            }
+//            .firstOrNull()
+//            ?: throw DucksBadRequestError("Пользователь не найден.")
+//    }
 
     private fun calculateProductPrice(
         size: CoffeeProductSizeDTO?,

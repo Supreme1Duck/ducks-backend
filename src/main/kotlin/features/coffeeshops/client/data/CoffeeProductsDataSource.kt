@@ -8,6 +8,7 @@ import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDet
 import com.ducks.features.coffeeshops.database.mappers.mapToProductPreviewDTO
 import com.ducks.features.coffeeshops.seller.data.model.CoffeeCategoryDTO
 import com.ducks.features.coffeeshops.service.CookingTimeCalculator
+import com.ducks.features.coffeeshops.service.fetchCookingMode
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -37,7 +38,7 @@ class CoffeeProductsDataSource(
             }
     }
 
-    fun calculateMinutesToCook(productIds: List<Long>): Int {
+    fun calculateMinutesToCook(shopId: Long, productIds: List<Long>): Int {
         val quantityById = productIds.groupingBy { it }.eachCount()
 
         val items = CoffeeProductTable
@@ -51,7 +52,7 @@ class CoffeeProductsDataSource(
                 )
             }
 
-        return cookingTimeCalculator.minutesToCook(items)
+        return cookingTimeCalculator.minutesToCook(items, fetchCookingMode(shopId))
     }
 
     /**

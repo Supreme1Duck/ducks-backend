@@ -8,6 +8,7 @@ import com.ducks.features.coffeeshops.seller.data.SellerCoffeeShopsDataSource
 import com.ducks.features.coffeeshops.seller.data.model.SellerClosestOrderTimeDTO
 import com.ducks.features.coffeeshops.seller.data.model.SellerCoffeeShopDetailsDTO
 import com.ducks.features.coffeeshops.seller.routings.request.shop.*
+import com.ducks.features.coffeeshops.service.CookingMode
 import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.util.DucksBadRequestError
@@ -88,6 +89,15 @@ class SellerCoffeeShopRepository(
     suspend fun updateFreeTables(shopId: Long, freeTables: Int) {
         return newSuspendedTransaction {
             sellerCoffeeShopDataSource.updateFreeTables(shopId, freeTables)
+        }
+    }
+
+    suspend fun updateCookingMode(shopId: Long, mode: Int) {
+        val cookingMode = CookingMode.fromValue(mode)
+            ?: throw DucksBadRequestError("Неизвестный режим приготовления.")
+
+        return newSuspendedTransaction {
+            sellerCoffeeShopDataSource.updateCookingMode(shopId, cookingMode)
         }
     }
 

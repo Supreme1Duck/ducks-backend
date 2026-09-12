@@ -125,7 +125,6 @@ class SellerOrdersHistoryRepository {
         // Будут заполнены дальше.
         products = emptyList(),
         price = this[CoffeeOrdersTable.price],
-        tips = this[CoffeeOrdersTable.tips],
         totalPrice = this[CoffeeOrdersTable.totalPrice],
     )
 }
