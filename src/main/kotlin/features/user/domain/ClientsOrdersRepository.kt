@@ -13,6 +13,7 @@ import com.ducks.features.user.data.dto.ActiveOrderProductDTO
 import com.ducks.features.user.data.dto.ClientOrderDTO
 import com.ducks.features.user.data.dto.ClientOrderProductDTO
 import com.ducks.service.PushNotificationService
+import com.ducks.service.LiveActivityPushService
 import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
@@ -30,6 +31,37 @@ class ClientsOrdersRepository(
 ) {
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
     private val pushNotificationService by application.inject<PushNotificationService>()
+    private val liveActivityPushService by application.inject<LiveActivityPushService>()
+
+    suspend fun registerLiveActivityToken(orderId: Long, userId: Long, token: String): LiveActivityRegistration {
+        val result = newSuspendedTransaction {
+            val orderExists = CoffeeOrdersTable.select(CoffeeOrdersTable.id)
+                .where { (CoffeeOrdersTable.id eq orderId) and (CoffeeOrdersTable.userId eq userId) }
+                .any()
+            if (!orderExists) return@newSuspendedTransaction LiveActivityRegistration.NOT_FOUND
+
+            val updated = CoffeeOrdersTable.update({
+                (CoffeeOrdersTable.id eq orderId) and
+                        (CoffeeOrdersTable.userId eq userId)
+            }) {
+                it[liveActivityToken] = token
+            }
+
+            if (updated == 0) return@newSuspendedTransaction LiveActivityRegistration.NOT_FOUND
+
+            val finished = CoffeeOrdersTable.select(CoffeeOrdersTable.finishedTime)
+                .where { CoffeeOrdersTable.id eq orderId }
+                .first()[CoffeeOrdersTable.finishedTime] != null
+
+            if (finished) {
+                LiveActivityRegistration.FINISHED
+            } else {
+                LiveActivityRegistration.REGISTERED
+            }
+        }
+        if (result == LiveActivityRegistration.FINISHED) liveActivityPushService.end(orderId)
+        return result
+    }
 
     suspend fun getActiveOrder(userId: Long): ActiveOrderDTO? {
         return newSuspendedTransaction {
@@ -249,6 +281,7 @@ class ClientsOrdersRepository(
         // Вне транзакции: сервис считает время в своей корутине и должен видеть
         // уже закоммиченную отмену.
         calculateCoffeeShopsOrdersTimeService.invoke(coffeeShopId)
+        liveActivityPushService.end(orderId)
 
         sellerFcmToken?.let {
             pushNotificationService.sendToSeller(
@@ -290,4 +323,6 @@ class ClientsOrdersRepository(
     private fun List<OrderedProductConstructorDBModel>.toActiveOrderConstructors() = map {
         ActiveOrderProductDTO.Constructor(id = it.id, name = it.name, price = it.price)
     }
+
+    enum class LiveActivityRegistration { REGISTERED, NOT_FOUND, FINISHED }
 }

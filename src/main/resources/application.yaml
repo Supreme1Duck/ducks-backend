@@ -3,6 +3,7 @@ ktor:
         modules:
             - com.ducks.ApplicationKt.module
     deployment:
+        host: "127.0.0.1"
         port: 8080
     database:
       password: "$DB_PASS"

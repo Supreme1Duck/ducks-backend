@@ -1,5 +1,6 @@
 package com.ducks.features.landing.route
 
+import com.ducks.common.ratelimit.clientIp
 import com.ducks.features.landing.domain.CallbackRequestService
 import com.ducks.features.landing.ratelimit.CallbackRateLimiter
 import com.ducks.features.landing.route.request.CallbackRequest
@@ -10,17 +11,35 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-// Промо-страница проекта: отдаётся с корня домена, публично и без авторизации.
+// Лендинг для кофеен: единственная страница, отдаётся с корня домена, публично и без авторизации.
 // Вёрстка и картинки лежат в src/main/resources/landing, поэтому едут вместе с jar
 // и отдельного деплоя лендингу не нужно.
 fun Route.landingRoute() {
     callbackRequestRoute()
 
-    staticResources(
-        remotePath = "/",
-        basePackage = "landing",
-        index = "index.html"
-    )
+    // Наружу только сама страница и её ассеты: остальное в landing не отдаём.
+    get("/") {
+        val page = call.resolveResource("index.html", "landing")
+            ?: return@get call.respond(HttpStatusCode.NotFound)
+        call.respond(page)
+    }
+    staticResources(remotePath = "/assets", basePackage = "landing/assets", index = null)
+
+    // Файлы для поисковиков: что индексировать и где список страниц.
+    for (file in listOf("robots.txt", "sitemap.xml")) {
+        get("/$file") {
+            val content = call.resolveResource(file, "landing")
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respond(content)
+        }
+    }
+
+    // Прежние адреса лендинга: тёмная версия стала основной, светлой больше нет.
+    for (path in listOf("/dark", "/business.html")) {
+        get(path) {
+            call.respondRedirect("/", permanent = true)
+        }
+    }
 }
 
 /**
@@ -50,9 +69,7 @@ private fun Route.callbackRequestRoute() {
                 status = HttpStatusCode.BadRequest,
             )
 
-        // За прокси адрес клиента приезжает заголовком, напрямую — из соединения.
-        val ip = call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
-            ?: call.request.local.remoteAddress
+        val ip = call.request.clientIp()
 
         val wait = rateLimiter.checkIpLimit(ip) ?: rateLimiter.checkPhoneLimit(phoneNumber)
 

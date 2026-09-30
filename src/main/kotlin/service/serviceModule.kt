@@ -7,4 +7,5 @@ val serviceModule = module {
     single { CoffeeShopDeleteUnusedImagesService(get()) }
     single { CoffeeShopNormalizeProductImagesService(get()) }
     single { PushNotificationService() }
+    single { LiveActivityPushService() }
 }

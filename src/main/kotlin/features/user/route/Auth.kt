@@ -1,6 +1,7 @@
 package com.ducks.features.user.route
 
 import com.ducks.auth.client.JWTClientService
+import com.ducks.common.ratelimit.clientIp
 import com.ducks.features.user.data.UsersRepository
 import com.ducks.features.user.ratelimit.LoginRateLimiter
 import com.ducks.features.user.route.request.DeviceLoginRequest
@@ -51,20 +52,16 @@ fun Route.authRoute() {
     post("/login/device") {
         val request = call.receive<DeviceLoginRequest>()
 
-        // Адрес берём только из соединения: прокси перед сервером нет, и X-Forwarded-For
-        // присылает сам клиент — подменяя его на каждый запрос, лимит обходился бы даром.
-        // Появится прокси — адрес придётся брать из заголовка, который выставляет он.
-        val ip = call.request.local.remoteAddress
+        val ip = call.request.clientIp()
 
-        // С локальной машины лимит не нужен: так удобнее гонять вход при разработке.
-        val isLocalhost = ip in listOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
-
-        if (!isLocalhost) {
-            val wait = loginRateLimiter.checkIpLimit(ip)
-            if (wait != null) {
-                call.response.headers.append(HttpHeaders.RetryAfter, wait.toString())
-                return@post call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(wait))
-            }
+        // Лимит действует и для локальных запросов. Раньше тут был обход для localhost, но
+        // за nginx в соединении localhost у всех: обход отключал лимит целиком. Разработке
+        // двадцати входов в час хватает, а если нет — счётчики живут в памяти и обнуляются
+        // перезапуском сервера.
+        val wait = loginRateLimiter.checkIpLimit(ip)
+        if (wait != null) {
+            call.response.headers.append(HttpHeaders.RetryAfter, wait.toString())
+            return@post call.respond(HttpStatusCode.TooManyRequests, rateLimitMessage(wait))
         }
 
         loginRateLimiter.recordIpRequest(ip)

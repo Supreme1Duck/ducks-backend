@@ -2,6 +2,7 @@ package com.ducks.features.user.route
 
 import com.ducks.features.coffeeshops.client.routings.request.CreateOrderRequest
 import com.ducks.features.user.data.UsersRepository
+import com.ducks.features.user.data.dto.LiveActivityTokenRequest
 import com.ducks.features.user.domain.ClientCreateOrdersRepository
 import com.ducks.features.user.domain.ClientsOrdersRepository
 import com.ducks.features.user.domain.ReorderPreviewRepository
@@ -96,6 +97,23 @@ fun Route.ordersRoute() {
             val userId = getClientPrincipal().userId
             usersRepository.updateFcmToken(userId, token)
             call.respond(HttpStatusCode.OK)
+        }
+    }
+
+    post("order/{orderId}/live-activity-token") {
+        ducksTryCatch {
+            val orderId = call.parameters["orderId"]?.toLongOrNull()
+                ?: return@ducksTryCatch call.respond(HttpStatusCode.BadRequest, "Некорректный id заказа")
+            val token = call.receive<LiveActivityTokenRequest>().token
+            if (token.length !in 32..256 || token.length % 2 != 0 || !token.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
+                return@ducksTryCatch call.respond(HttpStatusCode.BadRequest, "Некорректный токен Live Activity")
+            }
+
+            when (clientsOrdersRepository.registerLiveActivityToken(orderId, getClientPrincipal().userId, token)) {
+                ClientsOrdersRepository.LiveActivityRegistration.REGISTERED -> call.respond(HttpStatusCode.NoContent)
+                ClientsOrdersRepository.LiveActivityRegistration.NOT_FOUND -> call.respond(HttpStatusCode.NotFound)
+                ClientsOrdersRepository.LiveActivityRegistration.FINISHED -> call.respond(HttpStatusCode.NoContent)
+            }
         }
     }
 

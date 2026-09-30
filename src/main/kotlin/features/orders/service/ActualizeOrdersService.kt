@@ -6,6 +6,7 @@ import com.ducks.features.user.database.UserTable
 import com.ducks.service.MinuteChangeNotifierService
 import com.ducks.service.PushNotificationService
 import com.ducks.service.PushType
+import com.ducks.service.LiveActivityPushService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 class ActualizeOrdersService(
     private val changeNotifierService: MinuteChangeNotifierService,
     private val pushNotificationService: PushNotificationService,
+    private val liveActivityPushService: LiveActivityPushService,
 ) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
@@ -30,18 +32,20 @@ class ActualizeOrdersService(
     operator fun invoke() {
         changeNotifierService.observe()
             .onEach {
-                newSuspendedTransaction {
+                val expiredOrderIds = newSuspendedTransaction {
                     val currentTime = Clock.System.now().toEpochMilliseconds()
 
-                    cancelNotAcceptedOrders(currentTime)
+                    val expired = cancelNotAcceptedOrders(currentTime)
                     notifySellersAboutLateOrders(currentTime)
+                    expired
                 }
+                expiredOrderIds.forEach(liveActivityPushService::end)
             }
             .launchIn(coroutineScope)
     }
 
     // Отменяет непринятые заказы у которых истёк estimatedFinishTime
-    private fun cancelNotAcceptedOrders(currentTime: Long) {
+    private fun cancelNotAcceptedOrders(currentTime: Long): List<Long> {
         val expiredOrders = CoffeeOrdersTable
             .join(
                 otherTable = UserTable,
@@ -53,7 +57,7 @@ class ActualizeOrdersService(
             .where { isNotAccepted(currentTime) }
             .map { it[CoffeeOrdersTable.id].value to it[UserTable.fcmToken] }
 
-        if (expiredOrders.isEmpty()) return
+        if (expiredOrders.isEmpty()) return emptyList()
 
         CoffeeOrdersTable.update(
             where = { isNotAccepted(currentTime) }
@@ -74,6 +78,7 @@ class ActualizeOrdersService(
                 )
             }
         }
+        return expiredOrders.map { it.first }
     }
 
     /**

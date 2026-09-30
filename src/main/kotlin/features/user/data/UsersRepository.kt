@@ -58,16 +58,19 @@ class UsersRepository {
 
     /**
      * Клиент ничем не идентифицируется, поэтому каждый вход создаёт новый аккаунт: потеряв
-     * токен, к старому аккаунту уже не вернуться. Сохраняется только имя — фамилию приложение
-     * не спрашивает и не присылает.
+     * токен, к старому аккаунту уже не вернуться.
+     *
+     * Персональных данных в строке не остаётся: имя из запроса не сохраняется, номера у
+     * анонимного аккаунта нет. Так и написано в политике конфиденциальности
+     * (src/main/resources/legal/privacy-policy.md, п. 3.1 и 3.4) — если начать сохранять
+     * имя снова, политику придётся править вместе с кодом.
+     *
+     * [DeviceLoginRequest.firstName] оставлен в модели намеренно: ducksJson разбирает тела
+     * без ignoreUnknownKeys, и выкинь поле — вход сломается у клиентов, которые его шлют.
      */
     suspend fun createAnonymousUserAndGetId(request: DeviceLoginRequest): Long {
-        val firstName = request.firstName?.takeIf { it.isNotBlank() }
-
         return newSuspendedTransaction {
-            UserTable.insertAndGetId {
-                it[name] = firstName
-            }.value
+            UserTable.insertAndGetId { }.value
         }
     }
 

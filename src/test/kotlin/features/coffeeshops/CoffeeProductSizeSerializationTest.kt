@@ -7,7 +7,7 @@ import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class CoffeeProductSizeSerializationTest {
 
@@ -28,14 +28,13 @@ class CoffeeProductSizeSerializationTest {
         assertNull(size.priceWithoutDiscount)
     }
 
-    /** Ключ приходит всегда — иначе у клиента два разных вида одного и того же размера. */
     @Test
-    fun `в ответе цена без скидки есть и когда её нет`() {
+    fun `в ответе цена без скидки опускается когда её нет`() {
         val json = ducksJson.encodeToString(
             CoffeeProductSizeDTO(id = "1", sizeName = null, sizeValue = "300 мл", price = BigDecimal("5.00"))
         )
 
-        assertTrue(json.contains("\"priceWithoutDiscount\":null"), json)
+        assertFalse(json.contains("\"priceWithoutDiscount\""), json)
     }
 
     @Test

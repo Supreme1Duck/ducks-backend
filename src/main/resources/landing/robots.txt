@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /$
+Allow: /assets/
+Disallow: /
+
+Sitemap: https://ducks.by/sitemap.xml

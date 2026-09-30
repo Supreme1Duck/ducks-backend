@@ -16,4 +16,6 @@ data class CoffeeShopPreviewDTO(
     val isClosed: Boolean = false,
     val rating: Double,
     val distanceKm: Double? = null,
+    val closestTime: Long?,
+    val closestTimeReason: Int,
 )

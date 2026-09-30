@@ -35,4 +35,6 @@ object CoffeeOrdersTable : LongIdTable("ducks_coffee_orders_table") {
 
     val timeToCookInMinutes = integer("time_to_cook_in_minutes")
     val estimatedFinishTime = long("estimated_finish_time").nullable()
+    // ActivityKit update token for this order (distinct from the user's FCM token).
+    val liveActivityToken = text("live_activity_token").nullable()
 }

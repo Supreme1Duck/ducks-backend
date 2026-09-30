@@ -1,5 +1,6 @@
 package com.ducks.features.coffeeshops.seller.domain
 
+import com.ducks.features.cashregister.AlfaCashRegisterSettingsTable
 import com.ducks.features.coffeeshops.database.CoffeeShopScheduleTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTechnicalPausesTable
@@ -39,6 +40,12 @@ class SellerCoffeeShopRepository(
                         (CoffeeShopTechnicalPausesTable.isActive eq true)
                     }
                 )
+                .join(
+                    otherTable = AlfaCashRegisterSettingsTable,
+                    joinType = JoinType.LEFT,
+                    onColumn = CoffeeShopTable.id,
+                    otherColumn = AlfaCashRegisterSettingsTable.shopId,
+                )
                 .selectAll()
                 .where {
                     (CoffeeShopTable.id eq shopId)
@@ -46,7 +53,11 @@ class SellerCoffeeShopRepository(
                     val activeDaySchedule = fetchAvailableOrdersTimeListRepository.findShopsCurrentWorkTime(shopId)
                     val schedule = sellerCoffeeShopDataSource.fetchSchedule(shopId)
 
-                    it.mapToSellerCoffeeShopDetailsDTO(activeDaySchedule, schedule)
+                    it.mapToSellerCoffeeShopDetailsDTO(
+                        workTimeModel = activeDaySchedule,
+                        schedule = schedule,
+                        isAlfaCashRegisterEnabled = it.getOrNull(AlfaCashRegisterSettingsTable.enabled) ?: false,
+                    )
                 }.first()
         }
     }

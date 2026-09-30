@@ -8,12 +8,11 @@ import com.ducks.features.coffeeshops.database.CoffeeConstructorsTable
 import com.ducks.features.coffeeshops.database.CoffeeProductTable
 import com.ducks.features.coffeeshops.database.CoffeeProductsWithConstructorsTable
 import com.ducks.features.coffeeshops.database.CoffeeShopTable
+import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.features.orders.database.CoffeeOrderedProductsTable
 import com.ducks.features.orders.database.CoffeeOrdersTable
-import com.ducks.features.orders.data.repository.FetchAvailableOrdersTimeListRepository
 import com.ducks.features.orders.database.model.OrderedProductConstructorDBModel
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
-import com.ducks.features.user.database.UserTable
 import com.ducks.service.PushNotificationService
 import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
@@ -22,8 +21,11 @@ import io.ktor.server.application.*
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.ktor.ext.inject
 import java.math.BigDecimal
 
@@ -115,7 +117,10 @@ class ClientCreateOrdersRepository(
                 val product = productsById.getValue(requestProduct.productId)
                 val quantity = requestProduct.quantity ?: 1
 
+                // Единственный размер клиент не выбирает и может прислать вместо его id заглушку —
+                // перепутать тут не с чем, поэтому берём его как есть.
                 val size = product.sizes.firstOrNull { it.id == requestProduct.sizeId }
+                    ?: product.sizes.singleOrNull()
                     ?: throw DucksBadRequestError("Выбранного размера больше нет в меню, обновите корзину.")
 
                 val constructors = getSelectedConstructors(

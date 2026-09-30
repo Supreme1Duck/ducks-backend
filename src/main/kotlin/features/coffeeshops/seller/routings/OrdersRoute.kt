@@ -112,7 +112,7 @@ fun Route.sellerOrdersRoute() {
         }
     }
 
-    // Выдать заказ клиенту / завершить (готов -> выдан).
+    // «Выдать заказ»: завершить без отправки в кассу (готов -> выдан).
     post("/order/give-out") {
         ducksTryCatch {
             val shopId = getCoffeeShopSellerPrincipal().shopId
@@ -122,6 +122,18 @@ fun Route.sellerOrdersRoute() {
                 orderId = orderId,
                 shopId = shopId,
             )
+
+            call.respond(HttpStatusCode.Created)
+        }
+    }
+
+    // «Рассчитать»: поставить готовый заказ в очередь оплаты, не отмечая выданным.
+    post("/order/calculate") {
+        ducksTryCatch {
+            val shopId = getCoffeeShopSellerPrincipal().shopId
+            val orderId = call.receive<Long>()
+
+            orderRepository.calculateOrder(orderId = orderId, shopId = shopId)
 
             call.respond(HttpStatusCode.Created)
         }

@@ -17,4 +17,6 @@ data class CoffeeShopMapPinDTO(
     val openTime: Long? = null,
     val closeTime: Long? = null,
     val isClosed: Boolean = false,
+    val closestTime: Long?,
+    val closestTimeReason: Int,
 )

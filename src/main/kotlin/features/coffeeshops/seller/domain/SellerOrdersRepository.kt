@@ -6,6 +6,7 @@ import com.ducks.features.orders.database.CoffeeOrdersTable
 import com.ducks.features.orders.service.CalculateCoffeeShopsOrdersTimeService
 import com.ducks.features.user.database.UserTable
 import com.ducks.service.PushNotificationService
+import com.ducks.service.LiveActivityPushService
 import com.ducks.service.PushType
 import com.ducks.util.DucksBadRequestError
 import io.ktor.server.application.*
@@ -24,6 +25,7 @@ class SellerOrdersRepository(
 
     private val calculateCoffeeShopsOrdersTimeService by application.inject<CalculateCoffeeShopsOrdersTimeService>()
     private val pushNotificationService by application.inject<PushNotificationService>()
+    private val liveActivityPushService by application.inject<LiveActivityPushService>()
     private val alfaCashRegisterRepository by application.inject<AlfaCashRegisterRepository>()
 
     suspend fun acceptOrder(orderId: Long, shopId: Long) {
@@ -49,6 +51,7 @@ class SellerOrdersRepository(
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+        liveActivityPushService.update(orderId)
 
         fcmToken?.let {
             pushNotificationService.send(
@@ -93,6 +96,7 @@ class SellerOrdersRepository(
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+        liveActivityPushService.end(orderId)
 
         fcmToken?.let {
             pushNotificationService.send(
@@ -139,6 +143,7 @@ class SellerOrdersRepository(
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+        liveActivityPushService.update(orderId)
 
         fcmToken?.let {
             pushNotificationService.send(
@@ -163,27 +168,11 @@ class SellerOrdersRepository(
                 }
                 .firstOrNull() ?: throw DucksBadRequestError("Попытка выдать несуществующий заказ!")
 
-            if (order[CoffeeOrdersTable.finishedTime] != null) {
-                throw DucksBadRequestError("Попытка выдать уже завершённый заказ!")
-            }
-            if (order[CoffeeOrdersTable.readyTime] == null) {
-                throw DucksBadRequestError("Нельзя выдать неготовый заказ!")
-            }
-
-            CoffeeOrdersTable.update(
-                where = {
-                    CoffeeOrdersTable.id eq orderId
-                }
-            ) {
-                it[finishedTime] = currentTime
-            }
-
-            alfaCashRegisterRepository.enqueueCompletedOrder(orderId, shopId)
-
-            getFcmToken(orderId)
-        }
+    internal suspend fun notifyOrderGivenOut(orderId: Long, shopId: Long) {
+        val fcmToken = newSuspendedTransaction { getFcmToken(orderId) }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+        liveActivityPushService.end(orderId)
 
         fcmToken?.let {
             pushNotificationService.send(
@@ -228,6 +217,7 @@ class SellerOrdersRepository(
         }
 
         calculateCoffeeShopsOrdersTimeService.invoke(shopId)
+        liveActivityPushService.end(orderId)
 
         fcmToken?.let {
             pushNotificationService.send(

@@ -4,6 +4,7 @@ import com.ducks.features.landing.domain.CallbackRequestService
 import com.ducks.features.landing.ratelimit.CallbackRateLimiter
 import com.ducks.features.telegram.TelegramNotifier
 import com.ducks.util.ducksJson
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -49,9 +50,10 @@ class CallbackRequestRouteTest {
         }
     }
 
-    private suspend fun ApplicationTestBuilder.submit(phoneNumber: String) =
+    private suspend fun ApplicationTestBuilder.submit(phoneNumber: String, forwardedFor: String? = null) =
         client.post("/landing/callback-requests") {
             contentType(ContentType.Application.Json)
+            forwardedFor?.let { header("X-Forwarded-For", it) }
             setBody("""{"phoneNumber":"$phoneNumber"}""")
         }
 
@@ -92,6 +94,24 @@ class CallbackRequestRouteTest {
 
         assertEquals(HttpStatusCode.TooManyRequests, repeat.status)
         assertEquals(1, notifier.messages.size)
+    }
+
+    @Test
+    fun `подделанный X-Forwarded-For не открывает новый лимит по ip`() = testApplication {
+        val notifier = RecordingNotifier()
+        landingApplication(notifier)
+
+        // Лимит — пять заявок с адреса в час; номера разные, чтобы упереться именно в него.
+        repeat(5) { attempt ->
+            assertEquals(HttpStatusCode.Created, submit("37529123456$attempt").status)
+        }
+
+        // Прокси перед сервером здесь нет, значит заголовок прислал сам клиент: адрес
+        // берётся из соединения, и лимит остаётся тем же.
+        val spoofed = submit("375291234565", forwardedFor = "1.2.3.4")
+
+        assertEquals(HttpStatusCode.TooManyRequests, spoofed.status)
+        assertEquals(5, notifier.messages.size)
     }
 
     @Test

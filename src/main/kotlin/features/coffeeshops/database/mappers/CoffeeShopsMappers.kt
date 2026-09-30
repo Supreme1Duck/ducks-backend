@@ -19,6 +19,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
+private const val DEFAULT_COOKING_TIME_MS = 3 * 60 * 1000L
+
+private fun ResultRow.closestReadyTime(): Long? =
+    this[CoffeeShopTable.closestTimeToTakeOrders]?.plus(DEFAULT_COOKING_TIME_MS)
+
 fun ResultRow.mapToCoffeeShopPreview(userLocation: GeoPoint? = null): CoffeeShopPreviewDTO {
     return CoffeeShopPreviewDTO(
         id = this[CoffeeShopTable.id].value,
@@ -30,6 +35,8 @@ fun ResultRow.mapToCoffeeShopPreview(userLocation: GeoPoint? = null): CoffeeShop
         images = this[CoffeeShopTable.imageUrls].orEmpty(),
         rating = this[CoffeeShopTable.rating],
         distanceKm = distanceKmTo(userLocation),
+        closestTime = closestReadyTime(),
+        closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
     )
 }
 
@@ -64,6 +71,8 @@ fun ResultRow.mapToCoffeeShopMapPin(userLocation: GeoPoint? = null): CoffeeShopM
         pricesStartsFrom = this[CoffeeShopTable.lowestPrice],
         image = this[CoffeeShopTable.imageUrls]?.firstOrNull(),
         distanceKm = distanceKmTo(userLocation),
+        closestTime = closestReadyTime(),
+        closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
     )
 }
 
@@ -99,7 +108,7 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(workTimeModel: WorkTimeModel?): CoffeeSh
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
         isTemporaryClosed = this[CoffeeShopTable.isTemporaryClosed],
         freeTables = this[CoffeeShopTable.freeTables],
-        closestTime = this[CoffeeShopTable.closestTimeToTakeOrders]?.plus(6 * 60 * 1000L),
+        closestTime = closestReadyTime(),
         closestTimeReason = this[CoffeeShopTable.canTakeOrdersReason] ?: 0,
         rating = this[CoffeeShopTable.rating],
     )
@@ -108,6 +117,7 @@ fun ResultRow.mapToCoffeeShopDetailsDTO(workTimeModel: WorkTimeModel?): CoffeeSh
 fun ResultRow.mapToSellerCoffeeShopDetailsDTO(
     workTimeModel: WorkTimeModel?,
     schedule: List<SellerCoffeeShopDetailsDTO.Schedule>,
+    isAlfaCashRegisterEnabled: Boolean,
 ): SellerCoffeeShopDetailsDTO {
     val isClosed = workTimeModel?.isClosed ?: true
 
@@ -144,6 +154,7 @@ fun ResultRow.mapToSellerCoffeeShopDetailsDTO(
         tablesCapacity = this[CoffeeShopTable.tablesCapacity],
         freeTables = this[CoffeeShopTable.freeTables],
         cookingMode = this[CoffeeShopTable.cookingMode],
+        isAlfaCashRegisterEnabled = isAlfaCashRegisterEnabled,
         closestTimeToTakeOrder = this[CoffeeShopTable.closestTimeToTakeOrders],
         activePause = activePause,
         canTakeOrdersReason = this[CoffeeShopTable.canTakeOrdersReason],
