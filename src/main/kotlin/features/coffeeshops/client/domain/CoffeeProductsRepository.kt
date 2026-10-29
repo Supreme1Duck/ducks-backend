@@ -1,6 +1,7 @@
 package com.ducks.features.coffeeshops.client.domain
 
 import com.ducks.features.coffeeshops.client.data.CoffeeProductsDataSource
+import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.CookingTimeEstimateDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.ShopProductPair
@@ -20,9 +21,9 @@ class CoffeeProductsRepository(
         }
     }
 
-    suspend fun findMissingPairs(pairs: List<ShopProductPair>): List<ShopProductPair> {
+    suspend fun checkExistence(pairs: List<ShopProductPair>): CheckProductsExistenceResponse {
         return newSuspendedTransaction {
-            dataSource.findMissingPairs(pairs)
+            dataSource.checkExistence(pairs)
         }
     }
 

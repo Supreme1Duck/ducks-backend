@@ -6,7 +6,6 @@ import com.ducks.common.geo.toDegreesOrThrow
 import com.ducks.features.coffeeshops.client.domain.CartRecommendationsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeProductsRepository
 import com.ducks.features.coffeeshops.client.domain.CoffeeShopsRepository
-import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
 import com.ducks.features.coffeeshops.client.routings.request.CartRecommendationsRequest
 import com.ducks.features.coffeeshops.client.routings.request.CheckProductsExistenceRequest
 import com.ducks.features.coffeeshops.client.routings.request.EstimateCookingTimeRequest
@@ -87,7 +86,7 @@ fun Route.clientRoute() {
         }
     }
 
-    get("/product/{id}") {
+    get("/product/{productId}") {
         ducksTryCatch {
             val productId = call.parameters["productId"]!!.toLong()
 
@@ -105,14 +104,14 @@ fun Route.clientRoute() {
         }
     }
 
-    // Проверка существования пар (shopId, productId): в ответе — только несуществующие пары.
+    // Проверка существования пар (shopId, productId): несуществующие пары и актуальные данные остальных.
     post("/products/check-existence") {
         ducksTryCatch {
             val request = call.receive<CheckProductsExistenceRequest>()
 
-            val missing = coffeeProductsRepository.findMissingPairs(request.pairs)
+            val response = coffeeProductsRepository.checkExistence(request.pairs)
 
-            call.respond(HttpStatusCode.OK, CheckProductsExistenceResponse(missing = missing))
+            call.respond(HttpStatusCode.OK, response)
         }
     }
 

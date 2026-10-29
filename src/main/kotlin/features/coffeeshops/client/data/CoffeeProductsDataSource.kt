@@ -2,6 +2,8 @@ package com.ducks.features.coffeeshops.client.data
 
 import com.ducks.features.coffeeshops.client.data.model.dto.CoffeeProductWithDetailsDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.ProductsByCategoryDTO
+import com.ducks.features.coffeeshops.client.data.model.dto.CheckProductsExistenceResponse
+import com.ducks.features.coffeeshops.client.data.model.dto.ProductSnapshotDTO
 import com.ducks.features.coffeeshops.client.data.model.dto.ShopProductPair
 import com.ducks.features.coffeeshops.database.*
 import com.ducks.features.coffeeshops.database.mappers.mapToCoffeeProductWithDetailsDTO
@@ -56,22 +58,46 @@ class CoffeeProductsDataSource(
     }
 
     /**
-     * Возвращает те пары (shopId, productId), которых нет в базе:
-     * продукт не существует или не принадлежит указанной кофейне.
+     * Сверяет пары (shopId, productId) с базой: в `missing` — те, которых нет
+     * (продукт не существует или не принадлежит указанной кофейне),
+     * в `products` — актуальные данные остальных.
      */
-    fun findMissingPairs(pairs: List<ShopProductPair>): List<ShopProductPair> {
+    fun checkExistence(pairs: List<ShopProductPair>): CheckProductsExistenceResponse {
         val distinctPairs = pairs.distinct()
-        if (distinctPairs.isEmpty()) return emptyList()
+        if (distinctPairs.isEmpty()) return CheckProductsExistenceResponse(missing = emptyList())
 
         val productIds = distinctPairs.map { it.productId }.distinct()
+        val requested = distinctPairs.toSet()
 
-        val existingPairs = CoffeeProductTable
-            .select(CoffeeProductTable.id, CoffeeProductTable.shopId)
+        val products = CoffeeProductTable
+            .join(CoffeeShopTable, joinType = JoinType.INNER, CoffeeProductTable.shopId, CoffeeShopTable.id)
+            .select(
+                CoffeeProductTable.id,
+                CoffeeProductTable.shopId,
+                CoffeeProductTable.name,
+                CoffeeProductTable.imageUrl,
+                CoffeeProductTable.sizes,
+                CoffeeShopTable.name,
+            )
             .where { CoffeeProductTable.id inList productIds }
-            .map { ShopProductPair(shopId = it[CoffeeProductTable.shopId].value, productId = it[CoffeeProductTable.id].value) }
-            .toSet()
+            .map {
+                ProductSnapshotDTO(
+                    shopId = it[CoffeeProductTable.shopId].value,
+                    productId = it[CoffeeProductTable.id].value,
+                    name = it[CoffeeProductTable.name],
+                    imageUrl = it[CoffeeProductTable.imageUrl],
+                    shopName = it[CoffeeShopTable.name],
+                    price = it[CoffeeProductTable.sizes].firstOrNull()?.price,
+                )
+            }
+            .filter { ShopProductPair(shopId = it.shopId, productId = it.productId) in requested }
 
-        return distinctPairs.filter { it !in existingPairs }
+        val existingPairs = products.map { ShopProductPair(shopId = it.shopId, productId = it.productId) }.toSet()
+
+        return CheckProductsExistenceResponse(
+            missing = distinctPairs.filter { it !in existingPairs },
+            products = products,
+        )
     }
 
     fun getProductDetails(productId: Long): CoffeeProductWithDetailsDTO {
